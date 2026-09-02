@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* ── Glassmorphism base variables ─────────────────────────────────────────── */
+:root {
+  --bg-deep: #0a0a1a;
+  --bg-surface: #111127;
+  --bg-elevated: #1a1a35;
+  --surface-border: rgba(255, 255, 255, 0.12);
+  --neon-green: #39ff8f;
+  --neon-red: #ff4d6d;
+  --neon-blue: #4d9fff;
+  --neon-yellow: #ffd166;
+  --neon-purple: #b388ff;
+}
+
+/* ── Document reset ───────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-deep);
+  color: rgba(255, 255, 255, 0.9);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Glassmorphism card utility ────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+}
+
+.glass-card-hover {
+  transition: background 200ms ease, border-color 200ms ease;
+}
+
+.glass-card-hover:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}

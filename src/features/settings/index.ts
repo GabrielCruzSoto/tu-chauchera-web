@@ -1,0 +1,8 @@
+export { SettingsView } from "./components/SettingsView"
+export { CategoryManagerTab } from "./components/CategoryManagerTab"
+export { UserProfileTab } from "./components/UserProfileTab"
+export { DataStorageTab } from "./components/DataStorageTab"
+export { StorageStatsCard } from "./components/StorageStatsCard"
+export { WipeConfirmModal } from "./components/WipeConfirmModal"
+export { useSettingsStore, DEFAULT_USER_PREFERENCES } from "./store/settingsSlice"
+export type { SettingsState } from "./store/settingsSlice"
