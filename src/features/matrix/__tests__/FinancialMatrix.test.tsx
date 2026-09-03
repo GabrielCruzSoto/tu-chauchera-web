@@ -130,18 +130,51 @@ describe("FinancialMatrix Component & Responsive Toggle", () => {
     expect(screen.getByText("Banco")).toBeInTheDocument()
   })
 
-  it("expands and collapses all subcategories using toggle all button", () => {
+  it("expands and collapses all subcategories using toggle all button with aria-expanded", () => {
     render(<FinancialMatrix />)
 
     const toggleAllBtn = screen.getByRole("button", { name: /Desglosar subcategorías/i })
+    expect(toggleAllBtn).toHaveAttribute("aria-expanded", "false")
     fireEvent.click(toggleAllBtn)
 
     expect(screen.getByTestId("matrix-subcat-row-cat-1-banco")).toBeInTheDocument()
+    expect(toggleAllBtn).toHaveAttribute("aria-expanded", "true")
 
     // Click again to collapse
     const collapseAllBtn = screen.getByRole("button", { name: /Contraer subcategorías/i })
     fireEvent.click(collapseAllBtn)
 
     expect(screen.queryByTestId("matrix-subcat-row-cat-1-banco")).not.toBeInTheDocument()
+    expect(collapseAllBtn).toHaveAttribute("aria-expanded", "false")
+  })
+
+  it("renders tabular numeric cells with right alignment and monospace font", () => {
+    render(<FinancialMatrix />)
+
+    // Expand category to check row data cells
+    const expandBtn = screen.getByRole("button", { name: /Expandir Créditos/i })
+    expect(expandBtn).toHaveAttribute("aria-expanded", "false")
+    fireEvent.click(expandBtn)
+    expect(expandBtn).toHaveAttribute("aria-expanded", "true")
+
+    // Check table headers have text-right and font-mono / tabular-nums
+    const tableHeaders = screen.getAllByRole("columnheader")
+    // The first header is the category name (sticky, left-aligned)
+    const categoryColHeader = tableHeaders[0]
+    expect(categoryColHeader).toHaveClass("text-left")
+    expect(categoryColHeader).toHaveClass("sticky")
+    expect(categoryColHeader).toHaveClass("border-r")
+
+    // Subsequent period headers should have text-right font-mono tabular-nums
+    const periodHeader = tableHeaders[1]
+    expect(periodHeader).toHaveClass("text-right")
+    expect(periodHeader).toHaveClass("font-mono")
+    expect(periodHeader).toHaveClass("tabular-nums")
+
+    // Total header
+    const totalHeader = tableHeaders[tableHeaders.length - 1]
+    expect(totalHeader).toHaveClass("text-right")
+    expect(totalHeader).toHaveClass("font-mono")
+    expect(totalHeader).toHaveClass("tabular-nums")
   })
 })

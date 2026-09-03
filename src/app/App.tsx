@@ -59,9 +59,18 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col relative overflow-x-hidden selection:bg-emerald-500/30 selection:text-emerald-200">
+      {/* Ambient Lighting Orbs for Glassmorphism depth */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-40 w-[30rem] h-[30rem] bg-teal-500/8 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-40 left-1/3 w-[32rem] h-[32rem] bg-indigo-600/10 rounded-full blur-[140px]" />
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b0a_1px,transparent_1px),linear-gradient(to_bottom,#1e293b0a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+      </div>
+
       {/* Top Navbar */}
-      <header className="border-b border-slate-800/80 bg-slate-900/40 backdrop-blur-xl sticky top-0 z-40">
+      <header className="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-6">
             {/* Hamburger Button for Mobile / Tablet (<1024px) */}
@@ -83,8 +92,12 @@ export const App: React.FC = () => {
               )}
             </button>
 
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">💰</span>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/logo.png"
+                alt="Tu Chauchera Logo"
+                className="w-8 h-8 object-contain rounded-lg drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]"
+              />
               <span className="text-xl font-extrabold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
                 Tu Chauchera
               </span>
@@ -135,8 +148,12 @@ export const App: React.FC = () => {
           >
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">💰</span>
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src="/logo.png"
+                    alt="Tu Chauchera Logo"
+                    className="w-7 h-7 object-contain rounded-md"
+                  />
                   <span className="font-bold text-white text-lg">Menú Principal</span>
                 </div>
                 <button

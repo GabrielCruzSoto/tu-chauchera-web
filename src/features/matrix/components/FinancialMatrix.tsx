@@ -58,174 +58,210 @@ export const FinancialMatrix: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Matrix Controls & Summary */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-800 backdrop-blur-xl">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-            <span>Matriz de Consolidación Financiera</span>
-          </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Cruce interactivo de Categorías, Cuentas de Terceros y Flujo de Caja proyectado
-          </p>
+      {/* Matrix Controls & Summary: Multi-tier Toolbar */}
+      <div className="bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-800 backdrop-blur-xl flex flex-col gap-4">
+        {/* Tier 1: Header & View switches */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+              <span>Matriz de Consolidación Financiera</span>
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Cruce interactivo de Categorías, Cuentas de Terceros y Flujo de Caja proyectado
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+            {/* Group By Filter Tabs */}
+            <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setGroupBy("category")}
+                className={`min-h-[36px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                  groupBy === "category"
+                    ? "bg-slate-800 text-emerald-400 shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span>📂</span>
+                <span>Categorías</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGroupBy("p2p")}
+                className={`min-h-[36px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                  groupBy === "p2p"
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span>👥</span>
+                <span>Deudas Terceros ({matrix.p2pGroups.length})</span>
+              </button>
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode("table")}
+                className={`min-h-[36px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "table"
+                    ? "bg-slate-800 text-emerald-400 shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span>📊</span>
+                <span className="hidden xs:inline">Tabla</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("cards")}
+                className={`min-h-[36px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                  viewMode === "cards"
+                    ? "bg-slate-800 text-emerald-400 shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span>🗂️</span>
+                <span className="hidden xs:inline">Tarjetas</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto justify-between lg:justify-end">
-          {/* Group By Filter Tabs */}
-          <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs">
-            <button
-              type="button"
-              onClick={() => setGroupBy("category")}
-              className={`min-h-[36px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                groupBy === "category"
-                  ? "bg-slate-800 text-emerald-400 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
+        {/* Tier 2: Navigation & Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-slate-800/60">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+            {/* Period Range Navigator */}
+            <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
+              <button
+                type="button"
+                onClick={handlePrev}
+                aria-label="Mes anterior"
+                className="min-h-[36px] min-w-[36px] p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer flex items-center justify-center"
+              >
+                ←
+              </button>
+              <span className="text-xs font-semibold text-white px-2 whitespace-nowrap">
+                {matrix.periods[0]} a {matrix.periods[matrix.periods.length - 1]}
+              </span>
+              <button
+                type="button"
+                onClick={handleNext}
+                aria-label="Mes siguiente"
+                className="min-h-[36px] min-w-[36px] p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer flex items-center justify-center"
+              >
+                →
+              </button>
+            </div>
+
+            {/* Horizon Selector */}
+            <select
+              value={monthsCount}
+              onChange={(e) => setMonthsCount(Number(e.target.value))}
+              aria-label="Cantidad de meses a proyectar"
+              className="min-h-[36px] px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none cursor-pointer"
             >
-              <span>📂</span>
-              <span>Categorías</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setGroupBy("p2p")}
-              className={`min-h-[36px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                groupBy === "p2p"
-                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <span>👥</span>
-              <span>Deudas Terceros ({matrix.p2pGroups.length})</span>
-            </button>
+              <option value={3}>3 meses</option>
+              <option value={6}>6 meses</option>
+              <option value={12}>12 meses</option>
+            </select>
           </div>
 
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs">
+          {/* Action Button: Expand / Collapse All (Category mode) */}
+          {groupBy === "category" && (
             <button
               type="button"
-              onClick={() => setViewMode("table")}
-              className={`min-h-[36px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "table"
-                  ? "bg-slate-800 text-emerald-400 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
+              onClick={toggleExpandAll}
+              aria-expanded={areAllExpanded}
+              aria-label={areAllExpanded ? "Contraer subcategorías" : "Desglosar subcategorías"}
+              className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition cursor-pointer flex items-center gap-1.5"
             >
-              <span>📊</span>
-              <span className="hidden xs:inline">Tabla</span>
+              <span>{areAllExpanded ? "🔼" : "🔽"}</span>
+              <span>{areAllExpanded ? "Contraer subcategorías" : "Desglosar subcategorías"}</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("cards")}
-              className={`min-h-[36px] px-3 py-1.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "cards"
-                  ? "bg-slate-800 text-emerald-400 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <span>🗂️</span>
-              <span className="hidden xs:inline">Tarjetas</span>
-            </button>
-          </div>
-
-          {/* Period Range Navigator */}
-          <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
-            <button
-              type="button"
-              onClick={handlePrev}
-              aria-label="Mes anterior"
-              className="min-h-[36px] min-w-[36px] p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer flex items-center justify-center"
-            >
-              ←
-            </button>
-            <span className="text-xs font-semibold text-white px-2 whitespace-nowrap">
-              {matrix.periods[0]} a {matrix.periods[matrix.periods.length - 1]}
-            </span>
-            <button
-              type="button"
-              onClick={handleNext}
-              aria-label="Mes siguiente"
-              className="min-h-[36px] min-w-[36px] p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer flex items-center justify-center"
-            >
-              →
-            </button>
-          </div>
-
-          <select
-            value={monthsCount}
-            onChange={(e) => setMonthsCount(Number(e.target.value))}
-            aria-label="Cantidad de meses a proyectar"
-            className="min-h-[44px] px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none cursor-pointer"
-          >
-            <option value={3}>3 meses</option>
-            <option value={6}>6 meses</option>
-            <option value={12}>12 meses</option>
-          </select>
+          )}
         </div>
       </div>
 
       {/* Summary Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl">
+        {/* Card 1: Egresos Propios */}
+        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl flex flex-col justify-between">
           <div className="flex justify-between items-center">
             <span className="text-xs text-rose-400 font-semibold uppercase tracking-wider">
               Egresos Propios
             </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium">
               Gastos + Deudas
             </span>
           </div>
-          <div className="text-xl font-bold font-mono text-rose-300 mt-1">
+          <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-rose-300 mt-2">
             {formatCLP(toMoney(totalPersonalOutflow))}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">En los {monthsCount} meses</div>
+          <div className="text-[11px] text-slate-500 mt-1">En los {monthsCount} meses</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl">
+        {/* Card 2: Por Cobrar a Terceros */}
+        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl flex flex-col justify-between">
           <div className="flex justify-between items-center">
-            <span className="text-xs text-amber-400 font-semibold uppercase tracking-wider">
+            <span className="text-xs text-amber-300 font-semibold uppercase tracking-wider">
               Por Cobrar a Terceros
             </span>
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 font-medium">
               Reembolsos P2P
             </span>
           </div>
-          <div className="text-xl font-bold font-mono text-amber-300 mt-1">
+          <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-amber-300 mt-2">
             {formatCLP(toMoney(totalReceivables))}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">
+          <div className="text-[11px] text-slate-500 mt-1">
             {matrix.p2pGroups.filter((g) => g.role === "LENT_MY_CARD").length} cuentas por cobrar
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl">
-          <div className="text-xs text-sky-400 font-semibold uppercase tracking-wider">Total Ingresos</div>
-          <div className="text-xl font-bold font-mono text-sky-300 mt-1">
+        {/* Card 3: Total Ingresos */}
+        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl flex flex-col justify-between">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-sky-300 font-semibold uppercase tracking-wider">
+              Total Ingresos
+            </span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20 font-medium">
+              Ingresos Fijos/Var
+            </span>
+          </div>
+          <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-sky-300 mt-2">
             {formatCLP(toMoney(totalIncomesInRange))}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Sueldos y otros ingresos</div>
+          <div className="text-[11px] text-slate-500 mt-1">Sueldos y otros ingresos</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl">
+        {/* Card 4: Margen Neto Real */}
+        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl flex flex-col justify-between">
           <div className="flex justify-between items-center">
-            <span className="text-xs text-white font-semibold uppercase tracking-wider">Margen Neto Real</span>
+            <span className="text-xs text-white font-semibold uppercase tracking-wider">
+              Margen Neto Real
+            </span>
             <span
-              className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+              className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${
                 totalNetMargin >= 0
-                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                  : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                  : "bg-rose-500/10 text-rose-400 border-rose-500/20"
               }`}
             >
               Ingresos - Egresos
             </span>
           </div>
           <div
-            className={`text-xl font-bold font-mono mt-1 ${
+            className={`text-xl sm:text-2xl font-bold font-mono tracking-tight mt-2 ${
               totalNetMargin >= 0 ? "text-emerald-400" : "text-rose-400"
             }`}
           >
             {totalNetMargin >= 0 ? "+" : ""}
             {formatCLP(toMoney(totalNetMargin))}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Capacidad neta global</div>
+          <div className="text-[11px] text-slate-500 mt-1">Capacidad neta global</div>
         </div>
       </div>
 
@@ -258,18 +294,21 @@ export const FinancialMatrix: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="bg-slate-950/90 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-800 sticky top-0 z-30">
                   <tr>
-                    <th className="px-4 sm:px-5 py-3.5 font-bold text-slate-300 sticky left-0 bg-slate-950 z-20 min-w-[200px] sm:min-w-[260px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
+                    <th className="px-4 sm:px-5 py-3.5 text-left font-bold text-slate-300 sticky left-0 bg-slate-950 border-r border-slate-800 z-20 min-w-[200px] sm:min-w-[260px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
                       Persona / Producto / Medio
                     </th>
                     <th className="px-3 py-3.5 text-center font-bold text-amber-400 min-w-[120px]">
                       Situación
                     </th>
                     {matrix.periods.map((period) => (
-                      <th key={period} className="px-3 sm:px-4 py-3.5 text-center font-mono font-semibold min-w-[95px] sm:min-w-[110px]">
+                      <th
+                        key={period}
+                        className="px-3 sm:px-4 py-3.5 text-right font-mono tabular-nums font-semibold min-w-[100px] sm:min-w-[120px]"
+                      >
                         {period}
                       </th>
                     ))}
-                    <th className="px-4 sm:px-5 py-3.5 text-right font-bold text-amber-400 min-w-[110px] sm:min-w-[130px]">
+                    <th className="px-4 sm:px-5 py-3.5 text-right font-mono tabular-nums font-bold text-amber-400 min-w-[110px] sm:min-w-[130px]">
                       Total Período
                     </th>
                   </tr>
@@ -281,7 +320,7 @@ export const FinancialMatrix: React.FC = () => {
 
                     return (
                       <tr key={p2p.id} className="hover:bg-slate-800/30 transition bg-slate-900/40">
-                        <td className="px-4 sm:px-5 py-3 font-semibold text-white sticky left-0 bg-slate-900/95 backdrop-blur-md z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
+                        <td className="px-4 sm:px-5 py-3 font-semibold text-white sticky left-0 bg-slate-950/95 backdrop-blur-md border-r border-slate-800 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
                           <div className="space-y-0.5">
                             <div className="text-sm font-bold text-white flex items-center gap-1.5">
                               <span>👤</span>
@@ -317,8 +356,8 @@ export const FinancialMatrix: React.FC = () => {
                           return (
                             <td
                               key={period}
-                              className={`px-3 sm:px-4 py-3 text-center font-mono transition ${
-                                amount > 0 ? "text-slate-200 font-medium" : "text-slate-600"
+                              className={`px-3 sm:px-4 py-3 text-right font-mono tabular-nums text-xs whitespace-nowrap transition ${
+                                amount > 0 ? "text-slate-200 font-medium" : "text-slate-600 font-normal"
                               }`}
                             >
                               {amount > 0 ? formatCLP(toMoney(amount)) : "—"}
@@ -326,7 +365,7 @@ export const FinancialMatrix: React.FC = () => {
                           )
                         })}
 
-                        <td className="px-4 sm:px-5 py-3 text-right font-mono font-bold text-white">
+                        <td className="px-4 sm:px-5 py-3 text-right font-mono tabular-nums font-bold text-white whitespace-nowrap">
                           {formatCLP(toMoney(p2p.total))}
                         </td>
                       </tr>
@@ -524,31 +563,22 @@ export const FinancialMatrix: React.FC = () => {
         ) : (
           /* Matrix Grid Table */
           <div className="space-y-2" data-testid="matrix-table-view">
-            <div className="flex items-center justify-between px-1 text-xs text-slate-400">
-              <span className="sm:hidden">👉 Desliza horizontalmente para ver todos los meses</span>
-              <button
-                type="button"
-                onClick={toggleExpandAll}
-                className="ml-auto min-h-[32px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition cursor-pointer flex items-center gap-1.5"
-              >
-                <span>{areAllExpanded ? "🔼" : "🔽"}</span>
-                <span>{areAllExpanded ? "Contraer subcategorías" : "Desglosar subcategorías"}</span>
-              </button>
-            </div>
-
             <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-xl shadow-2xl">
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="bg-slate-950/90 text-slate-400 uppercase text-[11px] tracking-wider border-b border-slate-800 sticky top-0 z-30">
                   <tr>
-                    <th className="px-4 sm:px-5 py-3.5 sm:py-4 font-bold text-slate-300 sticky left-0 bg-slate-950 z-20 min-w-[180px] sm:min-w-[240px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
+                    <th className="px-4 sm:px-5 py-3.5 sm:py-4 text-left font-bold text-slate-300 sticky left-0 bg-slate-950 border-r border-slate-800 z-20 min-w-[180px] sm:min-w-[240px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
                       Categoría / Subcategoría
                     </th>
                     {matrix.periods.map((period) => (
-                      <th key={period} className="px-3 sm:px-4 py-3.5 sm:py-4 text-center font-mono font-semibold min-w-[95px] sm:min-w-[110px]">
+                      <th
+                        key={period}
+                        className="px-3 sm:px-4 py-3.5 sm:py-4 text-right font-mono tabular-nums font-semibold min-w-[100px] sm:min-w-[120px]"
+                      >
                         {period}
                       </th>
                     ))}
-                    <th className="px-4 sm:px-5 py-3.5 sm:py-4 text-right font-bold text-emerald-400 min-w-[110px] sm:min-w-[130px]">
+                    <th className="px-4 sm:px-5 py-3.5 sm:py-4 text-right font-mono tabular-nums font-bold text-emerald-400 min-w-[110px] sm:min-w-[130px]">
                       Total Fila
                     </th>
                   </tr>
@@ -567,7 +597,7 @@ export const FinancialMatrix: React.FC = () => {
                           onClick={() => toggleCategoryExpand(cat.id)}
                           className="hover:bg-slate-800/30 transition cursor-pointer bg-slate-900/40"
                         >
-                          <td className="px-4 sm:px-5 py-3 sm:py-3.5 font-semibold text-white sticky left-0 bg-slate-900/95 backdrop-blur-md z-10 flex items-center justify-between gap-2 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
+                          <td className="px-4 sm:px-5 py-3 sm:py-3.5 font-semibold text-white sticky left-0 bg-slate-950/95 backdrop-blur-md border-r border-slate-800 z-10 flex items-center justify-between gap-2 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
                             <div className="flex items-center gap-2 min-w-0">
                               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80 inline-block flex-shrink-0" />
                               <span className="truncate">{cat.name}</span>
@@ -581,6 +611,7 @@ export const FinancialMatrix: React.FC = () => {
                               <button
                                 type="button"
                                 aria-label={`Expandir ${cat.name}`}
+                                aria-expanded={isExpanded}
                                 className="text-slate-400 hover:text-white p-0.5 text-xs"
                               >
                                 {isExpanded ? "▼" : "▶"}
@@ -593,8 +624,8 @@ export const FinancialMatrix: React.FC = () => {
                             return (
                               <td
                                 key={period}
-                                className={`px-3 sm:px-4 py-3 sm:py-3.5 text-center font-mono transition ${
-                                  amount > 0 ? "text-slate-200 font-medium" : "text-slate-600"
+                                className={`px-3 sm:px-4 py-3 sm:py-3.5 text-right font-mono tabular-nums text-xs whitespace-nowrap transition ${
+                                  amount > 0 ? "text-slate-200 font-medium" : "text-slate-600 font-normal"
                                 }`}
                               >
                                 {amount > 0 ? formatCLP(toMoney(amount)) : "—"}
@@ -602,7 +633,7 @@ export const FinancialMatrix: React.FC = () => {
                             )
                           })}
 
-                          <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-right font-mono font-bold text-white">
+                          <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-right font-mono tabular-nums font-bold text-white whitespace-nowrap">
                             {formatCLP(toMoney(rowTotal))}
                           </td>
                         </tr>
@@ -629,7 +660,7 @@ export const FinancialMatrix: React.FC = () => {
                                   data-testid={`matrix-subcat-row-${subcat.id}`}
                                   className="bg-slate-950/50 hover:bg-slate-900/50 transition text-xs border-b border-slate-800/30"
                                 >
-                                  <td className="pl-8 sm:pl-10 pr-4 py-2.5 text-slate-300 sticky left-0 bg-slate-950/95 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
+                                  <td className="pl-8 sm:pl-10 pr-4 py-2.5 text-slate-300 sticky left-0 bg-slate-950/95 border-r border-slate-800 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                       <span className="text-slate-500 font-mono text-xs">↳</span>
                                       <span className="font-medium text-slate-200">{subcat.name}</span>
@@ -656,7 +687,7 @@ export const FinancialMatrix: React.FC = () => {
                                     return (
                                       <td
                                         key={period}
-                                        className={`px-3 sm:px-4 py-2.5 text-center font-mono text-xs ${
+                                        className={`px-3 sm:px-4 py-2.5 text-right font-mono tabular-nums text-xs whitespace-nowrap ${
                                           amount > 0 ? "text-slate-300 font-normal" : "text-slate-700"
                                         }`}
                                       >
@@ -665,7 +696,7 @@ export const FinancialMatrix: React.FC = () => {
                                     )
                                   })}
 
-                                  <td className="px-4 sm:px-5 py-2.5 text-right font-mono font-semibold text-slate-300 text-xs">
+                                  <td className="px-4 sm:px-5 py-2.5 text-right font-mono tabular-nums font-semibold text-slate-300 text-xs whitespace-nowrap">
                                     {formatCLP(toMoney(subcat.total))}
                                   </td>
                                 </tr>
@@ -681,43 +712,49 @@ export const FinancialMatrix: React.FC = () => {
                 <tfoot className="bg-slate-950/95 text-xs border-t-2 border-slate-700/80 font-bold divide-y divide-slate-800/80">
                   {/* Total Egresos */}
                   <tr>
-                    <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-rose-400 uppercase tracking-wider sticky left-0 bg-slate-950 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
+                    <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-rose-400 uppercase tracking-wider sticky left-0 bg-slate-950 border-r border-slate-800 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
                       Total Egresos
                     </td>
                     {matrix.periods.map((period) => {
                       const total = matrix.columnTotals[period] ?? 0
                       return (
-                        <td key={period} className="px-3 sm:px-4 py-3 sm:py-3.5 text-center font-mono text-rose-300">
+                        <td
+                          key={period}
+                          className="px-3 sm:px-4 py-3 sm:py-3.5 text-right font-mono tabular-nums text-rose-300 whitespace-nowrap"
+                        >
                           {formatCLP(toMoney(total))}
                         </td>
                       )
                     })}
-                    <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-right font-mono text-rose-300">
+                    <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-right font-mono tabular-nums text-rose-300 whitespace-nowrap">
                       {formatCLP(toMoney(matrix.grandTotal))}
                     </td>
                   </tr>
 
                   {/* Total Ingresos */}
                   <tr>
-                    <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-sky-400 uppercase tracking-wider sticky left-0 bg-slate-950 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
+                    <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-sky-400 uppercase tracking-wider sticky left-0 bg-slate-950 border-r border-slate-800 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
                       Total Ingresos
                     </td>
                     {matrix.periods.map((period) => {
                       const income = getTotalIncomeForPeriod(incomes, period)
                       return (
-                        <td key={period} className="px-3 sm:px-4 py-3 sm:py-3.5 text-center font-mono text-sky-300">
+                        <td
+                          key={period}
+                          className="px-3 sm:px-4 py-3 sm:py-3.5 text-right font-mono tabular-nums text-sky-300 whitespace-nowrap"
+                        >
                           {formatCLP(toMoney(income))}
                         </td>
                       )
                     })}
-                    <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-right font-mono text-sky-300">
+                    <td className="px-4 sm:px-5 py-3 sm:py-3.5 text-right font-mono tabular-nums text-sky-300 whitespace-nowrap">
                       {formatCLP(toMoney(totalIncomesInRange))}
                     </td>
                   </tr>
 
                   {/* Margen / Flujo de Caja */}
                   <tr className="bg-slate-900/95">
-                    <td className="px-4 sm:px-5 py-3.5 sm:py-4 text-white uppercase tracking-wider sticky left-0 bg-slate-900 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
+                    <td className="px-4 sm:px-5 py-3.5 sm:py-4 text-white uppercase tracking-wider sticky left-0 bg-slate-950 border-r border-slate-800 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
                       Capacidad de Ahorro / Margen
                     </td>
                     {matrix.periods.map((period) => {
@@ -729,7 +766,7 @@ export const FinancialMatrix: React.FC = () => {
                       return (
                         <td
                           key={period}
-                          className={`px-3 sm:px-4 py-3.5 sm:py-4 text-center font-mono font-extrabold text-xs sm:text-sm ${
+                          className={`px-3 sm:px-4 py-3.5 sm:py-4 text-right font-mono tabular-nums font-extrabold text-xs sm:text-sm whitespace-nowrap ${
                             isPositive ? "text-emerald-400" : "text-rose-400"
                           }`}
                         >
@@ -738,7 +775,7 @@ export const FinancialMatrix: React.FC = () => {
                         </td>
                       )
                     })}
-                    <td className="px-4 sm:px-5 py-3.5 sm:py-4 text-right font-mono text-sm sm:text-base font-extrabold text-white">
+                    <td className="px-4 sm:px-5 py-3.5 sm:py-4 text-right font-mono tabular-nums text-sm sm:text-base font-extrabold text-white whitespace-nowrap">
                       {totalNetMargin >= 0 ? "+" : ""}
                       {formatCLP(toMoney(totalNetMargin))}
                     </td>
