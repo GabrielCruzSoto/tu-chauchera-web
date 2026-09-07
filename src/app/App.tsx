@@ -20,11 +20,14 @@ const IncomeListView = lazy(() =>
 const SettingsView = lazy(() =>
   import("@/features/settings/components/SettingsView").then((m) => ({ default: m.SettingsView }))
 )
+const CreditCardsDashboard = lazy(() =>
+  import("@/features/credit-cards/components/CreditCardsDashboard").then((m) => ({ default: m.CreditCardsDashboard }))
+)
 
 export const App: React.FC = () => {
   const { isAuthenticated, isUnlocked, logout, user } = useAuthStore()
   const { hydrateFromDrive } = useSyncStore()
-  const [activeTab, setActiveTab] = useState<"matrix" | "calendar" | "obligations" | "income" | "settings">("matrix")
+  const [activeTab, setActiveTab] = useState<"matrix" | "calendar" | "obligations" | "cards" | "income" | "settings">("matrix")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Clean residual OAuth URL query params if present
@@ -50,10 +53,11 @@ export const App: React.FC = () => {
     { id: "calendar", label: "📅 Flujos & Cuotas" },
     { id: "income", label: "💵 Ingresos" },
     { id: "obligations", label: "💳 Obligaciones (Core)" },
+    { id: "cards", label: "💳 Tarjetas" },
     { id: "settings", label: "⚙️ Configuración" },
   ] as const
 
-  const handleTabSelect = (tab: "matrix" | "calendar" | "obligations" | "income" | "settings") => {
+  const handleTabSelect = (tab: "matrix" | "calendar" | "obligations" | "cards" | "income" | "settings") => {
     setActiveTab(tab)
     setIsMobileMenuOpen(false)
   }
@@ -208,6 +212,7 @@ export const App: React.FC = () => {
         <Suspense fallback={<PageLoader text="Cargando página..." />}>
           {activeTab === "matrix" && <FinancialMatrix />}
           {activeTab === "calendar" && <MonthlyInstallmentsView />}
+          {activeTab === "cards" && <CreditCardsDashboard />}
           {activeTab === "income" && <IncomeListView />}
           {activeTab === "obligations" && <ObligationsList />}
           {activeTab === "settings" && <SettingsView />}
