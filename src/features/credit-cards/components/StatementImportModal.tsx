@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useCreditCardStore } from '../store/creditCardSlice'
 import { parseFalabellaStatementText, type ParsedStatementTransaction } from '../parsers/falabellaParser'
+import { extractTextFromPdf } from '../parsers/pdfReader'
 import { formatCLP, toMoney } from '@/shared/types/money'
 import type { UUID } from '@/shared/types/domain'
 
@@ -19,6 +20,8 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const accountList = Object.values(accounts)
   const [selectedAccountId, setSelectedAccountId] = useState<UUID>(accountList[0]?.id || '')
   const [rawText, setRawText] = useState('')
+  const [isReadingPdf, setIsReadingPdf] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [parsedRows, setParsedRows] = useState<ParsedStatementTransaction[]>([])
   const [step, setStep] = useState<'INPUT' | 'PREVIEW'>('INPUT')
 
@@ -26,6 +29,33 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
 
   const currentAccount = accounts[selectedAccountId]
   const defaultPlasticId = currentAccount?.plastics[0]?.id || ''
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsReadingPdf(true)
+    setErrorMessage(null)
+
+    try {
+      const buffer = await file.arrayBuffer()
+      const extracted = await extractTextFromPdf(buffer)
+      const result = parseFalabellaStatementText(extracted)
+
+      if (result.transactions.length === 0) {
+        setErrorMessage('No se encontraron líneas de compra reconocibles en el PDF. Puedes intentar copiando el texto manualmente.')
+        setRawText(extracted)
+      } else {
+        setParsedRows(result.transactions)
+        setStep('PREVIEW')
+      }
+    } catch (err) {
+      console.error(err)
+      setErrorMessage('Error al leer el archivo PDF. Asegúrate de que no esté protegido por contraseña.')
+    } finally {
+      setIsReadingPdf(false)
+    }
+  }
 
   const handleParse = () => {
     if (!rawText.trim()) return
@@ -120,20 +150,62 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                 </select>
               </div>
 
+              {/* PDF File Upload Dropzone */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-400 uppercase">
+                  Subir Estado de Cuenta (PDF)
+                </label>
+                <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500/70 rounded-2xl p-6 text-center bg-slate-950/60 transition-all flex flex-col items-center justify-center gap-2">
+                  <div className="text-3xl">📄</div>
+                  {isReadingPdf ? (
+                    <div className="text-indigo-400 text-xs font-semibold animate-pulse">
+                      Leyendo y procesando archivo PDF localmente...
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium text-slate-200">
+                        Arrastra tu archivo PDF de Falabella aquí o búscalo en tu equipo
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Lectura 100% segura y privada en tu navegador (sin subir a servidores externos)
+                      </p>
+                      <label className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md shadow-indigo-600/30 transition-all">
+                        Seleccionar Archivo PDF
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {errorMessage && (
+                <div className="p-3 bg-rose-950/40 border border-rose-800/60 rounded-xl text-rose-300 text-xs">
+                  ⚠️ {errorMessage}
+                </div>
+              )}
+
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-slate-800"></div>
+                <span className="flex-shrink mx-4 text-[10px] text-slate-500 uppercase tracking-widest font-semibold">O pegar texto manualmente</span>
+                <div className="flex-grow border-t border-slate-800"></div>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
-                  Copia y Pega el texto de tus movimientos desde tu cartola/PDF CMR Falabella:
+                  Pegar texto de movimientos:
                 </label>
                 <textarea
-                  rows={8}
-                  placeholder={`Ejemplo:\n15/04/2026 FALABELLA PARQUE ARAUCO 03/12 $ 45.990\n18/04/2026 LIDER EXPRESS 01/01 $ 12.500\n22/04/2026 PARIS COSTANERA 28.990`}
+                  rows={4}
+                  placeholder={`Ejemplo:\n15/04/2026 FALABELLA PARQUE ARAUCO 03/12 $ 45.990\n18/04/2026 LIDER EXPRESS 01/01 $ 12.500`}
                   value={rawText}
                   onChange={(e) => setRawText(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 font-mono text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  💡 Abre el PDF de tu estado de cuenta, selecciona y copia las líneas de movimientos y pégalas aquí.
-                </p>
               </div>
             </div>
           ) : (

@@ -2,6 +2,7 @@
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
     "date-fns": "^4.4.0",
+    "pdfjs-dist": "^6.3.289",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3",
