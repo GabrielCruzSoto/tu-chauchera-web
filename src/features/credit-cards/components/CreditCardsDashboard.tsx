@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useCreditCardStore } from '../store/creditCardSlice'
 import { CreditCardAccountModal } from './CreditCardAccountModal'
 import { CreditCardPurchaseModal } from './CreditCardPurchaseModal'
+import { StatementImportModal } from './StatementImportModal'
 import { ThirdPartyReceivablesView } from './ThirdPartyReceivablesView'
 import { formatCLP, toMoney } from '@/shared/types/money'
 
@@ -11,6 +12,7 @@ export const CreditCardsDashboard: React.FC = () => {
 
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'CARDS' | 'THIRD_PARTY'>('CARDS')
 
   const accountList = Object.values(accounts)
@@ -29,16 +31,22 @@ export const CreditCardsDashboard: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="px-3.5 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded-xl text-xs font-semibold border border-emerald-500/40 transition-all cursor-pointer"
+          >
+            📄 Importar Cartola
+          </button>
           <button
             onClick={() => setIsAccountModalOpen(true)}
-            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold border border-slate-700 transition-all"
+            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
           >
             + Nueva Tarjeta
           </button>
           <button
             onClick={() => setIsPurchaseModalOpen(true)}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
           >
             + Cargar Compra
           </button>
@@ -146,6 +154,10 @@ export const CreditCardsDashboard: React.FC = () => {
       )}
 
       {/* Modals */}
+      <StatementImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+      />
       <CreditCardAccountModal
         isOpen={isAccountModalOpen}
         onClose={() => setIsAccountModalOpen(false)}
