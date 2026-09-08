@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useCreditCardStore } from '../store/creditCardSlice'
 import { parseFalabellaStatementText, type ParsedStatementTransaction } from '../parsers/falabellaParser'
 import { extractTextFromPdf } from '../parsers/pdfReader'
+import { matchExistingPurchases, type EnhancedParsedTransaction } from '../utils/deduplicationMatcher'
 import { formatCLP, toMoney } from '@/shared/types/money'
 import type { UUID } from '@/shared/types/domain'
 
@@ -15,6 +16,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   onClose,
 }) => {
   const accounts = useCreditCardStore((s) => s.accounts)
+  const purchases = useCreditCardStore((s) => s.purchases)
   const addPurchase = useCreditCardStore((s) => s.addPurchase)
 
   const accountList = Object.values(accounts)
@@ -22,13 +24,28 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [rawText, setRawText] = useState('')
   const [isReadingPdf, setIsReadingPdf] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [parsedRows, setParsedRows] = useState<ParsedStatementTransaction[]>([])
+  const [parsedRows, setParsedRows] = useState<EnhancedParsedTransaction[]>([])
   const [step, setStep] = useState<'INPUT' | 'PREVIEW'>('INPUT')
 
   if (!isOpen) return null
 
   const currentAccount = accounts[selectedAccountId]
   const defaultPlasticId = currentAccount?.plastics[0]?.id || ''
+  const existingPurchasesForAccount = Object.values(purchases).filter(
+    (p) => p.accountId === selectedAccountId
+  )
+
+  const processExtractedText = (text: string) => {
+    const result = parseFalabellaStatementText(text)
+    if (result.transactions.length === 0) {
+      setErrorMessage('No se encontraron líneas de compra reconocibles en el PDF. Puedes intentar copiando el texto manualmente.')
+      setRawText(text)
+    } else {
+      const enhanced = matchExistingPurchases(result.transactions, existingPurchasesForAccount)
+      setParsedRows(enhanced)
+      setStep('PREVIEW')
+    }
+  }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -40,15 +57,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     try {
       const buffer = await file.arrayBuffer()
       const extracted = await extractTextFromPdf(buffer)
-      const result = parseFalabellaStatementText(extracted)
-
-      if (result.transactions.length === 0) {
-        setErrorMessage('No se encontraron líneas de compra reconocibles en el PDF. Puedes intentar copiando el texto manualmente.')
-        setRawText(extracted)
-      } else {
-        setParsedRows(result.transactions)
-        setStep('PREVIEW')
-      }
+      processExtractedText(extracted)
     } catch (err) {
       console.error(err)
       setErrorMessage('Error al leer el archivo PDF. Asegúrate de que no esté protegido por contraseña.')
@@ -59,9 +68,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
 
   const handleParse = () => {
     if (!rawText.trim()) return
-    const result = parseFalabellaStatementText(rawText)
-    setParsedRows(result.transactions)
-    setStep('PREVIEW')
+    processExtractedText(rawText)
   }
 
   const handleToggleSelect = (index: number) => {
@@ -244,7 +251,18 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                           />
                         </td>
                         <td className="p-3 font-mono text-slate-400">{row.date}</td>
-                        <td className="p-3 font-medium text-white">{row.description}</td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-white">{row.description}</span>
+                            {row.isDuplicateOrOngoing && (
+                              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-amber-500/30">
+                                {row.duplicateReason === 'ONGOING_INSTALLMENT'
+                                  ? '🔄 Cuota en curso'
+                                  : '⚠️ Ya registrada'}
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="p-3 text-center font-mono">
                           {row.currentInstallment}/{row.totalInstallments}
                         </td>
