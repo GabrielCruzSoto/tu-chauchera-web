@@ -168,8 +168,9 @@ export function parseFalabellaStatementText(rawText: string): ParsedStatementRes
     let description = ''
 
     if (hasInstallment && instMatch) {
-      const beforeInst = restOfLine.substring(0, instMatch.index).trim()
-      const afterInst = restOfLine.substring(instMatch.index + instMatch[0].length).trim()
+      const instIndex = instMatch.index ?? 0
+      const beforeInst = restOfLine.substring(0, instIndex).trim()
+      const afterInst = restOfLine.substring(instIndex + instMatch[0].length).trim()
 
       // In official CMR tables, beforeInst has: [Desc] [Plastic T/A]? [Monto Operacion] [Monto Total a Pagar]
       const trailingAmountsMatch = beforeInst.match(/(?:\s+[TA])?\s+([\d.]+)(?:\s+([\d.]+))?$/)

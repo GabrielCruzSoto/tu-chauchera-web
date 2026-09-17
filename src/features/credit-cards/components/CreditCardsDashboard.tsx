@@ -5,7 +5,7 @@ import { CreditCardPurchaseModal } from './CreditCardPurchaseModal'
 import { CreditCardPurchasesModal } from './CreditCardPurchasesModal'
 import { StatementImportModal } from './StatementImportModal'
 import { ThirdPartyReceivablesView } from './ThirdPartyReceivablesView'
-import { formatCLP } from '@/shared/types/money'
+import { formatCLP, toMoney } from '@/shared/types/money'
 import type { CreditCardAccount } from '@/shared/types/domain'
 
 export const CreditCardsDashboard: React.FC = () => {
@@ -120,7 +120,7 @@ export const CreditCardsDashboard: React.FC = () => {
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Deuda Registrada:</span>
-                        <span className="text-amber-300 font-medium">{formatCLP(totalDebt)}</span>
+                        <span className="text-amber-300 font-medium">{formatCLP(toMoney(totalDebt))}</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Vence:</span>
