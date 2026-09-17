@@ -2,12 +2,13 @@
  * Zustand Slice for Global Synchronization state and Drive orchestration.
  */
 import { create } from "zustand"
-import type { SyncStatus, DataDomain, ObligationsStore, IncomesStore, CategoriesStore } from "@/shared/types/domain"
+import type { SyncStatus, DataDomain, ObligationsStore, IncomesStore, CategoriesStore, CreditCardsStore } from "@/shared/types/domain"
 import { DriveClient } from "@/shared/services/driveClient"
 import { SyncService } from "@/shared/services/syncService"
 import { useAuthStore } from "@/store/authSlice"
 import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
 import { useIncomeStore } from "@/features/income/store/incomeSlice"
+import { useCreditCardStore } from "@/features/credit-cards/store/creditCardSlice"
 import { decryptData } from "@/shared/utils/crypto"
 import { migrateDomainPayload, wrapDomainEnvelope } from "@/shared/migrations/migrate"
 
@@ -24,6 +25,7 @@ export interface SyncState {
   queueSyncDomain: (domain: DataDomain) => void
   forceResync: () => Promise<void>
   hydrateFromDrive: () => Promise<void>
+  resetSync: () => void
 }
 
 let syncServiceInstance: SyncService | null = null
@@ -86,6 +88,14 @@ export const useSyncStore = create<SyncState>((set, get) => ({
             }
             return wrapDomainEnvelope("incomes", payload)
           }
+          if (d === "credit_cards") {
+            const state = useCreditCardStore.getState()
+            const payload: CreditCardsStore = {
+              accounts: state.accounts,
+              purchases: state.purchases,
+            }
+            return wrapDomainEnvelope("credit_cards", payload)
+          }
           return null
         },
         setDomainData: () => {},
@@ -122,6 +132,8 @@ export const useSyncStore = create<SyncState>((set, get) => ({
         if (wasMigrated) {
           get().queueSyncDomain("obligations")
         }
+      } else {
+        useObligationsStore.getState().resetObligations()
       }
 
       // 2. Categories
@@ -144,6 +156,21 @@ export const useSyncStore = create<SyncState>((set, get) => ({
         if (wasMigrated) {
           get().queueSyncDomain("incomes")
         }
+      } else {
+        useIncomeStore.getState().resetIncomes()
+      }
+
+      // 4. Credit Cards
+      const ccBuffer = await driveClient.readDomain("credit_cards")
+      if (ccBuffer) {
+        const rawCcData = await decryptData<unknown>(cryptoKey, ccBuffer)
+        const { data: ccData, wasMigrated } = migrateDomainPayload<CreditCardsStore>("credit_cards", rawCcData)
+        useCreditCardStore.getState().setCreditCardsData(ccData)
+        if (wasMigrated) {
+          get().queueSyncDomain("credit_cards")
+        }
+      } else {
+        useCreditCardStore.getState().resetCreditCards()
       }
 
       get().setStatus("SYNCED")
@@ -151,5 +178,18 @@ export const useSyncStore = create<SyncState>((set, get) => ({
       const msg = err instanceof Error ? err.message : "Failed to load data from Drive"
       get().setStatus("ERROR", msg)
     }
+  },
+
+  resetSync: () => {
+    if (syncServiceInstance) {
+      syncServiceInstance.cancel()
+      syncServiceInstance = null
+    }
+    set({
+      status: "SYNCED",
+      lastSyncedAt: null,
+      pendingMutations: 0,
+      errorMessage: null,
+    })
   },
 }))

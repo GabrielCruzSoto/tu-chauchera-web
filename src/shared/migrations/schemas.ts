@@ -15,6 +15,15 @@ import type {
   CategoriesStore,
   IncomesStore,
   SettingsStore,
+  CreditCardsStore,
+  CreditCardAccount,
+  CreditCardPlastic,
+  CreditCardPurchase,
+  ThirdPartyRepayment,
+  ThirdPartyReceivable,
+  PlasticType,
+  PurchasePayerType,
+  ThirdPartyReceivableStatus,
 } from "@/shared/types/domain"
 
 const moneySchema = z.number().int().nonnegative().transform((val) => val as Money)
@@ -90,3 +99,66 @@ export const settingsStoreSchema = z.object({
   schemaVersion: z.string().optional(),
   createdAt: z.string(),
 }) satisfies z.ZodType<SettingsStore>
+
+export const creditCardPlasticSchema = z.object({
+  id: z.string().min(1),
+  accountId: z.string().min(1),
+  holderName: z.string().min(1),
+  lastFourDigits: z.string().min(1),
+  type: z.enum(["TITULAR", "ADICIONAL"] as const satisfies readonly PlasticType[]),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+}) satisfies z.ZodType<CreditCardPlastic>
+
+export const creditCardAccountSchema = z.object({
+  id: z.string().min(1),
+  institution: z.string().min(1),
+  accountName: z.string().min(1),
+  creditLimitCents: moneySchema,
+  closingDay: z.number().int().min(1).max(31),
+  dueDay: z.number().int().min(1).max(31),
+  plastics: z.array(creditCardPlasticSchema),
+  paidPeriods: z.array(z.string()).optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+}) satisfies z.ZodType<CreditCardAccount>
+
+export const thirdPartyRepaymentSchema = z.object({
+  id: z.string().min(1),
+  amountCents: moneySchema,
+  paymentDate: z.string(),
+  destinationAccount: z.string().optional(),
+  notes: z.string().optional(),
+}) satisfies z.ZodType<ThirdPartyRepayment>
+
+export const thirdPartyReceivableSchema = z.object({
+  id: z.string().min(1),
+  thirdPartyName: z.string().min(1),
+  purchaseId: z.string().min(1),
+  totalOwedCents: moneySchema,
+  amountCollectedCents: moneySchema,
+  status: z.enum(["PENDIENTE", "COBRADO_PARCIAL", "COBRADO_TOTAL"] as const satisfies readonly ThirdPartyReceivableStatus[]),
+  repayments: z.array(thirdPartyRepaymentSchema),
+}) satisfies z.ZodType<ThirdPartyReceivable>
+
+export const creditCardPurchaseSchema = z.object({
+  id: z.string().min(1),
+  accountId: z.string().min(1),
+  plasticId: z.string().min(1),
+  description: z.string().min(1),
+  purchaseDate: z.string(),
+  totalAmountCents: moneySchema,
+  totalInstallments: z.number().int().min(1),
+  firstInstallmentPeriod: z.string(),
+  payerType: z.enum(["PROPIO", "TERCERO"] as const satisfies readonly PurchasePayerType[]),
+  thirdPartyReceivable: thirdPartyReceivableSchema.optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+}) satisfies z.ZodType<CreditCardPurchase>
+
+export const creditCardsStoreSchema = z.object({
+  accounts: z.record(z.string(), creditCardAccountSchema),
+  purchases: z.record(z.string(), creditCardPurchaseSchema),
+  schemaVersion: z.string().optional(),
+}) satisfies z.ZodType<CreditCardsStore>
+

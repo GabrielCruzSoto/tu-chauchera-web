@@ -11,6 +11,7 @@ export const CURRENT_SCHEMA_VERSIONS: Record<DataDomain, SchemaVersion> = {
   categories: 1,
   incomes: 1,
   settings: 1,
+  credit_cards: 1,
 }
 
 /**
@@ -22,6 +23,7 @@ export const DOMAIN_MIGRATIONS: Record<DataDomain, DomainMigrationStep[]> = {
   categories: [],
   incomes: [],
   settings: [],
+  credit_cards: [],
 }
 
 /**

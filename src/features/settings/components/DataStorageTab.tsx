@@ -2,18 +2,21 @@ import React, { useState, useEffect, useCallback } from "react"
 import { useAuthStore } from "@/store/authSlice"
 import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
 import { useIncomeStore } from "@/features/income/store/incomeSlice"
+import { useCreditCardStore } from "@/features/credit-cards/store/creditCardSlice"
 import { useSettingsStore } from "../store/settingsSlice"
 import { DriveClient } from "@/shared/services/driveClient"
 import { StorageStatsCard } from "./StorageStatsCard"
 import { WipeConfirmModal } from "./WipeConfirmModal"
 import { buildBackupPayload, triggerBackupDownload } from "@/shared/services/backupService"
+import { resetAllAppData } from "@/store/appReset"
 import type { DriveStorageMetrics } from "@/shared/types/settings"
 
 export const DataStorageTab: React.FC = () => {
-  const { accessToken, logout } = useAuthStore()
+  const { accessToken } = useAuthStore()
   const { obligations, categories, installments } = useObligationsStore()
   const { incomes } = useIncomeStore()
-  const { preferences, resetPreferences } = useSettingsStore()
+  const { accounts, purchases } = useCreditCardStore()
+  const { preferences } = useSettingsStore()
 
   const [metrics, setMetrics] = useState<DriveStorageMetrics | null>(null)
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(false)
@@ -36,7 +39,7 @@ export const DataStorageTab: React.FC = () => {
         totalSizeBytes: stats.totalBytes,
         files: stats.files,
         lastCheckedAt: new Date().toISOString(),
-        schemaVersion: meta?.schemaVersion || "v1.1.0",
+        schemaVersion: meta?.schemaVersion ?? "v1.1.0",
       })
     } catch (err) {
       console.error("Failed to load storage metrics:", err)
@@ -64,9 +67,10 @@ export const DataStorageTab: React.FC = () => {
           categories,
           installments,
           incomes,
+          creditCards: { accounts, purchases },
           preferences,
         },
-        metrics?.schemaVersion || "v1.1.0"
+        metrics?.schemaVersion ?? "v1.1.0"
       )
 
       triggerBackupDownload(backupPayload)
@@ -82,12 +86,12 @@ export const DataStorageTab: React.FC = () => {
     setIsWiping(true)
     try {
       await driveClient.wipeAllAppData()
-      resetPreferences()
+      resetAllAppData()
       setIsWipeModalOpen(false)
-      // Logout and lock vault
-      logout()
     } catch (err) {
       console.error("Wipe failed:", err)
+      resetAllAppData()
+      setIsWipeModalOpen(false)
       throw err
     } finally {
       setIsWiping(false)

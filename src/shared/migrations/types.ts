@@ -20,7 +20,7 @@ export type MigrationFunction<TIn = unknown, TOut = unknown> = (payload: TIn) =>
 export interface DomainMigrationStep {
   fromVersion: SchemaVersion
   toVersion: SchemaVersion
-  migrate: MigrationFunction<any, any>
+  migrate: MigrationFunction<unknown, unknown>
 }
 
 export interface MigrationResult<T> {

@@ -13,10 +13,12 @@ describe("Envelope & Migration Engine with Runtime Zod Validation", () => {
     DOMAIN_MIGRATIONS.categories = []
     DOMAIN_MIGRATIONS.incomes = []
     DOMAIN_MIGRATIONS.settings = []
+    DOMAIN_MIGRATIONS.credit_cards = []
     CURRENT_SCHEMA_VERSIONS.obligations = 1
     CURRENT_SCHEMA_VERSIONS.categories = 1
     CURRENT_SCHEMA_VERSIONS.incomes = 1
     CURRENT_SCHEMA_VERSIONS.settings = 1
+    CURRENT_SCHEMA_VERSIONS.credit_cards = 1
   })
 
   describe("Envelope Wrapping & Unwrapping", () => {
@@ -73,6 +75,37 @@ describe("Envelope & Migration Engine with Runtime Zod Validation", () => {
       expect(() => validateDomainPayload("categories", validStore)).not.toThrow()
     })
 
+    it("validates a valid credit_cards store schema", () => {
+      const validCcStore = {
+        accounts: {
+          "acc-1": {
+            id: "acc-1",
+            institution: "Banco Santander",
+            accountName: "Visa Signature",
+            creditLimitCents: 2000000,
+            closingDay: 20,
+            dueDay: 5,
+            plastics: [
+              {
+                id: "plas-1",
+                accountId: "acc-1",
+                holderName: "Gabriel Cruz",
+                lastFourDigits: "1234",
+                type: "TITULAR",
+                createdAt: "2026-09-01",
+                updatedAt: "2026-09-01",
+              },
+            ],
+            createdAt: "2026-09-01",
+            updatedAt: "2026-09-01",
+          },
+        },
+        purchases: {},
+      }
+
+      expect(() => validateDomainPayload("credit_cards", validCcStore)).not.toThrow()
+    })
+
     it("throws ZodError on corrupted or invalid payload shape", () => {
       const corruptedStore = {
         categories: {
@@ -110,7 +143,7 @@ describe("Envelope & Migration Engine with Runtime Zod Validation", () => {
         toVersion: 2,
         migrate: (data: any) => {
           const updatedCategories: Record<string, any> = {}
-          for (const [id, cat] of Object.entries<any>(data.categories || {})) {
+          for (const [id, cat] of Object.entries<any>(data.categories ?? {})) {
             updatedCategories[id] = {
               ...cat,
               color: cat.color ?? "gray-500",
@@ -126,7 +159,7 @@ describe("Envelope & Migration Engine with Runtime Zod Validation", () => {
         toVersion: 3,
         migrate: (data: any) => {
           const updatedCategories: Record<string, any> = {}
-          for (const [id, cat] of Object.entries<any>(data.categories || {})) {
+          for (const [id, cat] of Object.entries<any>(data.categories ?? {})) {
             updatedCategories[id] = {
               ...cat,
               createdAt: cat.createdAt ?? "2026-08-31",

@@ -146,7 +146,7 @@ export interface CreateIncomeDTO {
 
 // ─── Sync Metadata ───────────────────────────────────────────────────────────
 
-export type DataDomain = 'obligations' | 'incomes' | 'categories' | 'settings'
+export type DataDomain = 'obligations' | 'incomes' | 'categories' | 'settings' | 'credit_cards'
 
 export type SyncStatus = 'SYNCED' | 'SYNCING' | 'PENDING' | 'ERROR' | 'OFFLINE'
 
@@ -194,4 +194,79 @@ export interface SettingsStore {
   passwordSentinel: string     // Base64-encoded ArrayBuffer from createPasswordSentinel()
   schemaVersion?: string | undefined
   createdAt: ISODate
+}
+
+// ─── Credit Cards & Third-Party Receivables ──────────────────────────────────
+
+export type PlasticType = 'TITULAR' | 'ADICIONAL'
+
+export interface CreditCardPlastic {
+  id: UUID
+  accountId: UUID
+  holderName: string            // e.g., "Gabriel Cruz", "Laura Soto"
+  lastFourDigits: string        // e.g., "1234"
+  type: PlasticType
+  createdAt: ISODate
+  updatedAt: ISODate
+}
+
+export interface CreditCardAccount {
+  id: UUID
+  institution: string           // e.g., "Banco Santander", "Banco de Chile"
+  accountName: string           // e.g., "Visa Signature", "Mastercard Black"
+  creditLimitCents: Money       // Total assigned limit in CLP cents
+  hasInternationalLimit?: boolean | undefined
+  internationalCreditLimitUSD?: number | undefined // Optional USD credit limit
+  monthlyMaintenanceFeeCents?: Money | undefined   // Optional fixed monthly maintenance fee in CLP (converted or native)
+  monthlyMaintenanceFeeCurrency?: 'CLP' | 'UF' | undefined
+  monthlyMaintenanceFeeAmount?: number | undefined // Raw entered value (e.g. 0.15 UF or 4500 CLP)
+  closingDay: number            // Cycle closing day of month (1-31)
+  dueDay: number                // Payment due day of month (1-31)
+  plastics: CreditCardPlastic[] // Primary + additional cards
+  paidPeriods?: Period[] | undefined // List of billing periods (YYYY-MM) paid by user
+  createdAt: ISODate
+  updatedAt: ISODate
+}
+
+export type PurchasePayerType = 'PROPIO' | 'TERCERO'
+export type ThirdPartyReceivableStatus = 'PENDIENTE' | 'COBRADO_PARCIAL' | 'COBRADO_TOTAL'
+
+export interface ThirdPartyRepayment {
+  id: UUID
+  amountCents: Money
+  paymentDate: ISODate
+  destinationAccount?: string | undefined  // e.g., "Banco Estado Cuenta Corriente"
+  notes?: string | undefined
+}
+
+export interface ThirdPartyReceivable {
+  id: UUID
+  thirdPartyName: string        // Responsible contact person
+  purchaseId: UUID
+  totalOwedCents: Money
+  amountCollectedCents: Money   // Sum of repayments
+  status: ThirdPartyReceivableStatus
+  repayments: ThirdPartyRepayment[]
+}
+
+export interface CreditCardPurchase {
+  id: UUID
+  accountId: UUID
+  plasticId: UUID               // Plastic used for the purchase
+  description: string
+  purchaseDate: ISODate
+  totalAmountCents: Money
+  totalInstallments: number     // 1 = single payment / no installments
+  firstInstallmentPeriod: Period // YYYY-MM calculated from purchaseDate vs closingDay
+  payerType: PurchasePayerType
+  thirdPartyReceivable?: ThirdPartyReceivable | undefined
+  createdAt: ISODate
+  updatedAt: ISODate
+}
+
+/** The decrypted JSON structure stored in credit_cards.enc */
+export interface CreditCardsStore {
+  accounts: Record<UUID, CreditCardAccount>
+  purchases: Record<UUID, CreditCardPurchase>
+  schemaVersion?: string | undefined
 }

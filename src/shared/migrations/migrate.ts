@@ -9,6 +9,7 @@ import {
   categoriesStoreSchema,
   incomesStoreSchema,
   settingsStoreSchema,
+  creditCardsStoreSchema,
 } from "./schemas"
 
 /**
@@ -81,6 +82,8 @@ export function validateDomainPayload<T>(domain: DataDomain, payload: unknown): 
       return incomesStoreSchema.parse(payload) as T
     case "settings":
       return settingsStoreSchema.parse(payload) as T
+    case "credit_cards":
+      return creditCardsStoreSchema.parse(payload) as T
     default:
       return payload as T
   }
@@ -97,7 +100,7 @@ export function migrateDomainPayload<T>(
   const { schemaVersion: initialVersion, payload } = unwrapDomainEnvelope(domain, rawContent)
 
   let currentVersion = initialVersion
-  let currentPayload: any = typeof payload === "object" && payload !== null ? { ...(payload as object) } : payload
+  let currentPayload: unknown = typeof payload === "object" && payload !== null ? { ...(payload as object) } : payload
 
   if (currentVersion === targetVersion) {
     const validated = validateDomainPayload<T>(domain, currentPayload)
@@ -115,7 +118,7 @@ export function migrateDomainPayload<T>(
     )
   }
 
-  const migrations = DOMAIN_MIGRATIONS[domain] || []
+  const migrations = DOMAIN_MIGRATIONS[domain] ?? []
 
   // Sequentially apply matching migration steps
   let stepApplied = true

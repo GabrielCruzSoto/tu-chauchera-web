@@ -35,6 +35,16 @@ export interface AuthState {
   logout: () => void
 }
 
+type LogoutListener = () => void
+const logoutListeners: Set<LogoutListener> = new Set()
+
+export function registerLogoutListener(listener: LogoutListener): () => void {
+  logoutListeners.add(listener)
+  return () => {
+    logoutListeners.delete(listener)
+  }
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
@@ -145,6 +155,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: () => {
+    logoutListeners.forEach((listener) => {
+      try {
+        listener()
+      } catch (err) {
+        console.error("Error executing logout listener:", err)
+      }
+    })
     set({
       user: null,
       accessToken: null,

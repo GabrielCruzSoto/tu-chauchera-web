@@ -35,6 +35,7 @@ export interface ObligationsState {
   cloneObligation: (id: UUID, overrides?: Partial<CreateObligationDTO>) => Obligation | null
   updateObligation: (id: UUID, updates: Partial<Obligation>) => void
   softDeleteObligation: (id: UUID) => void
+  resetObligations: () => void
 }
 
 export const useObligationsStore = create<ObligationsState>((set, get) => ({
@@ -42,6 +43,15 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
   installments: {},
   categories: { ...DEFAULT_CATEGORIES },
   isLoaded: false,
+
+  resetObligations: () => {
+    set({
+      obligations: {},
+      installments: {},
+      categories: { ...DEFAULT_CATEGORIES },
+      isLoaded: false,
+    })
+  },
 
   setObligationsData: (data) => {
     set({

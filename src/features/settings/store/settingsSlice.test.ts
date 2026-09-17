@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { useSettingsStore, DEFAULT_USER_PREFERENCES } from "./settingsSlice"
+import { useSettingsStore } from "./settingsSlice"
 
 describe("settingsSlice", () => {
   beforeEach(() => {

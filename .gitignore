@@ -35,3 +35,4 @@ Thumbs.db
 coverage/
 .vercel
 .env*
+.playwright-mcp/
