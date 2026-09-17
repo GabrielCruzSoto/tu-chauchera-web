@@ -146,7 +146,7 @@ export interface CreateIncomeDTO {
 
 // ─── Sync Metadata ───────────────────────────────────────────────────────────
 
-export type DataDomain = 'obligations' | 'incomes' | 'categories' | 'settings'
+export type DataDomain = 'obligations' | 'incomes' | 'categories' | 'settings' | 'credit_cards'
 
 export type SyncStatus = 'SYNCED' | 'SYNCING' | 'PENDING' | 'ERROR' | 'OFFLINE'
 
@@ -215,9 +215,15 @@ export interface CreditCardAccount {
   institution: string           // e.g., "Banco Santander", "Banco de Chile"
   accountName: string           // e.g., "Visa Signature", "Mastercard Black"
   creditLimitCents: Money       // Total assigned limit in CLP cents
+  hasInternationalLimit?: boolean | undefined
+  internationalCreditLimitUSD?: number | undefined // Optional USD credit limit
+  monthlyMaintenanceFeeCents?: Money | undefined   // Optional fixed monthly maintenance fee in CLP (converted or native)
+  monthlyMaintenanceFeeCurrency?: 'CLP' | 'UF' | undefined
+  monthlyMaintenanceFeeAmount?: number | undefined // Raw entered value (e.g. 0.15 UF or 4500 CLP)
   closingDay: number            // Cycle closing day of month (1-31)
   dueDay: number                // Payment due day of month (1-31)
   plastics: CreditCardPlastic[] // Primary + additional cards
+  paidPeriods?: Period[] | undefined // List of billing periods (YYYY-MM) paid by user
   createdAt: ISODate
   updatedAt: ISODate
 }
