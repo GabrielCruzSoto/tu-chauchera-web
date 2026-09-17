@@ -15,10 +15,10 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
   const addPurchase = useCreditCardStore((s) => s.addPurchase)
 
   const accountList = Object.values(accounts)
-  const [selectedAccountId, setSelectedAccountId] = useState<UUID>(accountList[0]?.id || '')
+  const [selectedAccountId, setSelectedAccountId] = useState<UUID>(accountList[0]?.id ?? '')
   const [selectedPlasticId, setSelectedPlasticId] = useState<UUID>('')
   const [description, setDescription] = useState('')
-  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0])
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0] ?? '')
   const [totalAmount, setTotalAmount] = useState('')
   const [totalInstallments, setTotalInstallments] = useState(1)
   const [payerType, setPayerType] = useState<'PROPIO' | 'TERCERO'>('PROPIO')
@@ -27,10 +27,10 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
   if (!isOpen) return null
 
   const currentAccount = accounts[selectedAccountId]
-  const availablePlastics = currentAccount?.plastics || []
+  const availablePlastics = currentAccount?.plastics ?? []
 
   // Ensure selected plastic matches current account
-  const activePlasticId = selectedPlasticId || availablePlastics[0]?.id || ''
+  const activePlasticId = selectedPlasticId || (availablePlastics[0]?.id ?? '')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

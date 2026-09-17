@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/authSlice"
 import { useSyncStore } from "@/features/sync/store/syncSlice"
 import { SyncStatusIndicator } from "@/features/sync/components/SyncStatusIndicator"
 import { PageLoader } from "@/shared/components/ui/PageLoader"
+import "@/store/appReset"
 
 const ObligationsList = lazy(() =>
   import("@/features/obligations/components/ObligationsList").then((m) => ({ default: m.ObligationsList }))

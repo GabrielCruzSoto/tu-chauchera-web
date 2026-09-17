@@ -2,17 +2,23 @@ import React, { useState } from 'react'
 import { useCreditCardStore } from '../store/creditCardSlice'
 import { CreditCardAccountModal } from './CreditCardAccountModal'
 import { CreditCardPurchaseModal } from './CreditCardPurchaseModal'
+import { CreditCardPurchasesModal } from './CreditCardPurchasesModal'
 import { StatementImportModal } from './StatementImportModal'
 import { ThirdPartyReceivablesView } from './ThirdPartyReceivablesView'
-import { formatCLP, toMoney } from '@/shared/types/money'
+import { formatCLP } from '@/shared/types/money'
+import type { CreditCardAccount } from '@/shared/types/domain'
 
 export const CreditCardsDashboard: React.FC = () => {
   const accounts = useCreditCardStore((s) => s.accounts)
   const purchases = useCreditCardStore((s) => s.purchases)
+  const deleteAccount = useCreditCardStore((s) => s.deleteAccount)
 
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
+  const [editingAccount, setEditingAccount] = useState<CreditCardAccount | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [selectedPurchasesAccount, setSelectedPurchasesAccount] = useState<CreditCardAccount | null>(null)
+  const [isPurchasesModalOpen, setIsPurchasesModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'CARDS' | 'THIRD_PARTY'>('CARDS')
 
   const accountList = Object.values(accounts)
@@ -113,6 +119,10 @@ export const CreditCardsDashboard: React.FC = () => {
                         <span className="text-white font-medium">{formatCLP(acc.creditLimitCents)}</span>
                       </div>
                       <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Deuda Registrada:</span>
+                        <span className="text-amber-300 font-medium">{formatCLP(totalDebt)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Vence:</span>
                         <span className="text-white font-medium">Día {acc.dueDay} de cada mes</span>
                       </div>
@@ -145,6 +155,42 @@ export const CreditCardsDashboard: React.FC = () => {
                         ))}
                       </div>
                     </div>
+
+                    {/* Card Actions */}
+                    <div className="pt-2 border-t border-slate-800/80 flex justify-end items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPurchasesAccount(acc)
+                          setIsPurchasesModalOpen(true)
+                        }}
+                        className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-300 rounded-lg text-xs font-semibold border border-indigo-500/30 transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        🛍️ Compras
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingAccount(acc)
+                          setIsAccountModalOpen(true)
+                        }}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-semibold border border-slate-700 transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        ✏️ Modificar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`¿Estás seguro de eliminar la tarjeta "${acc.accountName}"? Se eliminarán también sus compras asociadas.`)) {
+                            deleteAccount(acc.id)
+                          }
+                        }}
+                        className="px-2.5 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 hover:text-rose-300 rounded-lg text-xs font-semibold border border-rose-800/50 transition cursor-pointer"
+                        title="Eliminar tarjeta"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
                 )
               })}
@@ -154,13 +200,28 @@ export const CreditCardsDashboard: React.FC = () => {
       )}
 
       {/* Modals */}
+      {isPurchasesModalOpen && selectedPurchasesAccount && (
+        <CreditCardPurchasesModal
+          isOpen={isPurchasesModalOpen}
+          account={selectedPurchasesAccount}
+          purchases={purchaseList}
+          onClose={() => {
+            setIsPurchasesModalOpen(false)
+            setSelectedPurchasesAccount(null)
+          }}
+        />
+      )}
       <StatementImportModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
       />
       <CreditCardAccountModal
         isOpen={isAccountModalOpen}
-        onClose={() => setIsAccountModalOpen(false)}
+        editingAccount={editingAccount}
+        onClose={() => {
+          setIsAccountModalOpen(false)
+          setEditingAccount(null)
+        }}
       />
       <CreditCardPurchaseModal
         isOpen={isPurchaseModalOpen}

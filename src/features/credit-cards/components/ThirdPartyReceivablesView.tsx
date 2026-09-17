@@ -15,7 +15,7 @@ export const ThirdPartyReceivablesView: React.FC = () => {
 
   const [selectedPurchaseId, setSelectedPurchaseId] = useState<UUID | null>(null)
   const [repaymentAmount, setRepaymentAmount] = useState('')
-  const [repaymentDate, setRepaymentDate] = useState(new Date().toISOString().split('T')[0])
+  const [repaymentDate, setRepaymentDate] = useState(new Date().toISOString().split('T')[0] ?? '')
   const [destinationAccount, setDestinationAccount] = useState('Cuenta Corriente')
 
   const handleRepaymentSubmit = (e: React.FormEvent) => {

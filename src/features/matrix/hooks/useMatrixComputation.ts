@@ -12,8 +12,14 @@ import type {
   P2PRole,
   UUID,
   Period,
+  CreditCardAccount,
+  CreditCardPurchase,
 } from "@/shared/types/domain"
 import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
+import { useCreditCardStore } from "@/features/credit-cards/store/creditCardSlice"
+import { calculateInstallmentPeriods } from "@/features/credit-cards/utils/cycleCalculators"
+
+export const CREDIT_CARDS_CATEGORY_ID: UUID = "system-credit-cards"
 
 export interface MatrixSubcategory {
   id: string
@@ -21,6 +27,7 @@ export interface MatrixSubcategory {
   cells: Record<Period, number> // period -> amountCents
   total: number // total in range
   obligationId?: string | undefined
+  purchaseId?: string | undefined
   type?: ObligationType | undefined
   p2pRole?: P2PRole | undefined
   thirdPartyName?: string | undefined
@@ -38,7 +45,8 @@ export interface P2PPersonGroup {
   categoryName: string
   cells: Record<Period, number>
   total: number
-  obligationId: string
+  obligationId?: string | undefined
+  purchaseId?: string | undefined
 }
 
 export interface MatrixData {
@@ -76,15 +84,33 @@ export function generatePeriodsRange(baseDate: Date, monthsCount = 6): Period[] 
 
 /**
  * Pure computation of the Category × Period matrix from store data,
- * including subcategory and P2P third-party level breakdown.
+ * including subcategory and P2P third-party level breakdown,
+ * incorporating credit card purchases and installments.
  */
 export function computeFinancialMatrix(
   categoriesMap: Record<UUID, Category>,
   obligationsMap: Record<UUID, Obligation>,
   installmentsMap: Record<UUID, Installment>,
-  periods: Period[]
+  periods: Period[],
+  creditCardAccountsMap: Record<UUID, CreditCardAccount> = {},
+  creditCardPurchasesMap: Record<UUID, CreditCardPurchase> = {}
 ): MatrixData {
-  const categories = Object.values(categoriesMap)
+  const categoriesList = [...Object.values(categoriesMap)]
+
+  // If there are credit card accounts or purchases, append the virtual system category "Tarjetas de Crédito"
+  const hasCreditCards =
+    Object.keys(creditCardAccountsMap).length > 0 || Object.keys(creditCardPurchasesMap).length > 0
+
+  if (hasCreditCards && !categoriesMap[CREDIT_CARDS_CATEGORY_ID]) {
+    categoriesList.push({
+      id: CREDIT_CARDS_CATEGORY_ID,
+      name: "Tarjetas de Crédito",
+      color: "indigo",
+      createdAt: "",
+      updatedAt: "",
+    })
+  }
+
   const cells: Record<UUID, Record<Period, number>> = {}
   const columnTotals: Record<Period, number> = {}
   const rowTotals: Record<UUID, number> = {}
@@ -104,7 +130,7 @@ export function computeFinancialMatrix(
     periodTypeTotals[period] = { expense: 0, debt: 0, p2p: 0 }
   }
 
-  for (const cat of categories) {
+  for (const cat of categoriesList) {
     cells[cat.id] = {}
     rowTotals[cat.id] = 0
     subcatMap[cat.id] = {}
@@ -124,9 +150,7 @@ export function computeFinancialMatrix(
     const subcatName = obl.subcategory?.trim() || "Sin subcategoría"
     const subcatKey = subcatName.toLowerCase()
 
-    if (!subcatMap[catId]) {
-      subcatMap[catId] = {}
-    }
+    subcatMap[catId] ??= {}
     if (!subcatMap[catId]![subcatKey]) {
       const cellsRecord: Record<Period, number> = {}
       for (const p of periods) cellsRecord[p] = 0
@@ -207,9 +231,7 @@ export function computeFinancialMatrix(
       const subcatName = obl.subcategory?.trim() || "Sin subcategoría"
       const subcatKey = subcatName.toLowerCase()
 
-      if (!subcatMap[catId]) {
-        subcatMap[catId] = {}
-      }
+      subcatMap[catId] ??= {}
       if (!subcatMap[catId]![subcatKey]) {
         const cellsRecord: Record<Period, number> = {}
         for (const p of periods) cellsRecord[p] = 0
@@ -244,8 +266,113 @@ export function computeFinancialMatrix(
     }
   }
 
+  // Iterate over Credit Card Purchases and distribute their installments into the Matrix
+  if (hasCreditCards) {
+    const cardCatId = CREDIT_CARDS_CATEGORY_ID
+
+    // Pre-create subcategories for all registered credit card accounts so they appear in Tarjetas de Crédito
+    for (const account of Object.values(creditCardAccountsMap)) {
+      const cardSubcatKey = account.id
+      const cardName = `${account.institution} - ${account.accountName}`
+      subcatMap[cardCatId] ??= {}
+      if (!subcatMap[cardCatId]![cardSubcatKey]) {
+        const cellsRecord: Record<Period, number> = {}
+        for (const p of periods) cellsRecord[p] = 0
+        subcatMap[cardCatId]![cardSubcatKey] = {
+          id: `${cardCatId}-${account.id}`,
+          name: cardName,
+          cells: cellsRecord,
+          total: 0,
+          type: "DEBT",
+          cardIssuer: account.institution,
+          productDescription: account.accountName,
+        }
+      }
+    }
+
+    for (const purchase of Object.values(creditCardPurchasesMap)) {
+      const cardAccount = creditCardAccountsMap[purchase.accountId]
+      const cardName = cardAccount ? `${cardAccount.institution} - ${cardAccount.accountName}` : "Tarjeta de Crédito"
+      const cardSubcatKey = purchase.accountId || "unknown-card"
+      const totalInstallments = purchase.totalInstallments || 1
+      const installmentAmount = Math.round(purchase.totalAmountCents / totalInstallments)
+      const purchasePeriods = calculateInstallmentPeriods(purchase.firstInstallmentPeriod, totalInstallments)
+      const isThirdParty = purchase.payerType === "TERCERO"
+      const thirdPartyName = purchase.thirdPartyReceivable?.thirdPartyName ?? "Tercero"
+
+      subcatMap[cardCatId] ??= {}
+
+      if (!subcatMap[cardCatId]![cardSubcatKey]) {
+        const cellsRecord: Record<Period, number> = {}
+        for (const p of periods) cellsRecord[p] = 0
+        subcatMap[cardCatId]![cardSubcatKey] = {
+          id: `${cardCatId}-${cardSubcatKey}`,
+          name: cardName,
+          cells: cellsRecord,
+          total: 0,
+          type: "DEBT",
+          cardIssuer: cardAccount?.institution,
+          productDescription: cardAccount?.accountName,
+        }
+      }
+
+      const existingSubcat = subcatMap[cardCatId]![cardSubcatKey]!
+
+      purchasePeriods.forEach((targetPeriod) => {
+        if (periods.includes(targetPeriod)) {
+          if (!cells[cardCatId]) {
+            cells[cardCatId] = {}
+            for (const p of periods) cells[cardCatId]![p] = 0
+            rowTotals[cardCatId] = 0
+          }
+
+          cells[cardCatId]![targetPeriod] = (cells[cardCatId]![targetPeriod] ?? 0) + installmentAmount
+          columnTotals[targetPeriod] = (columnTotals[targetPeriod] ?? 0) + installmentAmount
+          rowTotals[cardCatId] = (rowTotals[cardCatId] ?? 0) + installmentAmount
+          grandTotal += installmentAmount
+
+          // Type-based sums
+          if (isThirdParty) {
+            periodTypeTotals[targetPeriod]!.p2p += installmentAmount
+            totalThirdPartyReceivables += installmentAmount
+          } else {
+            periodTypeTotals[targetPeriod]!.debt += installmentAmount
+            totalPersonalExpenses += installmentAmount
+          }
+
+          // Subcategory accumulation (grouped per card account)
+          existingSubcat.cells[targetPeriod] = (existingSubcat.cells[targetPeriod] ?? 0) + installmentAmount
+          existingSubcat.total += installmentAmount
+
+          // P2P group accumulation if third party
+          if (isThirdParty) {
+            const personKey = `cc-purchase-${purchase.id}`
+            if (!p2pMap[personKey]) {
+              const cellsRecord: Record<Period, number> = {}
+              for (const p of periods) cellsRecord[p] = 0
+              p2pMap[personKey] = {
+                id: personKey,
+                personName: thirdPartyName,
+                role: "LENT_MY_CARD",
+                cardIssuer: cardAccount?.institution,
+                productDescription: purchase.description,
+                categoryName: "Tarjetas de Crédito",
+                cells: cellsRecord,
+                total: 0,
+                purchaseId: purchase.id,
+              }
+            }
+            p2pMap[personKey]!.cells[targetPeriod] =
+              (p2pMap[personKey]!.cells[targetPeriod] ?? 0) + installmentAmount
+            p2pMap[personKey]!.total += installmentAmount
+          }
+        }
+      })
+    }
+  }
+
   // Populate sorted subcategories list per category
-  for (const cat of categories) {
+  for (const cat of categoriesList) {
     const subcats = Object.values(subcatMap[cat.id] ?? {})
     subcats.sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }))
     subcategoriesByCategory[cat.id] = subcats
@@ -256,7 +383,7 @@ export function computeFinancialMatrix(
   )
 
   return {
-    categories,
+    categories: categoriesList,
     periods,
     cells,
     columnTotals,
@@ -273,6 +400,7 @@ export function computeFinancialMatrix(
 
 export function useMatrixComputation(startDate: Date = new Date(), monthsCount = 6): MatrixData {
   const { categories, obligations, installments } = useObligationsStore()
+  const { accounts: creditCardAccounts, purchases: creditCardPurchases } = useCreditCardStore()
 
   const periods = useMemo(
     () => generatePeriodsRange(startDate, monthsCount),
@@ -280,7 +408,15 @@ export function useMatrixComputation(startDate: Date = new Date(), monthsCount =
   )
 
   return useMemo(
-    () => computeFinancialMatrix(categories, obligations, installments, periods),
-    [categories, obligations, installments, periods]
+    () =>
+      computeFinancialMatrix(
+        categories,
+        obligations,
+        installments,
+        periods,
+        creditCardAccounts,
+        creditCardPurchases
+      ),
+    [categories, obligations, installments, periods, creditCardAccounts, creditCardPurchases]
   )
 }
