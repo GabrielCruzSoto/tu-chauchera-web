@@ -1,4 +1,4 @@
-import type { Category, Income, Obligation, Installment, UUID } from "@/shared/types/domain"
+import type { Category, Income, Obligation, Installment, UUID, CreditCardsStore } from "@/shared/types/domain"
 import type { UserPreferences } from "@/shared/types/settings"
 
 export interface AppBackupData {
@@ -6,6 +6,7 @@ export interface AppBackupData {
   installments?: Record<UUID, Installment>
   categories: Record<UUID, Category>
   incomes: Record<UUID, Income>
+  creditCards?: CreditCardsStore
   preferences?: UserPreferences
 }
 
@@ -21,7 +22,7 @@ export interface AppBackupPayload {
  */
 export function triggerBackupDownload(payload: AppBackupPayload, filename?: string): void {
   const dateStr = new Date().toISOString().split("T")[0]
-  const targetFilename = filename || `tu-chauchera-backup-${dateStr}.json`
+  const targetFilename = filename ?? `tu-chauchera-backup-${dateStr}.json`
 
   const jsonString = JSON.stringify(payload, null, 2)
   const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" })

@@ -67,6 +67,7 @@ export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
           <ul className="list-disc list-inside space-y-1 text-slate-300">
             <li>Todas tus obligaciones, deudas y amortizaciones registradas.</li>
             <li>Todos tus ingresos y registros de flujo de caja.</li>
+            <li>Todas las tarjetas de crédito, plásticos y compras asociadas.</li>
             <li>Todas las categorías personalizadas y preferencias de configuración.</li>
             <li>Todos los archivos cifrados en tu <span className="font-mono text-white">appDataFolder</span> de Google Drive.</li>
           </ul>

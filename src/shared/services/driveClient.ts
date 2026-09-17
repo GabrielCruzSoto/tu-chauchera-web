@@ -48,7 +48,7 @@ export class DriveClient {
     }
 
     const query = encodeURIComponent(
-      `name = "${fileName}" and "appDataFolder" in parents and trashed = false`
+      `name = '${fileName}' and trashed = false`
     )
     const url = `${DRIVE_API_URL}/files?spaces=appDataFolder&q=${query}&fields=files(id,name)`
 
@@ -172,7 +172,7 @@ export class DriveClient {
    * Retrieves all files in appDataFolder with their sizes and modification timestamps.
    */
   async getStorageStats(): Promise<{ totalBytes: number; files: DriveStorageFileInfo[] }> {
-    const query = encodeURIComponent(`"appDataFolder" in parents and trashed = false`)
+    const query = encodeURIComponent("trashed = false")
     const url = `${DRIVE_API_URL}/files?spaces=appDataFolder&q=${query}&fields=files(id,name,size,modifiedTime)`
 
     const res = await fetch(url, {
@@ -188,11 +188,11 @@ export class DriveClient {
       files?: Array<{ id: string; name: string; size?: string; modifiedTime?: string }>
     }
 
-    const files: DriveStorageFileInfo[] = (data.files || []).map((f) => ({
+    const files: DriveStorageFileInfo[] = (data.files ?? []).map((f) => ({
       id: f.id,
       name: f.name,
       sizeBytes: f.size ? parseInt(f.size, 10) : 0,
-      modifiedTime: f.modifiedTime || new Date().toISOString(),
+      modifiedTime: f.modifiedTime ?? new Date().toISOString(),
     }))
 
     const totalBytes = files.reduce((acc, curr) => acc + curr.sizeBytes, 0)

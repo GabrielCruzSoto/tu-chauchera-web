@@ -87,4 +87,12 @@ export class SyncService {
   getPendingCount(): number {
     return this.pendingDomains.size
   }
+
+  cancel(): void {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer)
+      this.debounceTimer = null
+    }
+    this.pendingDomains.clear()
+  }
 }

@@ -17,11 +17,19 @@ export interface IncomeState {
   addRecurringIncome: (dto: CreateIncomeDTO, monthsCount: number) => Income[]
   updateIncome: (id: UUID, updates: Partial<Income>) => void
   removeIncome: (id: UUID) => void
+  resetIncomes: () => void
 }
 
 export const useIncomeStore = create<IncomeState>((set) => ({
   incomes: {},
   isLoaded: false,
+
+  resetIncomes: () => {
+    set({
+      incomes: {},
+      isLoaded: false,
+    })
+  },
 
   setIncomesData: (data) => {
     set({
