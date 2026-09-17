@@ -8,24 +8,27 @@ import { toMoney } from '../../../shared/types/money'
 
 describe('cycleCalculators', () => {
   describe('calculateBillingPeriod', () => {
-    it('assigns to current month cycle if purchase is on or before closingDay', () => {
-      const period = calculateBillingPeriod('2026-05-15', 20)
-      expect(period).toBe('2026-05')
+    it('assigns to next month when card closes on 19th and pays on 5th next month (Chilean standard)', () => {
+      // Purchases made up to closing day (19/05) are billed in May and paid in June (2026-06)
+      const period1 = calculateBillingPeriod('2026-05-15', 19, 5)
+      expect(period1).toBe('2026-06')
+
+      // Purchases made after closing day (21/05) are billed in June and paid in July (2026-07)
+      const period2 = calculateBillingPeriod('2026-05-21', 19, 5)
+      expect(period2).toBe('2026-07')
     })
 
-    it('assigns to current month cycle if purchase is exactly on closingDay', () => {
-      const period = calculateBillingPeriod('2026-05-20', 20)
-      expect(period).toBe('2026-05')
+    it('assigns to same month when card closing day <= due day (same month payment cycle)', () => {
+      const period1 = calculateBillingPeriod('2026-05-10', 15, 28)
+      expect(period1).toBe('2026-05')
+
+      const period2 = calculateBillingPeriod('2026-05-16', 15, 28)
+      expect(period2).toBe('2026-06')
     })
 
-    it('assigns to next month cycle if purchase is after closingDay', () => {
-      const period = calculateBillingPeriod('2026-05-21', 20)
-      expect(period).toBe('2026-06')
-    })
-
-    it('handles year boundary when purchase is after closingDay in December', () => {
-      const period = calculateBillingPeriod('2026-12-25', 20)
-      expect(period).toBe('2027-01')
+    it('handles year boundary across December and January', () => {
+      const period = calculateBillingPeriod('2026-12-25', 19, 5)
+      expect(period).toBe('2027-02')
     })
   })
 

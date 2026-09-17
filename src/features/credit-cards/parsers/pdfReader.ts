@@ -26,7 +26,7 @@ export async function extractTextFromPdf(pdfBuffer: ArrayBuffer): Promise<string
     for (const item of textContent.items) {
       if ('str' in item) {
         const textItem = item as { str: string; transform: number[] }
-        const currentY = textItem.transform[5]
+        const currentY = textItem.transform[5] ?? 0
 
         if (lastY !== null && Math.abs(currentY - lastY) > 5) {
           if (currentLine.trim()) {

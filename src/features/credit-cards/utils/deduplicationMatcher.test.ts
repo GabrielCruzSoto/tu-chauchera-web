@@ -58,9 +58,9 @@ describe('deduplicationMatcher', () => {
     ]
 
     const matched = matchExistingPurchases(nextMonthTxs, existing)
-    expect(matched[0].isDuplicateOrOngoing).toBe(true)
-    expect(matched[0].duplicateReason).toBe('ALREADY_IMPORTED')
-    expect(matched[0].selected).toBe(false)
+    expect(matched[0]?.isDuplicateOrOngoing).toBe(true)
+    expect(matched[0]?.duplicateReason).toBe('ALREADY_IMPORTED')
+    expect(matched[0]?.selected).toBe(false)
   })
 
   it('identifies installment 02/12 as ONGOING_INSTALLMENT and inherits thirdPartyName', () => {
@@ -78,11 +78,11 @@ describe('deduplicationMatcher', () => {
     ]
 
     const matched = matchExistingPurchases(nextMonthTxs, existing)
-    expect(matched[0].isDuplicateOrOngoing).toBe(true)
-    expect(matched[0].duplicateReason).toBe('ONGOING_INSTALLMENT')
-    expect(matched[0].selected).toBe(false)
-    expect(matched[0].isThirdParty).toBe(true)
-    expect(matched[0].thirdPartyName).toBe('Juan Pérez')
+    expect(matched[0]?.isDuplicateOrOngoing).toBe(true)
+    expect(matched[0]?.duplicateReason).toBe('ONGOING_INSTALLMENT')
+    expect(matched[0]?.selected).toBe(false)
+    expect(matched[0]?.isThirdParty).toBe(true)
+    expect(matched[0]?.thirdPartyName).toBe('Juan Pérez')
   })
 
   it('keeps brand new purchase as selected and non-duplicate', () => {
@@ -100,7 +100,7 @@ describe('deduplicationMatcher', () => {
     ]
 
     const matched = matchExistingPurchases(nextMonthTxs, existing)
-    expect(matched[0].isDuplicateOrOngoing).toBe(false)
-    expect(matched[0].selected).toBe(true)
+    expect(matched[0]?.isDuplicateOrOngoing).toBe(false)
+    expect(matched[0]?.selected).toBe(true)
   })
 })
