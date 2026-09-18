@@ -1,5 +1,6 @@
 import React from "react"
 import type { DriveStorageMetrics } from "@/shared/types/settings"
+import { CURRENT_SCHEMA_VERSION } from "@/shared/constants/version"
 
 interface StorageStatsCardProps {
   metrics: DriveStorageMetrics | null
@@ -70,7 +71,7 @@ export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
         <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
           <span className="text-[11px] text-slate-400 block mb-1">Versión del Schema</span>
           <span className="text-base font-bold text-teal-300">
-            {metrics?.schemaVersion || "v1.1.0"}
+            {metrics?.schemaVersion ?? CURRENT_SCHEMA_VERSION}
           </span>
         </div>
       </div>

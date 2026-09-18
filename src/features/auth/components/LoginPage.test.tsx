@@ -51,4 +51,12 @@ describe("LoginPage Security & Flow", () => {
     expect(screen.getByPlaceholderText("Ingresa tu contraseña para descifrar")).toBeInTheDocument()
     expect(screen.getByText("gabrielcruzsoto@gmail.com")).toBeInTheDocument()
   })
+
+  it("renders system version and schema version indicators in footer", () => {
+    render(<LoginPage />)
+    const footer = screen.getByTestId("landing-version-footer")
+    expect(footer).toBeInTheDocument()
+    expect(footer).toHaveTextContent("Sistema: v0.1.0")
+    expect(footer).toHaveTextContent("Schema: v1.1.0")
+  })
 })
