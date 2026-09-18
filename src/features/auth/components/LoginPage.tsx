@@ -5,6 +5,7 @@ import {
   fetchGoogleUserProfile,
 } from "@/features/auth/services/googleOAuth"
 import { Spinner } from "@/shared/components/ui/Spinner"
+import { APP_SYSTEM_VERSION, CURRENT_SCHEMA_VERSION } from "@/shared/constants/version"
 
 export const LoginPage: React.FC = () => {
   const {
@@ -84,7 +85,7 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-10 overflow-hidden selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-slate-950 text-slate-100 p-4 sm:p-6 lg:p-10 overflow-hidden selection:bg-emerald-500/30 selection:text-emerald-200">
       {/* Ambient background glows */}
       <div className="absolute top-1/4 -left-20 w-72 sm:w-96 h-72 sm:h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-80 sm:w-[28rem] h-80 sm:h-[28rem] bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -357,6 +358,21 @@ export const LoginPage: React.FC = () => {
         </div>
 
       </div>
+      
+      {/* Footer System & Schema Indicators */}
+      <footer
+        data-testid="landing-version-footer"
+        className="relative z-10 mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-2.5 text-xs text-slate-400"
+      >
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-slate-400 shadow-sm backdrop-blur-md">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span>Sistema: <strong className="font-mono text-slate-200">{APP_SYSTEM_VERSION}</strong></span>
+        </span>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-slate-400 shadow-sm backdrop-blur-md">
+          <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+          <span>Schema: <strong className="font-mono text-slate-200">{CURRENT_SCHEMA_VERSION}</strong></span>
+        </span>
+      </footer>
     </div>
   )
 }
