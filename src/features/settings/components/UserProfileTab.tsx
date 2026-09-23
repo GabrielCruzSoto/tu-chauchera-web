@@ -58,10 +58,12 @@ export const UserProfileTab: React.FC = () => {
         >
           <span>{savedFeedback}</span>
           <button
+            type="button"
             onClick={() => setSavedFeedback(null)}
-            className="text-emerald-400 hover:text-emerald-200 ml-2 min-h-[32px] px-2 flex items-center"
+            aria-label="Cerrar notificación de guardado"
+            className="text-emerald-400 hover:text-emerald-200 ml-2 min-h-[36px] min-w-[36px] p-2 flex items-center justify-center rounded-lg hover:bg-emerald-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition cursor-pointer"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
       )}
@@ -128,7 +130,7 @@ export const UserProfileTab: React.FC = () => {
               id="currency-select"
               value={currency}
               onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-              className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition cursor-pointer"
+              className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
             >
               <option value="CLP">CLP — Peso Chileno ($)</option>
               <option value="USD">USD — Dólar Estadounidense ($)</option>
@@ -145,7 +147,7 @@ export const UserProfileTab: React.FC = () => {
               id="date-format-select"
               value={dateFormat}
               onChange={(e) => setDateFormat(e.target.value as DateFormatPattern)}
-              className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition cursor-pointer"
+              className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
             >
               <option value="DD/MM/YYYY">DD/MM/YYYY (Ej. 31/12/2026)</option>
               <option value="YYYY-MM-DD">YYYY-MM-DD (Ej. 2026-12-31)</option>
@@ -161,7 +163,7 @@ export const UserProfileTab: React.FC = () => {
               id="theme-select"
               value={theme}
               onChange={(e) => setTheme(e.target.value as AppTheme)}
-              className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition cursor-pointer"
+              className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
             >
               <option value="dark">🌙 Modo Oscuro (Predeterminado)</option>
               <option value="light">☀️ Modo Claro</option>
@@ -175,7 +177,7 @@ export const UserProfileTab: React.FC = () => {
               id="show-cents-check"
               checked={showCents}
               onChange={(e) => setShowCents(e.target.checked)}
-              className="w-5 h-5 rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+              className="w-5 h-5 rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer"
             />
             <label htmlFor="show-cents-check" className="text-xs font-medium text-slate-300 cursor-pointer">
               Mostrar decimales/centavos en montos monetarios
@@ -186,7 +188,7 @@ export const UserProfileTab: React.FC = () => {
         <div className="flex justify-end pt-3 border-t border-slate-800">
           <button
             type="submit"
-            className="min-h-[44px] px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-semibold text-white cursor-pointer shadow transition"
+            className="min-h-[44px] px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-semibold text-white cursor-pointer shadow transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
           >
             Guardar Preferencias
           </button>

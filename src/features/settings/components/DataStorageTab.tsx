@@ -116,10 +116,12 @@ export const DataStorageTab: React.FC = () => {
         >
           <span>{toastMessage}</span>
           <button
+            type="button"
             onClick={() => setToastMessage(null)}
-            className="text-emerald-400 hover:text-emerald-200 ml-2 min-h-[32px] px-2 flex items-center"
+            aria-label="Cerrar notificación de respaldo"
+            className="text-emerald-400 hover:text-emerald-200 ml-2 min-h-[36px] min-w-[36px] p-2 flex items-center justify-center rounded-lg hover:bg-emerald-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition cursor-pointer"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
       )}

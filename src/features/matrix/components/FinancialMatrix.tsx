@@ -139,7 +139,7 @@ export const FinancialMatrix: React.FC = () => {
                 type="button"
                 onClick={handlePrev}
                 aria-label="Mes anterior"
-                className="min-h-[36px] min-w-[36px] p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer flex items-center justify-center"
+                className="min-h-[36px] min-w-[36px] p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition"
               >
                 ←
               </button>
@@ -150,7 +150,7 @@ export const FinancialMatrix: React.FC = () => {
                 type="button"
                 onClick={handleNext}
                 aria-label="Mes siguiente"
-                className="min-h-[36px] min-w-[36px] p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer flex items-center justify-center"
+                className="min-h-[36px] min-w-[36px] p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition"
               >
                 →
               </button>
@@ -161,7 +161,7 @@ export const FinancialMatrix: React.FC = () => {
               value={monthsCount}
               onChange={(e) => setMonthsCount(Number(e.target.value))}
               aria-label="Cantidad de meses a proyectar"
-              className="min-h-[36px] px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none cursor-pointer"
+              className="min-h-[36px] px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer transition"
             >
               <option value={3}>3 meses</option>
               <option value={6}>6 meses</option>
@@ -176,7 +176,7 @@ export const FinancialMatrix: React.FC = () => {
               onClick={toggleExpandAll}
               aria-expanded={areAllExpanded}
               aria-label={areAllExpanded ? "Contraer subcategorías" : "Desglosar subcategorías"}
-              className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition cursor-pointer flex items-center gap-1.5"
+              className="min-h-[36px] px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition cursor-pointer flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             >
               <span>{areAllExpanded ? "🔼" : "🔽"}</span>
               <span>{areAllExpanded ? "Contraer subcategorías" : "Desglosar subcategorías"}</span>
@@ -200,7 +200,7 @@ export const FinancialMatrix: React.FC = () => {
           <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-rose-300 mt-2">
             {formatCLP(toMoney(totalPersonalOutflow))}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1">En los {monthsCount} meses</div>
+          <div className="text-[11px] text-slate-400 mt-1">En los {monthsCount} meses</div>
         </div>
 
         {/* Card 2: Por Cobrar a Terceros */}
@@ -216,7 +216,7 @@ export const FinancialMatrix: React.FC = () => {
           <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-amber-300 mt-2">
             {formatCLP(toMoney(totalReceivables))}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1">
+          <div className="text-[11px] text-slate-400 mt-1">
             {matrix.p2pGroups.filter((g) => g.role === "LENT_MY_CARD").length} cuentas por cobrar
           </div>
         </div>
@@ -234,7 +234,7 @@ export const FinancialMatrix: React.FC = () => {
           <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-sky-300 mt-2">
             {formatCLP(toMoney(totalIncomesInRange))}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1">Sueldos y otros ingresos</div>
+          <div className="text-[11px] text-slate-400 mt-1">Sueldos y otros ingresos</div>
         </div>
 
         {/* Card 4: Margen Neto Real */}
@@ -357,10 +357,14 @@ export const FinancialMatrix: React.FC = () => {
                             <td
                               key={period}
                               className={`px-3 sm:px-4 py-3 text-right font-mono tabular-nums text-xs whitespace-nowrap transition ${
-                                amount > 0 ? "text-slate-200 font-medium" : "text-slate-600 font-normal"
+                                amount > 0 ? "text-slate-200 font-medium" : "text-slate-400/80 font-normal"
                               }`}
                             >
-                              {amount > 0 ? formatCLP(toMoney(amount)) : "—"}
+                              {amount > 0 ? (
+                                formatCLP(toMoney(amount))
+                              ) : (
+                                <span className="text-slate-500" aria-label="Sin movimientos">—</span>
+                              )}
                             </td>
                           )
                         })}
@@ -429,10 +433,14 @@ export const FinancialMatrix: React.FC = () => {
                             </span>
                             <span
                               className={`font-mono text-xs font-semibold mt-1 ${
-                                amount > 0 ? "text-amber-300" : "text-slate-600"
+                                amount > 0 ? "text-amber-300" : "text-slate-400/80"
                               }`}
                             >
-                              {amount > 0 ? formatCLP(toMoney(amount)) : "—"}
+                              {amount > 0 ? (
+                                formatCLP(toMoney(amount))
+                              ) : (
+                                <span className="text-slate-500" aria-label="Sin movimientos">—</span>
+                              )}
                             </span>
                           </div>
                         )
@@ -491,10 +499,14 @@ export const FinancialMatrix: React.FC = () => {
                             </span>
                             <span
                               className={`font-mono text-xs font-semibold mt-1 ${
-                                amount > 0 ? "text-slate-100" : "text-slate-600"
+                                amount > 0 ? "text-slate-100" : "text-slate-400/80"
                               }`}
                             >
-                              {amount > 0 ? formatCLP(toMoney(amount)) : "—"}
+                              {amount > 0 ? (
+                                formatCLP(toMoney(amount))
+                              ) : (
+                                <span className="text-slate-500" aria-label="Sin movimientos">—</span>
+                              )}
                             </span>
                           </div>
                         )
@@ -625,10 +637,14 @@ export const FinancialMatrix: React.FC = () => {
                               <td
                                 key={period}
                                 className={`px-3 sm:px-4 py-3 sm:py-3.5 text-right font-mono tabular-nums text-xs whitespace-nowrap transition ${
-                                  amount > 0 ? "text-slate-200 font-medium" : "text-slate-600 font-normal"
+                                  amount > 0 ? "text-slate-200 font-medium" : "text-slate-400/80 font-normal"
                                 }`}
                               >
-                                {amount > 0 ? formatCLP(toMoney(amount)) : "—"}
+                                {amount > 0 ? (
+                                  formatCLP(toMoney(amount))
+                                ) : (
+                                  <span className="text-slate-500" aria-label="Sin movimientos">—</span>
+                                )}
                               </td>
                             )
                           })}

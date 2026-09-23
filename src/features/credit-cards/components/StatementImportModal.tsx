@@ -209,7 +209,14 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
               Extracción local privada sin enviar datos fuera de tu navegador. Compatible con CMR Falabella y Tenpo.
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-lg">✕</button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar importador de estado de cuenta"
+            className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer flex items-center justify-center text-lg font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          >
+            <span aria-hidden="true">✕</span>
+          </button>
         </div>
 
         {/* Content */}
@@ -227,7 +234,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                 <select
                   value={effectiveAccountId}
                   onChange={(e) => setSelectedAccountId(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                  className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 cursor-pointer transition"
                 >
                   {accountList.map((acc) => (
                     <option key={acc.id} value={acc.id}>
@@ -300,7 +307,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                   placeholder={`Ejemplo (CMR Falabella o Tenpo):\n15/04/2026 FALABELLA PARQUE ARAUCO 03/12 $ 45.990\n21/07/2026 PAYU UBER TRIP SANTIAGO CH Digital $5.696 $5.696 00/00 $5.696`}
                   value={rawText}
                   onChange={(e) => setRawText(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 font-mono text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 font-mono text-xs text-slate-200 focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
                 />
               </div>
             </div>
@@ -441,7 +448,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-xl text-xs font-medium"
+              className="min-h-[44px] px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-xl text-xs font-medium cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             >
               Cancelar
             </button>
@@ -451,7 +458,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                 type="button"
                 disabled={!rawText.trim() || accountList.length === 0}
                 onClick={handleParse}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/30"
+                className="min-h-[44px] px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/30 cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
               >
                 Analizar Movimientos →
               </button>
@@ -460,7 +467,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                 type="button"
                 onClick={handleConfirmImport}
                 disabled={parsedRows.filter((r) => r.selected).length === 0}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/30"
+                className="min-h-[44px] px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/30 cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
                 Confirmar e Importar {parsedRows.filter((r) => r.selected).length} Compras
               </button>

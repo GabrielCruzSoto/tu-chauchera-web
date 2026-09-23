@@ -111,10 +111,12 @@ export const CategoryManagerTab: React.FC = () => {
         >
           <span>{errorMessage}</span>
           <button
+            type="button"
             onClick={() => setErrorMessage(null)}
-            className="text-rose-400 hover:text-rose-200 ml-2 min-h-[32px] px-2 flex items-center"
+            aria-label="Cerrar mensaje de error"
+            className="text-rose-400 hover:text-rose-200 ml-2 min-h-[36px] min-w-[36px] p-2 flex items-center justify-center rounded-lg hover:bg-rose-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 transition cursor-pointer"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
       )}
@@ -126,10 +128,12 @@ export const CategoryManagerTab: React.FC = () => {
         >
           <span>{successMessage}</span>
           <button
+            type="button"
             onClick={() => setSuccessMessage(null)}
-            className="text-emerald-400 hover:text-emerald-200 ml-2 min-h-[32px] px-2 flex items-center"
+            aria-label="Cerrar mensaje de confirmación"
+            className="text-emerald-400 hover:text-emerald-200 ml-2 min-h-[36px] min-w-[36px] p-2 flex items-center justify-center rounded-lg hover:bg-emerald-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition cursor-pointer"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
       )}

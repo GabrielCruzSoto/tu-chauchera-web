@@ -98,11 +98,12 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Cerrar modal"
-            className="min-h-[44px] min-w-[44px] text-slate-400 hover:text-white flex items-center justify-center rounded-lg hover:bg-slate-800 cursor-pointer text-lg font-semibold"
+            className="min-h-[44px] min-w-[44px] text-slate-400 hover:text-white flex items-center justify-center rounded-xl hover:bg-slate-800 cursor-pointer text-lg font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
 
@@ -114,10 +115,12 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
             >
               <span>{errorMessage}</span>
               <button
+                type="button"
                 onClick={() => setErrorMessage(null)}
-                className="text-rose-400 hover:text-rose-200 ml-2 min-h-[32px] px-2 flex items-center"
+                aria-label="Cerrar mensaje de error"
+                className="text-rose-400 hover:text-rose-200 ml-2 min-h-[36px] min-w-[36px] px-2 flex items-center justify-center rounded-lg hover:bg-rose-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 transition cursor-pointer"
               >
-                ✕
+                <span aria-hidden="true">✕</span>
               </button>
             </div>
           )}
@@ -132,7 +135,7 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="text-xs text-slate-400 hover:text-slate-200 min-h-[32px] px-2 flex items-center"
+                  className="text-xs text-slate-400 hover:text-slate-200 min-h-[32px] px-2 flex items-center rounded-lg hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
                 >
                   Cancelar edición
                 </button>
@@ -146,7 +149,7 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
                   placeholder="Nombre de categoría (ej. Seguros Médicos)"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full min-h-[44px] px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
                 />
               </div>
 

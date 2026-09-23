@@ -97,7 +97,7 @@ export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
               }}
               placeholder={CONFIRMATION_PHRASE}
               disabled={isLoading}
-              className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-rose-500 transition font-mono"
+              className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-rose-500 focus-visible:ring-2 focus-visible:ring-rose-500/40 transition font-mono"
             />
           </div>
 
@@ -106,14 +106,14 @@ export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs sm:text-sm text-slate-300 cursor-pointer transition text-center"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs sm:text-sm text-slate-300 cursor-pointer transition text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={!isMatched || isLoading}
-              className={`min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white shadow transition text-center flex items-center justify-center gap-2 ${
+              className={`min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white shadow transition text-center flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${
                 isMatched && !isLoading
                   ? "bg-rose-600 hover:bg-rose-500 cursor-pointer"
                   : "bg-rose-900/40 text-slate-500 border border-rose-900/30 cursor-not-allowed"
