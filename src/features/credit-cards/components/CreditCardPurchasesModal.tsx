@@ -171,11 +171,12 @@ export const CreditCardPurchasesModal: React.FC<CreditCardPurchasesModalProps> =
             </h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white text-lg p-2 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+            className="min-h-[44px] min-w-[44px] text-slate-400 hover:text-white text-lg p-2 rounded-xl hover:bg-slate-800 transition cursor-pointer flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             aria-label="Cerrar modal de compras"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
 

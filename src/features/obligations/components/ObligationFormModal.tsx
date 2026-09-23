@@ -324,9 +324,9 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
 
   // Consistent input styling classes across the entire modal
   const inputClass =
-    "w-full h-11 px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition cursor-text"
+    "w-full h-11 px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-text"
   const selectClass =
-    "w-full h-11 px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition cursor-pointer"
+    "w-full h-11 px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
 
   return (
     <>
@@ -349,11 +349,12 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
               )}
             </div>
             <button
+              type="button"
               onClick={onClose}
               aria-label="Cerrar modal"
-              className="min-h-[44px] min-w-[44px] text-slate-400 hover:text-white text-lg font-semibold cursor-pointer flex items-center justify-center rounded-lg hover:bg-slate-800 transition"
+              className="min-h-[44px] min-w-[44px] text-slate-400 hover:text-white text-lg font-semibold cursor-pointer flex items-center justify-center rounded-xl hover:bg-slate-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             >
-              ✕
+              <span aria-hidden="true">✕</span>
             </button>
           </div>
 

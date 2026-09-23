@@ -235,7 +235,14 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
             💳 {editingAccount ? 'Modificar Tarjeta de Crédito' : 'Nueva Tarjeta de Crédito'}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">✕</button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar modal de tarjeta"
+            className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer flex items-center justify-center text-lg font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          >
+            <span aria-hidden="true">✕</span>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">

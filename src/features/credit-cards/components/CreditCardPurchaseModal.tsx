@@ -57,7 +57,14 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
             🛍️ Cargar Compra con Tarjeta
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">✕</button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar modal de carga de compra"
+            className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer flex items-center justify-center text-lg font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          >
+            <span aria-hidden="true">✕</span>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
@@ -76,7 +83,7 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
                       setSelectedAccountId(e.target.value)
                       setSelectedPlasticId('')
                     }}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
                   >
                     {accountList.map((acc) => (
                       <option key={acc.id} value={acc.id}>
@@ -90,7 +97,7 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
                   <select
                     value={activePlasticId}
                     onChange={(e) => setSelectedPlasticId(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
                   >
                     {availablePlastics.map((plastic) => (
                       <option key={plastic.id} value={plastic.id}>
@@ -109,7 +116,7 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                  className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
                 />
               </div>
 
@@ -121,7 +128,7 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
                     value={purchaseDate}
                     onChange={(e) => setPurchaseDate(e.target.value)}
                     required
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                   />
                 </div>
                 <div className="col-span-1">
@@ -132,7 +139,7 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
                     value={totalAmount}
                     onChange={(e) => setTotalAmount(e.target.value)}
                     required
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                   />
                 </div>
                 <div className="col-span-1">
@@ -144,7 +151,7 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
                     value={totalInstallments}
                     onChange={(e) => setTotalInstallments(Number(e.target.value))}
                     required
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                    className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                   />
                 </div>
               </div>

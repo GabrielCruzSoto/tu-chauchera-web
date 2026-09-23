@@ -38,11 +38,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligat
         <div className="flex justify-between items-center px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-800 flex-shrink-0">
           <h3 className="text-base sm:text-lg font-bold text-white">Registrar Pago de Cuota</h3>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Cerrar modal"
-            className="min-h-[44px] min-w-[44px] text-slate-400 hover:text-white flex items-center justify-center rounded-lg hover:bg-slate-800 cursor-pointer text-lg font-semibold"
+            className="min-h-[44px] min-w-[44px] text-slate-400 hover:text-white flex items-center justify-center rounded-xl hover:bg-slate-800 cursor-pointer text-lg font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition"
           >
-            ✕
+            <span aria-hidden="true">✕</span>
           </button>
         </div>
 
@@ -87,7 +88,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligat
                 value={paidAmount || ""}
                 onChange={(e) => setPaidAmount(Number(e.target.value))}
                 required
-                className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm font-mono focus:outline-none focus:border-emerald-500"
+                className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm font-mono focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
               />
               <p className="text-[11px] text-slate-500 mt-1">
                 Puedes modificar el monto si pagaste con intereses de mora, multas o reajustes bancarios.
@@ -112,7 +113,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligat
                 value={paidDate}
                 onChange={(e) => setPaidDate(e.target.value)}
                 required
-                className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 font-mono transition"
               />
               <p className="text-[11px] text-slate-500 mt-1">
                 El período asignado será automáticamente: <strong className="text-slate-300">{paidDate.slice(0, 7)}</strong>
@@ -128,7 +129,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligat
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Ej. Transferencia #849302 (incluye $3.500 de mora)"
-                className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
               />
             </div>
           </div>
@@ -137,13 +138,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligat
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm text-slate-300 cursor-pointer transition"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm text-slate-300 cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-semibold text-white shadow-lg cursor-pointer transition"
+              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-semibold text-white shadow-lg cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
               Confirmar Pago ({formatCLP(toMoney(paidAmount))})
             </button>
