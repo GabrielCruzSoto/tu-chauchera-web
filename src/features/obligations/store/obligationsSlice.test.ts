@@ -218,4 +218,43 @@ describe("obligationsSlice", () => {
     )
     expect(clonedInstallments).toHaveLength(24)
   })
+
+  it("updates obligation currentInstallment and synchronizes paid and pending installments", () => {
+    const store = useObligationsStore.getState()
+    const obl = store.addObligation({
+      categoryId: "cat-1",
+      subcategory: "Arriendo Casa",
+      detail: "12 meses",
+      totalAmountCents: toMoney(8628000),
+      totalInstallments: 12,
+      currentInstallment: 1,
+      installmentAmountCents: toMoney(719000),
+      startDate: "2026-05-05",
+      dueDay: 5,
+    })
+
+    // Initially 12 pending installments
+    let related = Object.values(useObligationsStore.getState().installments).filter(
+      (i) => i.obligationId === obl.id
+    )
+    expect(related).toHaveLength(12)
+    expect(related.filter((i) => i.status === "PENDING")).toHaveLength(12)
+    expect(related.filter((i) => i.status === "PAID")).toHaveLength(0)
+
+    // User updates obligation: 4 paid installments -> currentInstallment is 5
+    store.updateObligation(obl.id, {
+      currentInstallment: 5,
+    })
+
+    related = Object.values(useObligationsStore.getState().installments).filter(
+      (i) => i.obligationId === obl.id
+    )
+    expect(related).toHaveLength(12)
+    const paid = related.filter((i) => i.status === "PAID")
+    const pending = related.filter((i) => i.status === "PENDING")
+    expect(paid).toHaveLength(4)
+    expect(pending).toHaveLength(8)
+    expect(paid.map((i) => i.installmentNumber).sort((a, b) => a - b)).toEqual([1, 2, 3, 4])
+    expect(pending.map((i) => i.installmentNumber).sort((a, b) => a - b)).toEqual([5, 6, 7, 8, 9, 10, 11, 12])
+  })
 })

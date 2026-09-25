@@ -50,9 +50,20 @@ export const ObligationsList: React.FC = () => {
 
   // Summary Metrics
   const totalMonthlyCommitment = activeObligations.reduce((sum, o) => sum + o.installmentAmountCents, 0)
-  const totalDebtBalance = activeObligations
+  
+  // Real remaining pending debt balance
+  const totalDebtRemainingBalance = activeObligations
     .filter((o) => o.type !== "EXPENSE")
-    .reduce((sum, o) => sum + o.totalAmountCents, 0)
+    .reduce((sum, o) => {
+      const relInst = Object.values(installments).filter((i) => i.obligationId === o.id)
+      const pendingInst = relInst.filter((i) => i.status === "PENDING")
+      if (relInst.length > 0) {
+        return sum + pendingInst.reduce((acc, inst) => acc + inst.amountCents, 0)
+      }
+      // Fallback if no installments loaded
+      const pendingCount = Math.max(0, o.totalInstallments - (o.currentInstallment - 1))
+      return sum + pendingCount * o.installmentAmountCents
+    }, 0)
 
   const handleCopyWhatsApp = (oblId: string) => {
     const obl = obligations[oblId]
@@ -152,7 +163,7 @@ export const ObligationsList: React.FC = () => {
             Saldo Total Deudas
           </div>
           <div className="text-xl font-bold font-mono text-amber-300 mt-1">
-            {formatCLP(toMoney(totalDebtBalance))}
+            {formatCLP(toMoney(totalDebtRemainingBalance))}
           </div>
         </div>
       </div>

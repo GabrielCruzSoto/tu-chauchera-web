@@ -404,13 +404,23 @@ export const MonthlyInstallmentsView: React.FC = () => {
                         )}
 
                         {inst.status === "PAID" && (
-                          <button
-                            onClick={() => revertToPending(inst.id)}
-                            className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 text-xs cursor-pointer transition"
-                            title="Revertir a Pendiente"
-                          >
-                            Deshacer pago
-                          </button>
+                          <>
+                            <button
+                              onClick={() => setSelectedForPayment({ installment: inst, obligation: obl })}
+                              className="min-h-[36px] px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 hover:border-slate-600 text-xs font-medium cursor-pointer transition flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                              title="Modificar pago"
+                            >
+                              <span aria-hidden="true">✏️</span>
+                              <span>Modificar pago</span>
+                            </button>
+                            <button
+                              onClick={() => revertToPending(inst.id)}
+                              className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 text-xs cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                              title="Revertir a Pendiente"
+                            >
+                              Deshacer pago
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>

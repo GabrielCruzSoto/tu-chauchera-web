@@ -61,7 +61,7 @@ describe("installmentGenerator", () => {
     expect(installments[47]?.dueDate).toBe("2027-12-15")
   })
 
-  it("calculates accurate future due dates when currentInstallment > 1", () => {
+  it("calculates accurate future due dates and generates historical paid installments when currentInstallment > 1", () => {
     const obligation: Obligation = {
       id: "obl-banco-estado",
       categoryId: "cat-1",
@@ -80,15 +80,24 @@ describe("installmentGenerator", () => {
 
     const installments = generateInstallments(obligation)
 
-    expect(installments).toHaveLength(4) // 69, 70, 71, 72
-    expect(installments[0]?.installmentNumber).toBe(69)
+    expect(installments).toHaveLength(72) // 1 to 72
+    // First installment is marked as PAID
+    expect(installments[0]?.installmentNumber).toBe(1)
+    expect(installments[0]?.status).toBe("PAID")
+    // Installment 68 is marked as PAID
+    expect(installments[67]?.installmentNumber).toBe(68)
+    expect(installments[67]?.status).toBe("PAID")
+
+    // Installments 69 onwards are PENDING
+    expect(installments[68]?.installmentNumber).toBe(69)
+    expect(installments[68]?.status).toBe("PENDING")
     // 68 months after Nov 2020 is July 2026!
-    expect(installments[0]?.dueDate).toBe("2026-07-31")
-    expect(installments[1]?.installmentNumber).toBe(70)
-    expect(installments[1]?.dueDate).toBe("2026-08-31")
-    expect(installments[3]?.installmentNumber).toBe(72)
+    expect(installments[68]?.dueDate).toBe("2026-07-31")
+    expect(installments[69]?.installmentNumber).toBe(70)
+    expect(installments[69]?.dueDate).toBe("2026-08-31")
+    expect(installments[71]?.installmentNumber).toBe(72)
     // 71 months after Nov 2020 is October 2026!
-    expect(installments[3]?.dueDate).toBe("2026-10-31")
+    expect(installments[71]?.dueDate).toBe("2026-10-31")
   })
 
   it("preserves PAID and RENEGOTIATED installments on regeneration", () => {

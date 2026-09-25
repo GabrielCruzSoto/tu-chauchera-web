@@ -90,11 +90,26 @@ describe("App Responsive Navigation", () => {
     expect(await screen.findByText("Obligaciones Financieras")).toBeInTheDocument()
   })
 
-  it("switches to settings view when clicking settings navigation tab", async () => {
+  it("switches to settings view when clicking settings button inside mobile drawer", async () => {
     render(<App />)
 
-    const settingsTabBtn = screen.getByRole("button", { name: /⚙️ Configuración/i })
-    fireEvent.click(settingsTabBtn)
+    const hamburgerBtn = screen.getByRole("button", { name: /Abrir menú/i })
+    fireEvent.click(hamburgerBtn)
+
+    const settingsDrawerBtn = screen.getAllByRole("button", { name: /Configuración/i })[0]!
+    fireEvent.click(settingsDrawerBtn)
+
+    expect(await screen.findByText("Configuración & Bóveda")).toBeInTheDocument()
+  })
+
+  it("opens settings view when selecting Configuración from user dropdown menu", async () => {
+    render(<App />)
+
+    const userDropdownBtn = screen.getByRole("button", { name: /Menú de usuario/i })
+    fireEvent.click(userDropdownBtn)
+
+    const settingsMenuItem = screen.getByRole("menuitem", { name: /Configuración/i })
+    fireEvent.click(settingsMenuItem)
 
     expect(await screen.findByText("Configuración & Bóveda")).toBeInTheDocument()
   })
@@ -103,4 +118,58 @@ describe("App Responsive Navigation", () => {
     const { container } = render(<App />)
     expect(container).toBeInTheDocument()
   })
+
+  it("handles authentication transition from logged out to unlocked without hook errors", async () => {
+    useAuthStore.setState({
+      isAuthenticated: false,
+      isUnlocked: false,
+      user: null,
+    })
+
+    const { rerender } = render(<App />)
+    expect(screen.getByText(/Acceder a Tu Bóveda/i)).toBeInTheDocument()
+
+    // Transition to authenticated & unlocked
+    useAuthStore.setState({
+      isAuthenticated: true,
+      isUnlocked: true,
+      user: { sub: "user-1", email: "test@example.com", name: "Test User" },
+    })
+
+    rerender(<App />)
+    expect(await screen.findByText("Matriz de Consolidación Financiera")).toBeInTheDocument()
+  })
+
+  it("switches tab using number keyboard shortcuts (1 - 6)", async () => {
+    render(<App />)
+
+    // Press '2' for Flujos & Cuotas
+    fireEvent.keyDown(window, { key: "2" })
+    expect(await screen.findByRole("button", { name: /Mes anterior/i })).toBeInTheDocument()
+  })
+
+  it("opens support modal when selecting Ayuda & Soporte from user dropdown menu", async () => {
+    render(<App />)
+
+    const userDropdownBtn = screen.getByRole("button", { name: /Menú de usuario/i })
+    fireEvent.click(userDropdownBtn)
+
+    const supportMenuItem = screen.getByRole("menuitem", { name: /Ayuda & Soporte/i })
+    fireEvent.click(supportMenuItem)
+
+    expect(await screen.findByRole("heading", { name: /centro de ayuda & soporte/i })).toBeInTheDocument()
+  })
+
+  it("opens support modal when clicking Ayuda & Soporte in mobile drawer", async () => {
+    render(<App />)
+
+    const hamburgerBtn = screen.getByLabelText("Abrir menú")
+    fireEvent.click(hamburgerBtn)
+
+    const supportDrawerBtn = screen.getByRole("button", { name: /Ayuda & Soporte/i })
+    fireEvent.click(supportDrawerBtn)
+
+    expect(await screen.findByRole("heading", { name: /centro de ayuda & soporte/i })).toBeInTheDocument()
+  })
 })
+

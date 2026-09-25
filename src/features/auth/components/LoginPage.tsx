@@ -5,6 +5,7 @@ import {
   fetchGoogleUserProfile,
 } from "@/features/auth/services/googleOAuth"
 import { Spinner } from "@/shared/components/ui/Spinner"
+import { SupportModal } from "@/shared/components/ui/SupportModal"
 import { APP_SYSTEM_VERSION, CURRENT_SCHEMA_VERSION } from "@/shared/constants/version"
 
 export const LoginPage: React.FC = () => {
@@ -25,6 +26,7 @@ export const LoginPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [localError, setLocalError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSupportOpen, setIsSupportOpen] = useState(false)
 
   const handleGoogleLogin = async () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
@@ -166,6 +168,18 @@ export const LoginPage: React.FC = () => {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Support helper hint on desktop */}
+          <div className="flex items-center gap-2 text-xs text-slate-400 pt-1">
+            <span>¿Preguntas o necesitas asistencia?</span>
+            <button
+              type="button"
+              onClick={() => setIsSupportOpen(true)}
+              className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2 cursor-pointer transition"
+            >
+              Contactar a soporte
+            </button>
           </div>
         </div>
 
@@ -372,7 +386,19 @@ export const LoginPage: React.FC = () => {
           <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
           <span>Schema: <strong className="font-mono text-slate-200">{CURRENT_SCHEMA_VERSION}</strong></span>
         </span>
+        <button
+          type="button"
+          onClick={() => setIsSupportOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-emerald-300 shadow-sm backdrop-blur-md cursor-pointer transition"
+        >
+          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span>Ayuda & Soporte</span>
+        </button>
       </footer>
+
+      <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { render, screen, fireEvent, within } from "@testing-library/react"
 import { describe, it, expect, beforeEach } from "vitest"
 import { FinancialMatrix } from "../components/FinancialMatrix"
 import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
@@ -177,4 +177,84 @@ describe("FinancialMatrix Component & Responsive Toggle", () => {
     expect(totalHeader).toHaveClass("font-mono")
     expect(totalHeader).toHaveClass("tabular-nums")
   })
+
+  it("opens item detail modal when clicking a subcategory item or detail button in the matrix table", () => {
+    render(<FinancialMatrix />)
+
+    // Expand category
+    const expandBtn = screen.getByRole("button", { name: /Expandir Créditos/i })
+    fireEvent.click(expandBtn)
+
+    // Subcategory row should be visible
+    const subcatRow = screen.getByTestId("matrix-subcat-row-cat-1-banco")
+    expect(subcatRow).toBeInTheDocument()
+
+    // Click the subcategory item / detail button
+    const detailBtn = screen.getByRole("button", { name: /Ver detalle de Banco/i })
+    fireEvent.click(detailBtn)
+
+    // Modal dialog should appear with item details
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toBeInTheDocument()
+    expect(within(dialog).getByRole("heading", { name: "Banco" })).toBeInTheDocument()
+    expect(within(dialog).getByText("Créditos")).toBeInTheDocument()
+    expect(within(dialog).getByText("Total en Horizonte")).toBeInTheDocument()
+
+    // Close modal
+    const closeBtn = screen.getByRole("button", { name: /Cerrar detalle/i })
+    fireEvent.click(closeBtn)
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  })
+
+  it("opens item detail modal when clicking an item in Deudas Terceros (P2P) view", () => {
+    // Add a P2P obligation
+    useObligationsStore.setState((prev) => ({
+      ...prev,
+      obligations: {
+        ...prev.obligations,
+        "obl-p2p": {
+          id: "obl-p2p",
+          categoryId: "cat-1",
+          subcategory: "Isis Paris",
+          detail: "Zapatos",
+          totalAmountCents: toMoney(500000),
+          totalInstallments: 3,
+          currentInstallment: 1,
+          installmentAmountCents: toMoney(100000),
+          startDate: "2026-01-01",
+          dueDay: 10,
+          status: "PENDING",
+          type: "P2P_DEBT",
+          p2pMetadata: {
+            role: "LENT_MY_CARD",
+            thirdPartyName: "Isis Paris",
+            cardIssuer: "Banco Falabella",
+            productDescription: "Zapatos",
+            baseInstallmentAmountCents: toMoney(100000),
+            totalMonthlyChargeCents: toMoney(100000),
+          },
+          createdAt: "",
+          updatedAt: "",
+        },
+      },
+    }))
+
+    render(<FinancialMatrix />)
+
+    // Go to P2P tab
+    const p2pTabBtn = screen.getByRole("button", { name: /Deudas Terceros/i })
+    fireEvent.click(p2pTabBtn)
+
+    // Click on the P2P person detail button
+    const detailBtn = screen.getByRole("button", { name: /Ver detalle de Isis Paris/i })
+    fireEvent.click(detailBtn)
+
+    // Verify modal is open with P2P details
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toBeInTheDocument()
+    expect(within(dialog).getByRole("heading", { name: "Isis Paris" })).toBeInTheDocument()
+    expect(within(dialog).getByText(/Presté mi tarjeta/i)).toBeInTheDocument()
+    expect(within(dialog).getByText(/Banco Falabella/i)).toBeInTheDocument()
+  })
 })
+

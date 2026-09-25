@@ -101,6 +101,72 @@ describe("paymentsSlice", () => {
     expect(reverted?.period).toBeUndefined()
   })
 
+  it("modifies an already PAID installment (updating paidDate, amount, and notes)", () => {
+    const oblStore = useObligationsStore.getState()
+    const obl = oblStore.addObligation({
+      categoryId: "cat-1",
+      subcategory: "Crédito Consumo",
+      detail: "Test",
+      totalAmountCents: toMoney(200000),
+      totalInstallments: 2,
+      currentInstallment: 1,
+      installmentAmountCents: toMoney(100000),
+      startDate: "2024-05-10",
+      dueDay: 10,
+    })
+
+    const inst = Object.values(useObligationsStore.getState().installments).find(
+      (i) => i.obligationId === obl.id
+    )!
+
+    const paymentsStore = usePaymentsStore.getState()
+    // Initial payment
+    paymentsStore.markPaid(inst.id, "2024-05-08", "Pago original", toMoney(100000))
+    expect(useObligationsStore.getState().installments[inst.id]?.paidDate).toBe("2024-05-08")
+    expect(useObligationsStore.getState().installments[inst.id]?.amountCents).toBe(toMoney(100000))
+
+    // Modify payment with new date, updated surcharge amount and changed notes
+    paymentsStore.updatePayment(inst.id, "2024-05-12", "Pago corregido con recargo", toMoney(102500))
+    const updated = useObligationsStore.getState().installments[inst.id]
+    expect(updated?.status).toBe("PAID")
+    expect(updated?.paidDate).toBe("2024-05-12")
+    expect(updated?.period).toBe("2024-05")
+    expect(updated?.amountCents).toBe(toMoney(102500))
+    expect(updated?.notes).toBe("Pago corregido con recargo")
+
+    // Reverting restores original scheduled installment amount (100000 instead of 102500)
+    paymentsStore.revertToPending(inst.id)
+    const reverted = useObligationsStore.getState().installments[inst.id]
+    expect(reverted?.status).toBe("PENDING")
+    expect(reverted?.amountCents).toBe(toMoney(100000))
+  })
+
+  it("clears notes when modifying a payment with empty string", () => {
+    const oblStore = useObligationsStore.getState()
+    const obl = oblStore.addObligation({
+      categoryId: "cat-1",
+      subcategory: "Crédito",
+      detail: "Test",
+      totalAmountCents: toMoney(100000),
+      totalInstallments: 1,
+      currentInstallment: 1,
+      installmentAmountCents: toMoney(100000),
+      startDate: "2024-05-10",
+      dueDay: 10,
+    })
+
+    const inst = Object.values(useObligationsStore.getState().installments).find(
+      (i) => i.obligationId === obl.id
+    )!
+
+    const paymentsStore = usePaymentsStore.getState()
+    paymentsStore.markPaid(inst.id, "2024-05-10", "Nota inicial", toMoney(100000))
+    expect(useObligationsStore.getState().installments[inst.id]?.notes).toBe("Nota inicial")
+
+    paymentsStore.markPaid(inst.id, "2024-05-10", "   ", toMoney(100000))
+    expect(useObligationsStore.getState().installments[inst.id]?.notes).toBeUndefined()
+  })
+
   it("renegotiates obligation and freezes remaining pending installments", () => {
     const oblStore = useObligationsStore.getState()
     const oldObl = oblStore.addObligation({

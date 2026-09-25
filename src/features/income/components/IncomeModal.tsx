@@ -1,20 +1,22 @@
 import React, { useState } from "react"
 import { useIncomeStore } from "../store/incomeSlice"
 import { toMoney } from "@/shared/types/money"
-import type { IncomeType } from "@/shared/types/domain"
+import type { Income, IncomeStatus, IncomeType } from "@/shared/types/domain"
 
 interface IncomeModalProps {
   initialPeriod: string
+  incomeToEdit?: Income | null
   onClose: () => void
 }
 
-export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, onClose }) => {
-  const { addIncome, addRecurringIncome } = useIncomeStore()
+export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, incomeToEdit, onClose }) => {
+  const { addIncome, addRecurringIncome, updateIncome } = useIncomeStore()
 
-  const [description, setDescription] = useState("")
-  const [amount, setAmount] = useState<number>(0)
-  const [type, setType] = useState<IncomeType>("FIXED")
-  const [period, setPeriod] = useState(initialPeriod)
+  const [description, setDescription] = useState(incomeToEdit?.description ?? "")
+  const [amount, setAmount] = useState<number>(incomeToEdit ? incomeToEdit.amountCents : 0)
+  const [type, setType] = useState<IncomeType>(incomeToEdit?.type ?? "FIXED")
+  const [status, setStatus] = useState<IncomeStatus>(incomeToEdit?.status ?? "REAL")
+  const [period, setPeriod] = useState(incomeToEdit?.period ?? initialPeriod)
   const [isRecurring, setIsRecurring] = useState(false)
   const [recurringMonths, setRecurringMonths] = useState<number>(12)
 
@@ -22,27 +24,45 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, onClose
     e.preventDefault()
     if (!description.trim() || amount <= 0) return
 
-    const dto = {
-      description: description.trim(),
-      amountCents: toMoney(amount),
-      type,
-      period,
-    }
-
-    if (isRecurring && type === "FIXED") {
-      addRecurringIncome(dto, recurringMonths)
+    if (incomeToEdit) {
+      updateIncome(incomeToEdit.id, {
+        description: description.trim(),
+        amountCents: toMoney(amount),
+        type,
+        status,
+        period,
+      })
     } else {
-      addIncome(dto)
+      const dto = {
+        description: description.trim(),
+        amountCents: toMoney(amount),
+        type,
+        status,
+        period,
+      }
+
+      if (isRecurring && type === "FIXED") {
+        addRecurringIncome(dto, recurringMonths)
+      } else {
+        addIncome(dto)
+      }
     }
 
     onClose()
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-income-title"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md"
+    >
       <div className="w-full sm:max-w-md max-h-[90vh] sm:max-h-[85vh] rounded-t-2xl sm:rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl flex flex-col">
         <div className="flex justify-between items-center px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-800 flex-shrink-0">
-          <h3 className="text-base sm:text-lg font-bold text-white">Registrar Ingreso</h3>
+          <h3 id="modal-income-title" className="text-base sm:text-lg font-bold text-white">
+            {incomeToEdit ? "Editar Ingreso" : "Registrar Ingreso"}
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -94,6 +114,44 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, onClose
               </div>
             </div>
 
+            {/* Estado del Ingreso: Real vs Estimado */}
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                Estado del Ingreso
+              </label>
+              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setStatus("REAL")}
+                  className={`min-h-[40px] px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    status === "REAL"
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
+                      : "text-slate-400 hover:text-slate-200 border border-transparent"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <span>Ingreso Real</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus("ESTIMATED")}
+                  className={`min-h-[40px] px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    status === "ESTIMATED"
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm"
+                      : "text-slate-400 hover:text-slate-200 border border-transparent"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                  <span>Estimado / Proyectado</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                {status === "REAL"
+                  ? "Dinero efectivamente recibido o con fecha cierta de depósito."
+                  : "Monto proyectado no confirmado. Podrás actualizarlo a 'Real' cuando se deposite."}
+              </p>
+            </div>
+
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">Período / Mes</label>
               <input
@@ -105,7 +163,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, onClose
               />
             </div>
 
-            {type === "FIXED" && (
+            {!incomeToEdit && type === "FIXED" && (
               <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
                 <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-300 min-h-[32px]">
                   <input
@@ -151,7 +209,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, onClose
               type="submit"
               className="min-h-[44px] px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-semibold text-white shadow-lg cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
             >
-              Guardar Ingreso
+              {incomeToEdit ? "Guardar Cambios" : "Guardar Ingreso"}
             </button>
           </div>
         </form>

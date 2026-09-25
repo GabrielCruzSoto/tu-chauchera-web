@@ -1,5 +1,5 @@
 import React from "react"
-import { render, screen } from "@testing-library/react"
+import { render, screen, fireEvent } from "@testing-library/react"
 import { describe, it, expect, beforeEach } from "vitest"
 import { LoginPage } from "./LoginPage"
 import { useAuthStore } from "@/store/authSlice"
@@ -58,5 +58,23 @@ describe("LoginPage Security & Flow", () => {
     expect(footer).toBeInTheDocument()
     expect(footer).toHaveTextContent("Sistema: v0.1.0")
     expect(footer).toHaveTextContent("Schema: v1.1.0")
+  })
+
+  it("opens support modal when clicking Ayuda & Soporte in footer", () => {
+    render(<LoginPage />)
+    const supportBtn = screen.getByRole("button", { name: /ayuda & soporte/i })
+    expect(supportBtn).toBeInTheDocument()
+
+    fireEvent.click(supportBtn)
+    expect(screen.getByRole("heading", { name: /centro de ayuda & soporte/i })).toBeInTheDocument()
+  })
+
+  it("opens support modal when clicking Contactar a soporte link", () => {
+    render(<LoginPage />)
+    const contactBtn = screen.getByRole("button", { name: /contactar a soporte/i })
+    expect(contactBtn).toBeInTheDocument()
+
+    fireEvent.click(contactBtn)
+    expect(screen.getByRole("heading", { name: /centro de ayuda & soporte/i })).toBeInTheDocument()
   })
 })

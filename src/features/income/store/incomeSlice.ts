@@ -2,7 +2,7 @@
  * Zustand Slice for Income management and Cash Flow computations.
  */
 import { create } from "zustand"
-import type { Income, CreateIncomeDTO, IncomesStore, UUID, Period } from "@/shared/types/domain"
+import type { Income, CreateIncomeDTO, IncomesStore, UUID, Period, IncomeStatus } from "@/shared/types/domain"
 import { useSyncStore } from "@/features/sync/store/syncSlice"
 
 export interface IncomeState {
@@ -46,6 +46,7 @@ export const useIncomeStore = create<IncomeState>((set) => ({
       description: dto.description,
       amountCents: dto.amountCents,
       type: dto.type,
+      status: dto.status ?? "REAL",
       period: dto.period,
       receivedDate: dto.receivedDate,
       categoryId: dto.categoryId,
@@ -83,6 +84,7 @@ export const useIncomeStore = create<IncomeState>((set) => ({
         description: `${dto.description} (${period})`,
         amountCents: dto.amountCents,
         type: dto.type,
+        status: dto.status ?? "REAL",
         period,
         receivedDate: dto.receivedDate,
         categoryId: dto.categoryId,
@@ -136,9 +138,46 @@ export const useIncomeStore = create<IncomeState>((set) => ({
 
 /**
  * Computes the total income for a specific period ("YYYY-MM").
+ * Optionally filters by status ("REAL" | "ESTIMATED"). If not specified, sums all.
  */
-export function getTotalIncomeForPeriod(incomes: Record<UUID, Income>, period: Period): number {
+export function getTotalIncomeForPeriod(
+  incomes: Record<UUID, Income>,
+  period: Period,
+  statusFilter?: IncomeStatus
+): number {
   return Object.values(incomes)
-    .filter((inc) => inc.period === period)
+    .filter((inc) => {
+      if (inc.period !== period) return false
+      if (!statusFilter) return true
+      const itemStatus: IncomeStatus = inc.status ?? "REAL"
+      return itemStatus === statusFilter
+    })
     .reduce((sum, inc) => sum + inc.amountCents, 0)
+}
+
+/**
+ * Computes separate real, estimated, and combined totals for a period.
+ */
+export function getIncomeBreakdownForPeriod(
+  incomes: Record<UUID, Income>,
+  period: Period
+): { real: number; estimated: number; total: number } {
+  let real = 0
+  let estimated = 0
+
+  for (const inc of Object.values(incomes)) {
+    if (inc.period === period) {
+      if (inc.status === "ESTIMATED") {
+        estimated += inc.amountCents
+      } else {
+        real += inc.amountCents
+      }
+    }
+  }
+
+  return {
+    real,
+    estimated,
+    total: real + estimated,
+  }
 }

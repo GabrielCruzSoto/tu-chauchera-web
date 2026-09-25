@@ -31,6 +31,7 @@ describe("SettingsView", () => {
     expect(screen.getByText("🏷️ Categorías")).toBeInTheDocument()
     expect(screen.getByText("👤 Usuario & Preferencias")).toBeInTheDocument()
     expect(screen.getByText("💾 Almacenamiento & Bóveda")).toBeInTheDocument()
+    expect(screen.getByText("💬 Soporte & Ayuda")).toBeInTheDocument()
     expect(screen.getByText(/mantenedor de categorías/i)).toBeInTheDocument()
   })
 
@@ -52,5 +53,16 @@ describe("SettingsView", () => {
 
     expect(screen.getByText(/almacenamiento & gestión de datos/i)).toBeInTheDocument()
     expect(screen.getByText(/copia de seguridad descifrada/i)).toBeInTheDocument()
+  })
+
+  it("switches to Support tab when clicked", () => {
+    render(<SettingsView />)
+
+    const supportTabBtn = screen.getByRole("button", { name: /💬 soporte & ayuda/i })
+    fireEvent.click(supportTabBtn)
+
+    expect(screen.getByText(/centro de ayuda & asistencia técnica/i)).toBeInTheDocument()
+    expect(screen.getByText(/soporte por correo/i)).toBeInTheDocument()
+    expect(screen.getByText(/reporte de diagnóstico del sistema/i)).toBeInTheDocument()
   })
 })

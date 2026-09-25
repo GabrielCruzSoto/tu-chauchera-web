@@ -7,6 +7,7 @@ import type { UUID, ISODate, CreateObligationDTO, Installment, Money } from "@/s
 
 export interface PaymentsState {
   markPaid: (installmentId: UUID, paidDate: ISODate, notes?: string, paidAmountCents?: Money) => void
+  updatePayment: (installmentId: UUID, paidDate: ISODate, notes?: string, paidAmountCents?: Money) => void
   markRenegotiated: (
     oldObligationId: UUID,
     fromInstallmentNumber: number,
@@ -28,7 +29,7 @@ export const usePaymentsStore = create<PaymentsState>(() => ({
         paidDate,
         period,
         amountCents: paidAmountCents !== undefined ? paidAmountCents : existing.amountCents,
-        notes: notes ?? existing.notes,
+        notes: notes !== undefined ? (notes.trim() ? notes.trim() : undefined) : existing.notes,
       }
 
       return {
@@ -40,16 +41,24 @@ export const usePaymentsStore = create<PaymentsState>(() => ({
     })
   },
 
+  updatePayment: (installmentId: UUID, paidDate: ISODate, notes?: string, paidAmountCents?: Money) => {
+    usePaymentsStore.getState().markPaid(installmentId, paidDate, notes, paidAmountCents)
+  },
+
   revertToPending: (installmentId: UUID) => {
     useObligationsStore.setState((state) => {
       const existing = state.installments[installmentId]
       if (!existing) return state
+
+      const obl = state.obligations[existing.obligationId]
+      const originalAmount = obl ? obl.installmentAmountCents : existing.amountCents
 
       const updated: Installment = {
         ...existing,
         status: "PENDING",
         paidDate: undefined,
         period: undefined,
+        amountCents: originalAmount,
       }
 
       return {

@@ -2,8 +2,9 @@ import React, { useState } from "react"
 import { CategoryManagerTab } from "./CategoryManagerTab"
 import { UserProfileTab } from "./UserProfileTab"
 import { DataStorageTab } from "./DataStorageTab"
+import { SupportTab } from "./SupportTab"
 
-type SettingsTab = "categories" | "profile" | "storage"
+type SettingsTab = "categories" | "profile" | "storage" | "support"
 
 export const SettingsView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>("categories")
@@ -12,6 +13,7 @@ export const SettingsView: React.FC = () => {
     { id: "categories", label: "🏷️ Categorías" },
     { id: "profile", label: "👤 Usuario & Preferencias" },
     { id: "storage", label: "💾 Almacenamiento & Bóveda" },
+    { id: "support", label: "💬 Soporte & Ayuda" },
   ] as const
 
   return (
@@ -51,6 +53,7 @@ export const SettingsView: React.FC = () => {
         {activeTab === "categories" && <CategoryManagerTab />}
         {activeTab === "profile" && <UserProfileTab />}
         {activeTab === "storage" && <DataStorageTab />}
+        {activeTab === "support" && <SupportTab />}
       </div>
     </div>
   )

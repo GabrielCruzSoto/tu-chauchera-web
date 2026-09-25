@@ -21,9 +21,19 @@ export const SyncStatusIndicator: React.FC = () => {
   return (
     <div className="flex items-center gap-2 text-xs">
       {status === "SYNCED" && (
-        <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-medium hidden sm:inline">Drive Sincronizado</span>
+        <div
+          title={lastSyncedAt ? `Última sincronización con Google Drive: ${new Date(lastSyncedAt).toLocaleString()}` : "Sincronizado con Google Drive"}
+          className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20 select-none cursor-default"
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <div className="flex flex-col text-left leading-none">
+            <span className="font-semibold text-[11px] hidden sm:inline">Drive Sincronizado</span>
+            {lastSyncedAt && (
+              <span className="text-[9px] text-emerald-400/80 font-mono mt-0.5 hidden sm:inline">
+                {new Date(lastSyncedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+          </div>
         </div>
       )}
 
@@ -56,7 +66,7 @@ export const SyncStatusIndicator: React.FC = () => {
           </span>
           <button
             onClick={() => void forceResync()}
-            className="text-amber-300 hover:text-white underline cursor-pointer text-[10px]"
+            className="min-h-[44px] sm:min-h-0 text-amber-300 hover:text-white underline cursor-pointer text-xs sm:text-[10px] flex items-center px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
           >
             Subir ahora
           </button>
@@ -71,7 +81,7 @@ export const SyncStatusIndicator: React.FC = () => {
           </span>
           <button
             onClick={() => void forceResync()}
-            className="text-rose-300 hover:text-white underline cursor-pointer text-[10px]"
+            className="min-h-[44px] sm:min-h-0 text-rose-300 hover:text-white underline cursor-pointer text-xs sm:text-[10px] flex items-center px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
           >
             Reintentar
           </button>
@@ -83,12 +93,6 @@ export const SyncStatusIndicator: React.FC = () => {
           <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
           <span className="font-medium">Sin conexión</span>
         </div>
-      )}
-
-      {lastSyncedAt && status === "SYNCED" && (
-        <span className="text-[10px] text-slate-500 hidden md:inline">
-          {new Date(lastSyncedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </span>
       )}
     </div>
   )

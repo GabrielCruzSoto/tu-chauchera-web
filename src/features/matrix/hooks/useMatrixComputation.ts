@@ -24,10 +24,15 @@ export const CREDIT_CARDS_CATEGORY_ID: UUID = "system-credit-cards"
 export interface MatrixSubcategory {
   id: string
   name: string
+  categoryId?: string | undefined
+  categoryName?: string | undefined
+  categoryColor?: string | undefined
   cells: Record<Period, number> // period -> amountCents
   total: number // total in range
   obligationId?: string | undefined
+  obligationIds?: string[] | undefined
   purchaseId?: string | undefined
+  cardAccountId?: string | undefined
   type?: ObligationType | undefined
   p2pRole?: P2PRole | undefined
   thirdPartyName?: string | undefined
@@ -47,6 +52,8 @@ export interface P2PPersonGroup {
   total: number
   obligationId?: string | undefined
   purchaseId?: string | undefined
+  cardAccountId?: string | undefined
+  detail?: string | undefined
 }
 
 export interface MatrixData {
@@ -157,9 +164,13 @@ export function computeFinancialMatrix(
       subcatMap[catId]![subcatKey] = {
         id: `${catId}-${subcatKey}`,
         name: subcatName,
+        categoryId: catId,
+        categoryName: cat.name,
+        categoryColor: cat.color,
         cells: cellsRecord,
         total: 0,
         obligationId: obl.id,
+        obligationIds: [obl.id],
         type: obl.type ?? "DEBT",
         p2pRole: obl.p2pMetadata?.role,
         thirdPartyName: obl.p2pMetadata?.thirdPartyName,
@@ -167,6 +178,10 @@ export function computeFinancialMatrix(
         productDescription: obl.p2pMetadata?.productDescription,
         detail: obl.detail,
       }
+    } else {
+      const existing = subcatMap[catId]![subcatKey]!
+      if (!existing.obligationIds) existing.obligationIds = [existing.obligationId || obl.id]
+      if (!existing.obligationIds.includes(obl.id)) existing.obligationIds.push(obl.id)
     }
 
     if (obl.type === "P2P_DEBT" && obl.p2pMetadata) {
@@ -183,6 +198,7 @@ export function computeFinancialMatrix(
         cells: cellsRecord,
         total: 0,
         obligationId: obl.id,
+        detail: obl.detail,
       }
     }
   }
@@ -235,12 +251,17 @@ export function computeFinancialMatrix(
       if (!subcatMap[catId]![subcatKey]) {
         const cellsRecord: Record<Period, number> = {}
         for (const p of periods) cellsRecord[p] = 0
+        const cat = categoriesMap[catId]
         subcatMap[catId]![subcatKey] = {
           id: `${catId}-${subcatKey}`,
           name: subcatName,
+          categoryId: catId,
+          categoryName: cat?.name ?? "Categoría",
+          categoryColor: cat?.color ?? "emerald",
           cells: cellsRecord,
           total: 0,
           obligationId: obl.id,
+          obligationIds: [obl.id],
           type: obl.type ?? "DEBT",
           p2pRole: obl.p2pMetadata?.role,
           thirdPartyName: obl.p2pMetadata?.thirdPartyName,
@@ -248,6 +269,10 @@ export function computeFinancialMatrix(
           productDescription: obl.p2pMetadata?.productDescription,
           detail: obl.detail,
         }
+      } else {
+        const existing = subcatMap[catId]![subcatKey]!
+        if (!existing.obligationIds) existing.obligationIds = [existing.obligationId || obl.id]
+        if (!existing.obligationIds.includes(obl.id)) existing.obligationIds.push(obl.id)
       }
       const existingSubcat = subcatMap[catId]![subcatKey]!
       existingSubcat.cells[targetPeriod] =
@@ -281,9 +306,13 @@ export function computeFinancialMatrix(
         subcatMap[cardCatId]![cardSubcatKey] = {
           id: `${cardCatId}-${account.id}`,
           name: cardName,
+          categoryId: cardCatId,
+          categoryName: "Tarjetas de Crédito",
+          categoryColor: "indigo",
           cells: cellsRecord,
           total: 0,
           type: "DEBT",
+          cardAccountId: account.id,
           cardIssuer: account.institution,
           productDescription: account.accountName,
         }
@@ -308,9 +337,13 @@ export function computeFinancialMatrix(
         subcatMap[cardCatId]![cardSubcatKey] = {
           id: `${cardCatId}-${cardSubcatKey}`,
           name: cardName,
+          categoryId: cardCatId,
+          categoryName: "Tarjetas de Crédito",
+          categoryColor: "indigo",
           cells: cellsRecord,
           total: 0,
           type: "DEBT",
+          cardAccountId: purchase.accountId,
           cardIssuer: cardAccount?.institution,
           productDescription: cardAccount?.accountName,
         }

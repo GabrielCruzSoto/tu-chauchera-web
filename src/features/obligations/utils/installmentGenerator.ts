@@ -59,7 +59,7 @@ export function generateInstallments(
 
   const installments: Installment[] = []
 
-  for (let num = currentInstallment; num <= totalInstallments; num++) {
+  for (let num = 1; num <= totalInstallments; num++) {
     const existing = preserved.get(num)
     if (existing) {
       installments.push(existing)
@@ -76,16 +76,19 @@ export function generateInstallments(
         ).totalMonthlyChargeCents
       }
 
+      const dueDate = computeDueDate(startDate, offset, dueDay)
+      const isHistoricalPaid = num < currentInstallment
+
       installments.push({
         id: crypto.randomUUID(),
         obligationId: id,
         installmentNumber: num,
-        dueDate: computeDueDate(startDate, offset, dueDay),
+        dueDate,
         amountCents: calculatedAmount,
-        status: "PENDING",
-        period: undefined,
-        paidDate: undefined,
-        notes: undefined,
+        status: isHistoricalPaid ? "PAID" : "PENDING",
+        period: isHistoricalPaid && dueDate !== "—" ? dueDate.slice(0, 7) : undefined,
+        paidDate: isHistoricalPaid && dueDate !== "—" ? dueDate : undefined,
+        notes: isHistoricalPaid ? "Amortización inicial registrada" : undefined,
       })
     }
   }

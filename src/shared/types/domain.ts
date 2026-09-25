@@ -123,12 +123,14 @@ export interface Installment {
 // ─── Income ──────────────────────────────────────────────────────────────────
 
 export type IncomeType = 'FIXED' | 'VARIABLE'
+export type IncomeStatus = 'REAL' | 'ESTIMATED'
 
 export interface Income {
   id: UUID
   description: string
   amountCents: Money
   type: IncomeType
+  status?: IncomeStatus | undefined // 'REAL' (default) or 'ESTIMATED'
   period: Period               // "YYYY-MM" — the month this income applies to
   receivedDate?: ISODate | undefined
   categoryId?: UUID | undefined
@@ -139,6 +141,7 @@ export interface CreateIncomeDTO {
   description: string
   amountCents: Money
   type: IncomeType
+  status?: IncomeStatus | undefined
   period: Period
   receivedDate?: ISODate
   categoryId?: UUID

@@ -153,4 +153,17 @@ describe("MonthlyInstallmentsView Status Filters", () => {
     expect(screen.getByText("PAGADO")).toBeInTheDocument()
     expect(screen.getByText(`${currentMonthStr}-15`)).toBeInTheDocument()
   })
+
+  it("renders Modificar pago button for paid installments and opens PaymentModal in edit mode", () => {
+    render(<MonthlyInstallmentsView />)
+
+    const modifyBtn = screen.getByRole("button", { name: /Modificar pago/i })
+    expect(modifyBtn).toBeInTheDocument()
+
+    fireEvent.click(modifyBtn)
+
+    expect(screen.getByRole("heading", { name: "Modificar Pago de Cuota" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Guardar Cambios/i })).toBeInTheDocument()
+  })
 })
+

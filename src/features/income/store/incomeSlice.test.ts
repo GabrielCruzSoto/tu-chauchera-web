@@ -89,4 +89,41 @@ describe("incomeSlice", () => {
     store.removeIncome(inc.id)
     expect(queueSpy).toHaveBeenCalledWith("incomes")
   })
+
+  it("handles REAL and ESTIMATED income statuses and calculates breakdown", () => {
+    const store = useIncomeStore.getState()
+
+    // Default status is REAL
+    const inc1 = store.addIncome({
+      description: "Sueldo Base",
+      amountCents: toMoney(1000000),
+      type: "FIXED",
+      period: "2024-05",
+    })
+    expect(inc1.status).toBe("REAL")
+
+    // Explicit ESTIMATED
+    const inc2 = store.addIncome({
+      description: "Bono Estimado",
+      amountCents: toMoney(400000),
+      type: "VARIABLE",
+      status: "ESTIMATED",
+      period: "2024-05",
+    })
+    expect(inc2.status).toBe("ESTIMATED")
+
+    const state = useIncomeStore.getState()
+    expect(getTotalIncomeForPeriod(state.incomes, "2024-05")).toBe(1400000)
+    expect(getTotalIncomeForPeriod(state.incomes, "2024-05", "REAL")).toBe(1000000)
+    expect(getTotalIncomeForPeriod(state.incomes, "2024-05", "ESTIMATED")).toBe(400000)
+
+    const breakdown = {
+      real: getTotalIncomeForPeriod(state.incomes, "2024-05", "REAL"),
+      estimated: getTotalIncomeForPeriod(state.incomes, "2024-05", "ESTIMATED"),
+      total: getTotalIncomeForPeriod(state.incomes, "2024-05"),
+    }
+    expect(breakdown.real).toBe(1000000)
+    expect(breakdown.estimated).toBe(400000)
+    expect(breakdown.total).toBe(1400000)
+  })
 })

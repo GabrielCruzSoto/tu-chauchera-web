@@ -202,8 +202,39 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
         }
       }
 
-      // Regenerate pending installments
-      const regenerated = generateInstallments(updatedObligation, currentObligationInstallments)
+      // If currentInstallment was updated in updates, adjust previously generated PAID installments if needed
+      let adjustedInstallments = currentObligationInstallments
+      if (updates.currentInstallment !== undefined) {
+        const newCurrent = updates.currentInstallment
+        adjustedInstallments = currentObligationInstallments.map((inst) => {
+          if (inst.installmentNumber < newCurrent && inst.status !== "PAID" && inst.status !== "RENEGOTIATED") {
+            const updatedInst: Installment = {
+              ...inst,
+              status: "PAID",
+              paidDate: inst.paidDate || inst.dueDate,
+              period: inst.period || (inst.dueDate !== "—" ? inst.dueDate.slice(0, 7) : undefined),
+              notes: inst.notes || "Amortización registrada",
+            }
+            newInstallmentsMap[inst.id] = updatedInst
+            return updatedInst
+          } else if (inst.installmentNumber >= newCurrent && inst.status === "PAID" && inst.notes?.includes("Amortización")) {
+            // Revert auto-amortized installments back to PENDING if user decreased paid count
+            const updatedInst: Installment = {
+              ...inst,
+              status: "PENDING",
+              paidDate: undefined,
+              period: undefined,
+              notes: undefined,
+            }
+            delete newInstallmentsMap[inst.id]
+            return updatedInst
+          }
+          return inst
+        })
+      }
+
+      // Regenerate pending installments and any missing historical paid installments
+      const regenerated = generateInstallments(updatedObligation, adjustedInstallments)
       for (const inst of regenerated) {
         newInstallmentsMap[inst.id] = inst
       }
