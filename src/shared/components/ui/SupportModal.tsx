@@ -5,9 +5,16 @@ import { APP_SYSTEM_VERSION, CURRENT_SCHEMA_VERSION } from "@/shared/constants/v
 export interface SupportModalProps {
   isOpen: boolean
   onClose: () => void
+  onOpenPrivacy?: (() => void) | undefined
+  onOpenTerms?: (() => void) | undefined
 }
 
-export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) => {
+export const SupportModal: React.FC<SupportModalProps> = ({
+  isOpen,
+  onClose,
+  onOpenPrivacy,
+  onOpenTerms,
+}) => {
   const [copiedEmail, setCopiedEmail] = useState(false)
   const [copiedDiagnostics, setCopiedDiagnostics] = useState(false)
 
@@ -137,6 +144,76 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose }) =
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </a>
+            </div>
+          </div>
+
+          {/* Privacy Policy Link Card */}
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-white">Política de Privacidad</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium">
+                  Local-First
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Conoce cómo se protegen tus datos financieros con cifrado AES-256 y Google Drive
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose()
+                  if (onOpenPrivacy) {
+                    onOpenPrivacy()
+                  } else {
+                    window.history.pushState({}, "", "/privacidad")
+                    window.dispatchEvent(new PopStateEvent("popstate"))
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition cursor-pointer border border-slate-700 inline-flex items-center gap-1.5"
+              >
+                <span>Leer Política</span>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Terms of Service Link Card */}
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-white">Condiciones del Servicio</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20 font-medium">
+                  Términos de Uso
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Consulta las condiciones legales, licencias, responsabilidades y descargo financiero
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose()
+                  if (onOpenTerms) {
+                    onOpenTerms()
+                  } else {
+                    window.history.pushState({}, "", "/terminos")
+                    window.dispatchEvent(new PopStateEvent("popstate"))
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition cursor-pointer border border-slate-700 inline-flex items-center gap-1.5"
+              >
+                <span>Ver Términos</span>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>

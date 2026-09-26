@@ -4,7 +4,12 @@ import { APP_SYSTEM_VERSION, CURRENT_SCHEMA_VERSION } from "@/shared/constants/v
 import { useAuthStore } from "@/store/authSlice"
 import { useSyncStore } from "@/features/sync/store/syncSlice"
 
-export const SupportTab: React.FC = () => {
+export interface SupportTabProps {
+  onOpenPrivacy?: (() => void) | undefined
+  onOpenTerms?: (() => void) | undefined
+}
+
+export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTerms }) => {
   const { user, isUnlocked } = useAuthStore()
   const { status: syncStatus, lastSyncedAt } = useSyncStore()
   const [copiedEmail, setCopiedEmail] = useState(false)
@@ -90,6 +95,76 @@ export const SupportTab: React.FC = () => {
                 <span>Redactar</span>
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Card Privacy Policy */}
+          <div className="p-4 sm:p-5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-white">Política de Privacidad</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium">
+                  Documento Oficial
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Consulta los términos oficiales de privacidad por diseño, cifrado AES-256 y persistencia en tu Google Drive personal.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="/privacidad"
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (onOpenPrivacy) {
+                    onOpenPrivacy()
+                  } else {
+                    window.history.pushState({}, "", "/privacidad")
+                    window.dispatchEvent(new PopStateEvent("popstate"))
+                  }
+                }}
+                className="py-2 px-3.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition cursor-pointer border border-slate-700 inline-flex items-center gap-1.5"
+              >
+                <span>Ver Política</span>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Card Terms of Service */}
+          <div className="p-4 sm:p-5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-white">Condiciones del Servicio</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20 font-medium">
+                  Términos Legales
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Revisa los términos de uso, licencias, descargo de asesoría financiera y responsabilidades de la plataforma.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="/terminos"
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (onOpenTerms) {
+                    onOpenTerms()
+                  } else {
+                    window.history.pushState({}, "", "/terminos")
+                    window.dispatchEvent(new PopStateEvent("popstate"))
+                  }
+                }}
+                className="py-2 px-3.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition cursor-pointer border border-slate-700 inline-flex items-center gap-1.5"
+              >
+                <span>Ver Términos</span>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </a>
             </div>

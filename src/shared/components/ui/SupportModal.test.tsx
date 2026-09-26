@@ -63,4 +63,30 @@ describe("SupportModal Component", () => {
     fireEvent.click(closeBtn)
     expect(mockOnClose).toHaveBeenCalledTimes(1)
   })
+
+  it("renders privacy policy card and triggers onOpenPrivacy when clicked", () => {
+    const mockOnOpenPrivacy = vi.fn()
+    render(<SupportModal isOpen={true} onClose={mockOnClose} onOpenPrivacy={mockOnOpenPrivacy} />)
+
+    expect(screen.getByText("Política de Privacidad")).toBeInTheDocument()
+    const privacyBtn = screen.getByRole("button", { name: /leer política/i })
+    expect(privacyBtn).toBeInTheDocument()
+
+    fireEvent.click(privacyBtn)
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
+    expect(mockOnOpenPrivacy).toHaveBeenCalledTimes(1)
+  })
+
+  it("renders terms of service action and calls onOpenTerms when clicked", () => {
+    const mockOnOpenTerms = vi.fn()
+    render(<SupportModal isOpen={true} onClose={mockOnClose} onOpenTerms={mockOnOpenTerms} />)
+
+    expect(screen.getByText("Condiciones del Servicio")).toBeInTheDocument()
+    const termsBtn = screen.getByRole("button", { name: /ver términos/i })
+    expect(termsBtn).toBeInTheDocument()
+
+    fireEvent.click(termsBtn)
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
+    expect(mockOnOpenTerms).toHaveBeenCalledTimes(1)
+  })
 })

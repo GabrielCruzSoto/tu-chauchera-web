@@ -36,3 +36,4 @@ coverage/
 .vercel
 .env*
 .playwright-mcp/
+videos/

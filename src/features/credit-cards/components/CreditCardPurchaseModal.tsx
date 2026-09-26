@@ -26,18 +26,24 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
 
   if (!isOpen) return null
 
-  const currentAccount = accounts[selectedAccountId]
+  const activeAccountId = (selectedAccountId && accounts[selectedAccountId])
+    ? selectedAccountId
+    : (accountList[0]?.id ?? '')
+
+  const currentAccount = accounts[activeAccountId]
   const availablePlastics = currentAccount?.plastics ?? []
 
   // Ensure selected plastic matches current account
-  const activePlasticId = selectedPlasticId || (availablePlastics[0]?.id ?? '')
+  const activePlasticId = (selectedPlasticId && availablePlastics.some((p) => p.id === selectedPlasticId))
+    ? selectedPlasticId
+    : (availablePlastics[0]?.id ?? '')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedAccountId || !activePlasticId || !description || !totalAmount) return
+    if (!activeAccountId || !activePlasticId || !description || !totalAmount) return
 
     addPurchase({
-      accountId: selectedAccountId,
+      accountId: activeAccountId,
       plasticId: activePlasticId,
       description,
       purchaseDate,
@@ -47,6 +53,11 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
       thirdPartyName: payerType === 'TERCERO' ? thirdPartyName : undefined,
     })
 
+    setDescription('')
+    setTotalAmount('')
+    setTotalInstallments(1)
+    setPayerType('PROPIO')
+    setThirdPartyName('')
     onClose()
   }
 
@@ -78,7 +89,7 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Tarjeta / Cuenta</label>
                   <select
-                    value={selectedAccountId}
+                    value={activeAccountId}
                     onChange={(e) => {
                       setSelectedAccountId(e.target.value)
                       setSelectedPlasticId('')

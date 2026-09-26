@@ -6,6 +6,8 @@ import { SyncStatusIndicator } from "@/features/sync/components/SyncStatusIndica
 import { PageLoader } from "@/shared/components/ui/PageLoader"
 import { UserMenuDropdown } from "@/shared/components/layout/UserMenuDropdown"
 import { SupportModal } from "@/shared/components/ui/SupportModal"
+import { PrivacyPolicyPage } from "@/features/legal/components/PrivacyPolicyPage"
+import { TermsOfServicePage } from "@/features/legal/components/TermsOfServicePage"
 import "@/store/appReset"
 
 const ObligationsList = lazy(() =>
@@ -80,6 +82,26 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"matrix" | "calendar" | "obligations" | "cards" | "income" | "settings">("matrix")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSupportOpen, setIsSupportOpen] = useState(false)
+  const [currentPath, setCurrentPath] = useState<string>(() =>
+    typeof window !== "undefined" ? window.location.pathname : "/"
+  )
+
+  // Listen for browser back/forward history navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname)
+    }
+    window.addEventListener("popstate", handlePopState)
+    return () => window.removeEventListener("popstate", handlePopState)
+  }, [])
+
+  const navigateTo = (path: string) => {
+    if (typeof window !== "undefined") {
+      window.history.pushState({}, "", path)
+      setCurrentPath(path)
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+  }
 
   // Clean residual OAuth URL query params if present
   useEffect(() => {
@@ -124,8 +146,31 @@ export const App: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [isAuthenticated, isUnlocked])
 
+  if (currentPath === "/privacidad" || currentPath === "/privacy") {
+    return (
+      <PrivacyPolicyPage
+        onBack={() => navigateTo("/")}
+        onNavigateToTerms={() => navigateTo("/terminos")}
+      />
+    )
+  }
+
+  if (currentPath === "/terminos" || currentPath === "/terms" || currentPath === "/condiciones") {
+    return (
+      <TermsOfServicePage
+        onBack={() => navigateTo("/")}
+        onNavigateToPrivacy={() => navigateTo("/privacidad")}
+      />
+    )
+  }
+
   if (!isAuthenticated || !isUnlocked) {
-    return <LoginPage />
+    return (
+      <LoginPage
+        onOpenPrivacy={() => navigateTo("/privacidad")}
+        onOpenTerms={() => navigateTo("/terminos")}
+      />
+    )
   }
 
   const handleTabSelect = (tab: "matrix" | "calendar" | "obligations" | "cards" | "income" | "settings") => {
@@ -412,11 +457,21 @@ export const App: React.FC = () => {
           {activeTab === "cards" && <CreditCardsDashboard />}
           {activeTab === "income" && <IncomeListView />}
           {activeTab === "obligations" && <ObligationsList />}
-          {activeTab === "settings" && <SettingsView />}
+          {activeTab === "settings" && (
+            <SettingsView
+              onOpenPrivacy={() => navigateTo("/privacidad")}
+              onOpenTerms={() => navigateTo("/terminos")}
+            />
+          )}
         </Suspense>
       </main>
 
-      <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
+      <SupportModal
+        isOpen={isSupportOpen}
+        onClose={() => setIsSupportOpen(false)}
+        onOpenPrivacy={() => navigateTo("/privacidad")}
+        onOpenTerms={() => navigateTo("/terminos")}
+      />
     </div>
   )
 }

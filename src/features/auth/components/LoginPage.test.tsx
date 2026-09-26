@@ -77,4 +77,27 @@ describe("LoginPage Security & Flow", () => {
     fireEvent.click(contactBtn)
     expect(screen.getByRole("heading", { name: /centro de ayuda & soporte/i })).toBeInTheDocument()
   })
+
+  it("renders privacy policy link in footer and calls onOpenPrivacy when clicked", () => {
+    const mockOnOpenPrivacy = vi.fn()
+    render(<LoginPage onOpenPrivacy={mockOnOpenPrivacy} />)
+
+    const privacyLink = screen.getByRole("link", { name: /privacidad/i })
+    expect(privacyLink).toBeInTheDocument()
+
+    fireEvent.click(privacyLink)
+    expect(mockOnOpenPrivacy).toHaveBeenCalledTimes(1)
+  })
+
+  it("renders terms of service link in footer and calls onOpenTerms when clicked", () => {
+    const mockOnOpenTerms = vi.fn()
+    render(<LoginPage onOpenTerms={mockOnOpenTerms} />)
+
+    const termsLink = screen.getByRole("link", { name: /términos/i })
+    expect(termsLink).toBeInTheDocument()
+
+    fireEvent.click(termsLink)
+    expect(mockOnOpenTerms).toHaveBeenCalledTimes(1)
+  })
 })
+

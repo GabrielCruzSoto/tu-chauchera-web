@@ -6,7 +6,12 @@ import { SupportTab } from "./SupportTab"
 
 type SettingsTab = "categories" | "profile" | "storage" | "support"
 
-export const SettingsView: React.FC = () => {
+export interface SettingsViewProps {
+  onOpenPrivacy?: (() => void) | undefined
+  onOpenTerms?: (() => void) | undefined
+}
+
+export const SettingsView: React.FC<SettingsViewProps> = ({ onOpenPrivacy, onOpenTerms }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>("categories")
 
   const tabs = [
@@ -53,7 +58,7 @@ export const SettingsView: React.FC = () => {
         {activeTab === "categories" && <CategoryManagerTab />}
         {activeTab === "profile" && <UserProfileTab />}
         {activeTab === "storage" && <DataStorageTab />}
-        {activeTab === "support" && <SupportTab />}
+        {activeTab === "support" && <SupportTab onOpenPrivacy={onOpenPrivacy} onOpenTerms={onOpenTerms} />}
       </div>
     </div>
   )
