@@ -37,3 +37,6 @@ coverage/
 .env*
 .playwright-mcp/
 videos/
+# SonarQube
+.scannerwork/
+.codegraph/
