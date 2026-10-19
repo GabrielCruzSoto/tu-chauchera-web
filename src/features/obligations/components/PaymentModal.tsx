@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import type { Installment, Obligation } from "@/shared/types/domain"
 import { usePaymentsStore } from "../store/paymentsSlice"
 import { formatCLP, toMoney } from "@/shared/types/money"
+import { getLocalISODate } from "@/shared/utils/date"
 
 interface PaymentModalProps {
   installment: Installment
@@ -12,8 +13,15 @@ interface PaymentModalProps {
 export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligation, onClose }) => {
   const { markPaid } = usePaymentsStore()
   const isEditing = installment.status === "PAID"
+  const isP2P = obligation.type === "P2P_DEBT"
+  const isLent = isP2P && (obligation.p2pMetadata?.role === "LENT_MY_CARD" || obligation.p2pMetadata?.role === "DIRECT_LOAN_GIVEN")
+  const conceptText = isP2P
+    ? (obligation.p2pMetadata?.productDescription || obligation.detail)
+    : obligation.detail
+  const hasDistinctConcept = conceptText && conceptText.trim().toLowerCase() !== obligation.subcategory.trim().toLowerCase()
+
   const [paidDate, setPaidDate] = useState(
-    installment.paidDate ?? new Date().toISOString().slice(0, 10)
+    installment.paidDate ?? getLocalISODate()
   )
   const [paidAmount, setPaidAmount] = useState<number>(installment.amountCents)
   const [notes, setNotes] = useState(installment.notes ?? "")
@@ -45,7 +53,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligat
         <div className="flex justify-between items-center px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-800 flex-shrink-0">
           <div className="flex items-center gap-2">
             <h3 id="payment-modal-title" className="text-base sm:text-lg font-bold text-white">
-              {isEditing ? "Modificar Pago de Cuota" : "Registrar Pago de Cuota"}
+              {isEditing
+                ? isLent ? "Modificar Cobro de Cuota" : "Modificar Pago de Cuota"
+                : isLent ? "Registrar Cobro de Cuota" : "Registrar Pago de Cuota"}
             </h3>
             {isEditing && (
               <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -67,8 +77,37 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligat
           <div className="overflow-y-auto px-5 py-4 sm:px-6 sm:py-5 space-y-4 flex-1">
             <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 text-xs space-y-1.5">
               <div className="text-slate-400">
-                Obligación: <span className="font-semibold text-white">{obligation.subcategory}</span>
+                {isP2P ? "Persona / Contacto:" : "Obligación / Entidad:"}{" "}
+                <span className="font-semibold text-white">{obligation.subcategory}</span>
               </div>
+              {hasDistinctConcept && (
+                <div className="text-slate-400">
+                  Concepto / Ítem:{" "}
+                  <span className="font-semibold text-emerald-300">{conceptText}</span>
+                </div>
+              )}
+              {isP2P && obligation.p2pMetadata?.cardIssuer && (
+                <div className="text-slate-400">
+                  Tarjeta:{" "}
+                  <span className="font-medium text-slate-200">💳 {obligation.p2pMetadata.cardIssuer}</span>
+                </div>
+              )}
+              {isP2P && (
+                <div className="text-slate-400">
+                  Situación:{" "}
+                  <span className="font-medium text-amber-300">
+                    {obligation.p2pMetadata?.role === "LENT_MY_CARD"
+                      ? "Presté mi tarjeta (Por cobrar)"
+                      : obligation.p2pMetadata?.role === "USED_THEIR_CARD"
+                      ? "Usé tarjeta ajena (Por pagar)"
+                      : obligation.p2pMetadata?.role === "DIRECT_LOAN_GIVEN"
+                      ? "Préstamo otorgado (Por cobrar)"
+                      : obligation.p2pMetadata?.role === "DIRECT_LOAN_TAKEN"
+                      ? "Préstamo recibido (Por pagar)"
+                      : "Compromiso entre personas"}
+                  </span>
+                </div>
+              )}
               <div className="text-slate-400">
                 Cuota:{" "}
                 <span className="font-semibold text-emerald-400">
@@ -91,6 +130,18 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligat
                 </div>
               )}
             </div>
+
+            {(installment.isOverdueRollover || installment.originalDueDate) && (
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <span className="text-base">⚠️</span>
+                <div>
+                  <div className="font-semibold text-rose-200">Cuota no pagada en plazo original</div>
+                  <div className="text-[11px] text-rose-300/80">
+                    Vencimiento original: {installment.originalDueDate || installment.dueDate}. Fue trasladada a este período.
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Editable Paid Amount (with interest / penalty / discount support) */}
             <div>
@@ -180,6 +231,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ installment, obligat
             >
               {isEditing
                 ? `Guardar Cambios (${formatCLP(toMoney(paidAmount))})`
+                : isLent
+                ? `Confirmar Cobro (${formatCLP(toMoney(paidAmount))})`
                 : `Confirmar Pago (${formatCLP(toMoney(paidAmount))})`}
             </button>
           </div>

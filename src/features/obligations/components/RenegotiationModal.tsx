@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import type { Obligation } from "@/shared/types/domain"
 import { usePaymentsStore } from "../store/paymentsSlice"
 import { toMoney } from "@/shared/types/money"
+import { getLocalISODate } from "@/shared/utils/date"
 
 interface RenegotiationModalProps {
   oldObligation: Obligation
@@ -21,7 +22,7 @@ export const RenegotiationModal: React.FC<RenegotiationModalProps> = ({
   const [totalAmount, setTotalAmount] = useState<number>(0)
   const [totalInstallments, setTotalInstallments] = useState<number>(24)
   const [installmentAmount, setInstallmentAmount] = useState<number>(0)
-  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10))
+  const [startDate, setStartDate] = useState(getLocalISODate())
   const [dueDay, setDueDay] = useState<number>(oldObligation.dueDay)
 
   const handleTotalChange = (val: number) => {

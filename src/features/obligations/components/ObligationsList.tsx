@@ -350,8 +350,20 @@ export const ObligationsList: React.FC = () => {
                         </div>
                         <div>
                           {isExpense && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">
-                              💡 Gasto Fijo
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                obl.isRecurringIndefinite
+                                  ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
+                                  : obl.totalInstallments === 1
+                                  ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
+                                  : "bg-teal-500/15 text-teal-300 border-teal-500/30"
+                              }`}
+                            >
+                              {obl.isRecurringIndefinite
+                                ? "💡 Gasto Fijo"
+                                : obl.totalInstallments === 1
+                                ? "⚡ Momentáneo"
+                                : "🗓️ Plazo Fijo"}
                             </span>
                           )}
                           {isP2P && (
@@ -374,17 +386,48 @@ export const ObligationsList: React.FC = () => {
                         {formatCLP(obl.installmentAmountCents)}
                       </div>
                       <div className="text-[10px] text-slate-400">
-                        {isExpense ? "estimado/mes" : "por cuota"}
+                        {isExpense
+                          ? obl.isRecurringIndefinite
+                            ? "estimado/mes"
+                            : obl.totalInstallments === 1
+                            ? "monto único"
+                            : `${obl.totalInstallments} meses`
+                          : "por cuota"}
                       </div>
                     </td>
 
                     {/* Column 4: Progress / Due Day */}
                     <td className="px-3 sm:px-4 py-3.5 text-center">
                       {isExpense ? (
-                        <div className="space-y-0.5">
-                          <span className="text-xs font-medium text-sky-300">Mensual permanente</span>
-                          <div className="text-[11px] text-slate-400">Día {obl.dueDay} de cada mes</div>
-                        </div>
+                        obl.isRecurringIndefinite ? (
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-medium text-sky-300">Mensual permanente</span>
+                            <div className="text-[11px] text-slate-400">Día {obl.dueDay} de cada mes</div>
+                          </div>
+                        ) : obl.totalInstallments === 1 ? (
+                          <div className="space-y-0.5">
+                            <span className={`text-xs font-medium ${paidCount > 0 ? "text-emerald-300" : "text-violet-300"}`}>
+                              {paidCount > 0 ? "✅ Pagado" : "⚡ Pago puntual"}
+                            </span>
+                            <div className="text-[11px] text-slate-400">Día {obl.dueDay} • {obl.startDate.slice(0, 7)}</div>
+                          </div>
+                        ) : (
+                          <div className="space-y-1 max-w-[140px] mx-auto">
+                            <div className="flex justify-between text-[11px] text-slate-300 font-medium">
+                              <span>{paidCount} pagadas</span>
+                              <span className="text-slate-400">de {obl.totalInstallments}</span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-teal-500 h-1.5 rounded-full transition-all"
+                                style={{ width: `${progressPercent}%` }}
+                              />
+                            </div>
+                            <div className="text-[10px] text-slate-400">
+                              {pendingCount} pendientes • Día {obl.dueDay}
+                            </div>
+                          </div>
+                        )
                       ) : (
                         <div className="space-y-1 max-w-[140px] mx-auto">
                           <div className="flex justify-between text-[11px] text-slate-300 font-medium">
@@ -406,14 +449,16 @@ export const ObligationsList: React.FC = () => {
 
                     {/* Column 5: Total Commitment */}
                     <td className="px-3 sm:px-4 py-3.5 text-right font-mono">
-                      {isExpense ? (
+                      {isExpense && obl.isRecurringIndefinite ? (
                         <span className="text-xs text-slate-400">Continuo</span>
                       ) : (
                         <div>
                           <div className="font-semibold text-xs text-slate-200">
                             {formatCLP(obl.totalAmountCents)}
                           </div>
-                          <div className="text-[10px] text-slate-500">Monto total</div>
+                          <div className="text-[10px] text-slate-500">
+                            {isExpense && obl.totalInstallments === 1 ? "Pago puntual" : "Monto total"}
+                          </div>
                         </div>
                       )}
                     </td>
@@ -483,8 +528,20 @@ export const ObligationsList: React.FC = () => {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <CategoryBadge categoryId={obl.categoryId} />
                       {isExpense && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">
-                          💡 Gasto
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                            obl.isRecurringIndefinite
+                              ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
+                              : obl.totalInstallments === 1
+                              ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
+                              : "bg-teal-500/15 text-teal-300 border-teal-500/30"
+                          }`}
+                        >
+                          {obl.isRecurringIndefinite
+                            ? "💡 Gasto Fijo"
+                            : obl.totalInstallments === 1
+                            ? "⚡ Momentáneo"
+                            : "🗓️ Plazo Fijo"}
                         </span>
                       )}
                       {isP2P && (
@@ -534,11 +591,19 @@ export const ObligationsList: React.FC = () => {
 
                 <div className="space-y-2 pt-3 border-t border-slate-800/80">
                   <div className="flex justify-between text-xs text-slate-400">
-                    <span>{isExpense ? "Monto mensual estimado:" : "Monto por cuota:"}</span>
+                    <span>
+                      {isExpense
+                        ? obl.isRecurringIndefinite
+                          ? "Monto mensual estimado:"
+                          : obl.totalInstallments === 1
+                          ? "Monto puntual:"
+                          : "Monto mensual:"
+                        : "Monto por cuota:"}
+                    </span>
                     <span className="font-semibold text-white">{formatCLP(obl.installmentAmountCents)}</span>
                   </div>
 
-                  {!isExpense && (
+                  {(!isExpense || !obl.isRecurringIndefinite) && (
                     <div className="flex justify-between text-xs text-slate-400">
                       <span>Total compromiso:</span>
                       <span className="font-medium text-slate-300">{formatCLP(obl.totalAmountCents)}</span>
@@ -546,10 +611,24 @@ export const ObligationsList: React.FC = () => {
                   )}
 
                   <div className="flex justify-between text-xs text-slate-400">
-                    <span>{isExpense ? "Frecuencia:" : "Progreso cuotas:"}</span>
-                    <span className={`font-medium ${isExpense ? "text-sky-300" : "text-emerald-400"}`}>
+                    <span>{isExpense ? "Frecuencia / Vencimiento:" : "Progreso cuotas:"}</span>
+                    <span
+                      className={`font-medium ${
+                        isExpense
+                          ? obl.isRecurringIndefinite
+                            ? "text-sky-300"
+                            : obl.totalInstallments === 1
+                            ? "text-violet-300"
+                            : "text-teal-300"
+                          : "text-emerald-400"
+                      }`}
+                    >
                       {isExpense
-                        ? `Mensual (Día ${obl.dueDay})`
+                        ? obl.isRecurringIndefinite
+                          ? `Mensual (Día ${obl.dueDay})`
+                          : obl.totalInstallments === 1
+                          ? `${paidCount > 0 ? "Pagado" : "Pago puntual"} (Día ${obl.dueDay})`
+                          : `${paidCount} de ${obl.totalInstallments} meses`
                         : `${paidCount} pagadas / ${pendingCount} pendientes (${obl.totalInstallments} total)`}
                     </span>
                   </div>

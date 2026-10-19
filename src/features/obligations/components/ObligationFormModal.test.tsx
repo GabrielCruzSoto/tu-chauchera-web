@@ -36,7 +36,7 @@ describe("ObligationFormModal Integration", () => {
     fireEvent.change(totalAmountInput, { target: { value: "360000" } })
 
     // Open category creation via dropdown option
-    const select = screen.getByRole("combobox")
+    const select = screen.getByRole("combobox", { name: "Categoría" })
     fireEvent.change(select, { target: { value: "__NEW_CATEGORY__" } })
 
     // Category modal should be visible
@@ -199,7 +199,7 @@ describe("ObligationFormModal Integration", () => {
     render(<ObligationFormModal onClose={onClose} />)
 
     // Initially in DEBT mode, category is Bancos & Créditos
-    const select = screen.getByRole("combobox")
+    const select = screen.getByRole("combobox", { name: "Categoría" })
     expect(select).toHaveValue("cat-bancos")
 
     // Click Entre Personas tab
@@ -249,6 +249,43 @@ describe("ObligationFormModal Integration", () => {
     expect(clonedObl).toBeDefined()
     expect(clonedObl?.id).not.toBe("obl-to-clone")
     expect(clonedObl?.installmentAmountCents).toBe(toMoney(100000))
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it("creates a momentary / one-off expense when selecting Momentáneo mode", () => {
+    const onClose = vi.fn()
+    render(<ObligationFormModal onClose={onClose} />)
+
+    // Click Gasto Recurrente & Puntual tab
+    const expenseTab = screen.getByRole("button", { name: /Gasto Recurrente/i })
+    fireEvent.click(expenseTab)
+
+    // Select Momentáneo / Puntual cadence
+    const momentaryBtn = screen.getByRole("button", { name: /Momentáneo \/ Puntual/i })
+    fireEvent.click(momentaryBtn)
+
+    const providerInput = screen.getByPlaceholderText(/Enel, VTR, Netflix/i)
+    fireEvent.change(providerInput, { target: { value: "ENEL - 3439789-9" } })
+
+    const detailInput = screen.getByPlaceholderText(/Luz periodo agosto pendiente de pago/i)
+    fireEvent.change(detailInput, { target: { value: "LUZ - PERIODO AGOSTO" } })
+
+    const amountInput = screen.getByPlaceholderText("Ej. 29990")
+    fireEvent.change(amountInput, { target: { value: "199861" } })
+
+    const submitBtn = screen.getByRole("button", { name: "Guardar Obligación" })
+    fireEvent.click(submitBtn)
+
+    const state = useObligationsStore.getState()
+    const addedObl = Object.values(state.obligations).find(
+      (o) => o.subcategory === "ENEL - 3439789-9"
+    )
+    expect(addedObl).toBeDefined()
+    expect(addedObl?.type).toBe("EXPENSE")
+    expect(addedObl?.totalInstallments).toBe(1)
+    expect(addedObl?.isRecurringIndefinite).toBe(false)
+    expect(addedObl?.installmentAmountCents).toBe(199861)
+    expect(addedObl?.totalAmountCents).toBe(199861)
     expect(onClose).toHaveBeenCalled()
   })
 })
