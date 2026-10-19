@@ -1,6 +1,7 @@
 import { addMonths, getDaysInMonth, setDate, format } from "date-fns"
-import type { Obligation, Installment } from "@/shared/types/domain"
+import type { Obligation, Installment, DueRule } from "@/shared/types/domain"
 import { computeP2PInstallmentCharge } from "./surchargeCalculator"
+import { resolveDueDate } from "@/features/payments/domain/resolveDueDate"
 
 /** Clamp dueDay to the actual last day of a given month (handles Feb 30 -> Feb 28/29) */
 export function clampDueDay(year: number, month: number, dueDay: number): number {
@@ -14,8 +15,13 @@ export function clampDueDay(year: number, month: number, dueDay: number): number
   }
 }
 
-/** Compute ISO due date string for a given installment offset */
-export function computeDueDate(startDate: string, offsetMonths: number, dueDay: number): string {
+/** Compute ISO due date string for a given installment offset, respecting optional dueRule */
+export function computeDueDate(
+  startDate: string,
+  offsetMonths: number,
+  dueDay: number,
+  dueRule?: DueRule
+): string {
   if (!startDate || typeof startDate !== "string" || startDate.trim().length < 4) {
     return "—"
   }
@@ -32,6 +38,13 @@ export function computeDueDate(startDate: string, offsetMonths: number, dueDay: 
     const year = target.getFullYear()
     const month = target.getMonth() + 1
     if (isNaN(year) || isNaN(month)) return "—"
+
+    const paddedMonth = month.toString().padStart(2, "0")
+    const period = `${year}-${paddedMonth}`
+
+    if (dueRule) {
+      return resolveDueDate(dueRule, period)
+    }
 
     const day = clampDueDay(year, month, cleanDueDay)
     return format(setDate(new Date(year, month - 1), day), "yyyy-MM-dd")
@@ -76,7 +89,7 @@ export function generateInstallments(
         ).totalMonthlyChargeCents
       }
 
-      const dueDate = computeDueDate(startDate, offset, dueDay)
+      const dueDate = computeDueDate(startDate, offset, dueDay, obligation.dueRule)
       const isHistoricalPaid = num < currentInstallment
 
       installments.push({

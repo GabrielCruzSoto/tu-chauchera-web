@@ -3,6 +3,7 @@
  */
 import { create } from "zustand"
 import { useObligationsStore } from "./obligationsSlice"
+import { useSyncStore } from "@/features/sync/store/syncSlice"
 import type { UUID, ISODate, CreateObligationDTO, Installment, Money } from "@/shared/types/domain"
 
 export interface PaymentsState {
@@ -14,6 +15,9 @@ export interface PaymentsState {
     newObligationDTO: CreateObligationDTO
   ) => void
   revertToPending: (installmentId: UUID) => void
+  postponeToNextMonth: (installmentId: UUID) => void
+  revertPostpone: (installmentId: UUID) => void
+  moveToPreviousMonth: (installmentId: UUID) => void
 }
 
 export const usePaymentsStore = create<PaymentsState>(() => ({
@@ -68,6 +72,98 @@ export const usePaymentsStore = create<PaymentsState>(() => ({
         },
       }
     })
+  },
+
+  postponeToNextMonth: (installmentId: UUID) => {
+    useObligationsStore.setState((state) => {
+      const existing = state.installments[installmentId]
+      if (!existing) return state
+
+      const [year, month, day] = existing.dueDate.split("-").map(Number)
+      if (!year || !month || !day) return state
+
+      let nextYear = year
+      let nextMonth = month + 1
+      if (nextMonth > 12) {
+        nextMonth = 1
+        nextYear += 1
+      }
+      const daysInNextMonth = new Date(nextYear, nextMonth, 0).getDate()
+      const cleanDay = Math.min(day, daysInNextMonth)
+      const nextDueDate = `${nextYear}-${String(nextMonth).padStart(2, "0")}-${String(cleanDay).padStart(2, "0")}`
+
+      const updated: Installment = {
+        ...existing,
+        dueDate: nextDueDate,
+        originalDueDate: existing.originalDueDate || existing.dueDate,
+        isOverdueRollover: true,
+        notes: existing.notes
+          ? `${existing.notes} | Pasada al mes siguiente por no pago en plazo`
+          : `Pasada al mes siguiente por no pago en plazo (vencía el ${existing.dueDate})`,
+      }
+
+      return {
+        installments: {
+          ...state.installments,
+          [installmentId]: updated,
+        },
+      }
+    })
+
+    useSyncStore.getState().queueSyncDomain("obligations")
+  },
+
+  moveToPreviousMonth: (installmentId: UUID) => {
+    useObligationsStore.setState((state) => {
+      const existing = state.installments[installmentId]
+      if (!existing) return state
+
+      let targetDueDate: string
+      if (existing.originalDueDate) {
+        targetDueDate = existing.originalDueDate
+      } else {
+        const [year, month, day] = existing.dueDate.split("-").map(Number)
+        if (!year || !month || !day) return state
+
+        let prevYear = year
+        let prevMonth = month - 1
+        if (prevMonth < 1) {
+          prevMonth = 12
+          prevYear -= 1
+        }
+        const daysInPrevMonth = new Date(prevYear, prevMonth, 0).getDate()
+        const cleanDay = Math.min(day, daysInPrevMonth)
+        targetDueDate = `${prevYear}-${String(prevMonth).padStart(2, "0")}-${String(cleanDay).padStart(2, "0")}`
+      }
+
+      let cleanNotes = existing.notes
+      if (cleanNotes) {
+        cleanNotes = cleanNotes.replace(/\s*\|\s*Pasada al mes siguiente por no pago en plazo/g, "")
+        cleanNotes = cleanNotes.replace(/^Pasada al mes siguiente por no pago en plazo \(vencía el \d{4}-\d{2}-\d{2}\)\s*/g, "")
+        cleanNotes = cleanNotes.trim() || undefined
+      }
+
+      const updated: Installment = {
+        ...existing,
+        dueDate: targetDueDate,
+        originalDueDate: undefined,
+        isOverdueRollover: undefined,
+        notes: cleanNotes,
+      }
+
+      return {
+        installments: {
+          ...state.installments,
+          [installmentId]: updated,
+        },
+      }
+    })
+
+    useSyncStore.getState().queueSyncDomain("obligations")
+  },
+
+  revertPostpone: (installmentId: UUID) => {
+    usePaymentsStore.getState().moveToPreviousMonth(installmentId)
   },
 
   markRenegotiated: (oldObligationId, fromInstallmentNumber, newObligationDTO) => {

@@ -11,10 +11,24 @@ import type {
   ObligationsStore,
   CategoriesStore,
   UUID,
+  Money,
+  ISODate,
 } from "@/shared/types/domain"
 import { generateInstallments } from "../utils/installmentGenerator"
 import { DEFAULT_CATEGORIES } from "../constants/categories"
+import { getLocalISODate } from "@/shared/utils/date"
 import { useSyncStore } from "@/features/sync/store/syncSlice"
+
+export type QuickExpensePaymentMethod = "DEBIT" | "CASH" | "TRANSFER"
+
+export interface CreateQuickExpenseDTO {
+  categoryId: UUID
+  description: string
+  amountCents: Money
+  date?: ISODate | undefined
+  paymentMethod?: QuickExpensePaymentMethod | undefined
+  notes?: string | undefined
+}
 
 export interface ObligationsState {
   obligations: Record<UUID, Obligation>
@@ -32,6 +46,7 @@ export interface ObligationsState {
   deleteCategory: (id: UUID) => void
 
   addObligation: (dto: CreateObligationDTO) => Obligation
+  addQuickExpense: (dto: CreateQuickExpenseDTO) => Obligation
   cloneObligation: (id: UUID, overrides?: Partial<CreateObligationDTO>) => Obligation | null
   updateObligation: (id: UUID, updates: Partial<Obligation>) => void
   softDeleteObligation: (id: UUID) => void
@@ -54,16 +69,85 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
   },
 
   setObligationsData: (data) => {
+    const currentCategories = get().categories
+    const normalizedObligations: Record<UUID, Obligation> = {}
+
+    for (const [id, obl] of Object.entries(data.obligations)) {
+      let resolvedType = obl.type
+      let resolvedRecurring = obl.isRecurringIndefinite
+
+      if (!resolvedType) {
+        if (obl.p2pMetadata) {
+          resolvedType = "P2P_DEBT"
+        } else if (obl.isRecurringIndefinite) {
+          resolvedType = "EXPENSE"
+        } else {
+          const cat = currentCategories[obl.categoryId]
+          const catName = cat?.name?.toLowerCase() ?? ""
+          const isRecurringCat =
+            obl.categoryId === "cat-servicios" ||
+            obl.categoryId === "cat-suscrip" ||
+            catName.includes("servicio") ||
+            catName.includes("suscrip")
+
+          if (isRecurringCat && obl.totalInstallments === 60 && obl.totalAmountCents === obl.installmentAmountCents * 60) {
+            resolvedType = "EXPENSE"
+            resolvedRecurring = true
+          } else {
+            resolvedType = "DEBT"
+          }
+        }
+      }
+
+      normalizedObligations[id] = {
+        ...obl,
+        type: resolvedType,
+        isRecurringIndefinite: resolvedRecurring,
+      }
+    }
+
     set({
-      obligations: data.obligations,
+      obligations: normalizedObligations,
       installments: data.installments,
       isLoaded: true,
     })
   },
 
   setCategoriesData: (data) => {
-    set({
-      categories: data.categories,
+    set((state) => {
+      const updatedObligations = { ...state.obligations }
+      let hasChanges = false
+
+      for (const [id, obl] of Object.entries(updatedObligations)) {
+        if (!obl.type || obl.type === "DEBT") {
+          const cat = data.categories[obl.categoryId]
+          const catName = cat?.name?.toLowerCase() ?? ""
+          const isRecurringCat =
+            obl.categoryId === "cat-servicios" ||
+            obl.categoryId === "cat-suscrip" ||
+            catName.includes("servicio") ||
+            catName.includes("suscrip")
+
+          if (
+            isRecurringCat &&
+            obl.totalInstallments === 60 &&
+            obl.totalAmountCents === obl.installmentAmountCents * 60 &&
+            !obl.p2pMetadata
+          ) {
+            updatedObligations[id] = {
+              ...obl,
+              type: "EXPENSE",
+              isRecurringIndefinite: true,
+            }
+            hasChanges = true
+          }
+        }
+      }
+
+      return {
+        categories: data.categories,
+        ...(hasChanges ? { obligations: updatedObligations } : {}),
+      }
     })
   },
 
@@ -153,6 +237,66 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
     return newObligation
   },
 
+  addQuickExpense: (dto) => {
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+    const expenseDate = dto.date ?? getLocalISODate()
+    const dueDay = parseInt(expenseDate.slice(8, 10), 10) || 1
+    const period = expenseDate.slice(0, 7)
+    const methodLabels: Record<QuickExpensePaymentMethod, string> = {
+      DEBIT: "Tarjeta de Débito",
+      CASH: "Efectivo",
+      TRANSFER: "Transferencia",
+    }
+    const paymentMethod = dto.paymentMethod ?? "DEBIT"
+    const paymentMethodLabel = methodLabels[paymentMethod] ?? "Débito"
+
+    const newObligation: Obligation = {
+      id,
+      type: "EXPENSE",
+      categoryId: dto.categoryId,
+      subcategory: dto.description.trim(),
+      detail: dto.notes ? `${paymentMethodLabel} — ${dto.notes.trim()}` : paymentMethodLabel,
+      totalAmountCents: dto.amountCents,
+      totalInstallments: 1,
+      currentInstallment: 1,
+      installmentAmountCents: dto.amountCents,
+      isRecurringIndefinite: false,
+      startDate: expenseDate,
+      dueDay,
+      status: "PAID",
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    const installmentId = crypto.randomUUID()
+    const installment: Installment = {
+      id: installmentId,
+      obligationId: id,
+      installmentNumber: 1,
+      dueDate: expenseDate,
+      amountCents: dto.amountCents,
+      status: "PAID",
+      paidDate: expenseDate,
+      period,
+      notes: `Gasto puntual (${paymentMethodLabel})`,
+    }
+
+    set((state) => ({
+      obligations: {
+        ...state.obligations,
+        [id]: newObligation,
+      },
+      installments: {
+        ...state.installments,
+        [installmentId]: installment,
+      },
+    }))
+
+    useSyncStore.getState().queueSyncDomain("obligations")
+    return newObligation
+  },
+
   cloneObligation: (id, overrides = {}) => {
     const state = get()
     const existing = state.obligations[id]
@@ -168,7 +312,7 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       currentInstallment: 1,
       installmentAmountCents: existing.installmentAmountCents,
       isRecurringIndefinite: existing.isRecurringIndefinite,
-      startDate: new Date().toISOString().slice(0, 10),
+      startDate: getLocalISODate(),
       dueDay: existing.dueDay,
       p2pMetadata: existing.p2pMetadata ? { ...existing.p2pMetadata } : undefined,
       ...overrides,
@@ -211,9 +355,9 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
             const updatedInst: Installment = {
               ...inst,
               status: "PAID",
-              paidDate: inst.paidDate || inst.dueDate,
-              period: inst.period || (inst.dueDate !== "—" ? inst.dueDate.slice(0, 7) : undefined),
-              notes: inst.notes || "Amortización registrada",
+              paidDate: inst.paidDate ?? inst.dueDate,
+              period: inst.period ?? (inst.dueDate !== "—" ? inst.dueDate.slice(0, 7) : undefined),
+              notes: inst.notes ?? "Amortización registrada",
             }
             newInstallmentsMap[inst.id] = updatedInst
             return updatedInst

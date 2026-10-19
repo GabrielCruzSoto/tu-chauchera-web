@@ -257,4 +257,110 @@ describe("obligationsSlice", () => {
     expect(paid.map((i) => i.installmentNumber).sort((a, b) => a - b)).toEqual([1, 2, 3, 4])
     expect(pending.map((i) => i.installmentNumber).sort((a, b) => a - b)).toEqual([5, 6, 7, 8, 9, 10, 11, 12])
   })
+
+  it("creates a quick daily expense as a pre-paid one-installment obligation and queues sync", () => {
+    const queueSpy = vi.spyOn(useSyncStore.getState(), "queueSyncDomain")
+    const store = useObligationsStore.getState()
+
+    const quickExpense = store.addQuickExpense({
+      categoryId: "cat-1",
+      description: "Almuerzo Café Tavelli",
+      amountCents: toMoney(14500),
+      paymentMethod: "DEBIT",
+      date: "2026-09-30",
+      notes: "Menú ejecutivo",
+    })
+
+    const state = useObligationsStore.getState()
+    expect(state.obligations[quickExpense.id]).toBeDefined()
+    expect(quickExpense.type).toBe("EXPENSE")
+    expect(quickExpense.status).toBe("PAID")
+    expect(quickExpense.totalInstallments).toBe(1)
+    expect(quickExpense.currentInstallment).toBe(1)
+    expect(quickExpense.isRecurringIndefinite).toBe(false)
+    expect(quickExpense.subcategory).toBe("Almuerzo Café Tavelli")
+    expect(quickExpense.installmentAmountCents).toBe(14500)
+    expect(quickExpense.detail).toContain("Tarjeta de Débito")
+    expect(quickExpense.detail).toContain("Menú ejecutivo")
+
+    // Check associated installment
+    const installments = Object.values(state.installments).filter(
+      (i) => i.obligationId === quickExpense.id
+    )
+    expect(installments).toHaveLength(1)
+    const inst = installments[0]!
+    expect(inst.status).toBe("PAID")
+    expect(inst.amountCents).toBe(14500)
+    expect(inst.period).toBe("2026-09")
+    expect(inst.paidDate).toBe("2026-09-30")
+
+    expect(queueSpy).toHaveBeenCalledWith("obligations")
+  })
+
+  it("normalizes and preserves types when setting obligations data from Drive", () => {
+    const store = useObligationsStore.getState()
+    store.setObligationsData({
+      obligations: {
+        "exp-1": {
+          id: "exp-1",
+          type: "EXPENSE",
+          categoryId: "cat-suscrip",
+          subcategory: "Google One",
+          detail: "Google AI Pro",
+          totalAmountCents: toMoney(1302000),
+          totalInstallments: 60,
+          currentInstallment: 1,
+          installmentAmountCents: toMoney(21700),
+          isRecurringIndefinite: true,
+          startDate: "2026-09-01",
+          dueDay: 30,
+          status: "PENDING",
+          createdAt: "2026-09-01",
+          updatedAt: "2026-09-01",
+        },
+        "legacy-enel": {
+          id: "legacy-enel",
+          categoryId: "cat-servicios",
+          subcategory: "ENEL",
+          detail: "Luz",
+          totalAmountCents: toMoney(11991660),
+          totalInstallments: 60,
+          currentInstallment: 1,
+          installmentAmountCents: toMoney(199861),
+          startDate: "2026-09-01",
+          dueDay: 15,
+          status: "PENDING",
+          createdAt: "2026-09-01",
+          updatedAt: "2026-09-01",
+        },
+        "real-debt": {
+          id: "real-debt",
+          categoryId: "cat-bancos",
+          subcategory: "Banco de Chile",
+          detail: "Crédito de Consumo",
+          totalAmountCents: toMoney(15836460),
+          totalInstallments: 60,
+          currentInstallment: 15,
+          installmentAmountCents: toMoney(287936),
+          startDate: "2025-05-10",
+          dueDay: 10,
+          status: "PENDING",
+          createdAt: "2025-05-10",
+          updatedAt: "2025-05-10",
+        },
+      },
+      installments: {},
+    })
+
+    const state = useObligationsStore.getState()
+    expect(state.obligations["exp-1"]?.type).toBe("EXPENSE")
+    expect(state.obligations["exp-1"]?.isRecurringIndefinite).toBe(true)
+
+    // Legacy ENEL without explicit type should be auto-healed to EXPENSE
+    expect(state.obligations["legacy-enel"]?.type).toBe("EXPENSE")
+    expect(state.obligations["legacy-enel"]?.isRecurringIndefinite).toBe(true)
+
+    // Real bank loan without explicit type should default to DEBT
+    expect(state.obligations["real-debt"]?.type).toBe("DEBT")
+  })
 })

@@ -214,4 +214,147 @@ describe("paymentsSlice", () => {
     expect(oldInstallments.find((i) => i.installmentNumber === 3)?.status).toBe("RENEGOTIATED")
     expect(oldInstallments.find((i) => i.installmentNumber === 12)?.status).toBe("RENEGOTIATED")
   })
+
+  it("postpones an installment to the next month and reverts it cleanly", () => {
+    const oblStore = useObligationsStore.getState()
+    const obl = oblStore.addObligation({
+      categoryId: "cat-1",
+      subcategory: "Gasto Común",
+      detail: "Gasto mensual",
+      totalAmountCents: toMoney(50000),
+      totalInstallments: 1,
+      currentInstallment: 1,
+      installmentAmountCents: toMoney(50000),
+      startDate: "2024-05-15",
+      dueDay: 15,
+    })
+
+    const inst = Object.values(useObligationsStore.getState().installments).find(
+      (i) => i.obligationId === obl.id
+    )!
+
+    const paymentsStore = usePaymentsStore.getState()
+
+    // 1. Postpone
+    paymentsStore.postponeToNextMonth(inst.id)
+    const postponed = useObligationsStore.getState().installments[inst.id]!
+    expect(postponed.dueDate).toBe("2024-06-15")
+    expect(postponed.originalDueDate).toBe("2024-05-15")
+    expect(postponed.isOverdueRollover).toBe(true)
+    expect(postponed.notes).toContain("Pasada al mes siguiente por no pago en plazo")
+
+    // 2. Revert
+    paymentsStore.revertPostpone(inst.id)
+    const reverted = useObligationsStore.getState().installments[inst.id]!
+    expect(reverted.dueDate).toBe("2024-05-15")
+    expect(reverted.originalDueDate).toBeUndefined()
+    expect(reverted.isOverdueRollover).toBeUndefined()
+    expect(reverted.notes).toBeUndefined()
+  })
+
+  it("preserves custom user notes when reverting a postponed installment", () => {
+    const oblStore = useObligationsStore.getState()
+    const obl = oblStore.addObligation({
+      categoryId: "cat-1",
+      subcategory: "Internet",
+      detail: "Fibra óptica",
+      totalAmountCents: toMoney(25000),
+      totalInstallments: 1,
+      currentInstallment: 1,
+      installmentAmountCents: toMoney(25000),
+      startDate: "2024-05-20",
+      dueDay: 20,
+    })
+
+    const inst = Object.values(useObligationsStore.getState().installments).find(
+      (i) => i.obligationId === obl.id
+    )!
+
+    // Manually set existing note
+    useObligationsStore.setState((state) => ({
+      installments: {
+        ...state.installments,
+        [inst.id]: {
+          ...state.installments[inst.id]!,
+          notes: "Nota del usuario",
+        },
+      },
+    }))
+
+    const paymentsStore = usePaymentsStore.getState()
+    paymentsStore.postponeToNextMonth(inst.id)
+    const postponed = useObligationsStore.getState().installments[inst.id]!
+    expect(postponed.notes).toBe("Nota del usuario | Pasada al mes siguiente por no pago en plazo")
+
+    paymentsStore.revertPostpone(inst.id)
+    const reverted = useObligationsStore.getState().installments[inst.id]!
+    expect(reverted.dueDate).toBe("2024-05-20")
+    expect(reverted.originalDueDate).toBeUndefined()
+    expect(reverted.notes).toBe("Nota del usuario")
+  })
+
+  it("moves an ordinary installment to the previous month even without originalDueDate", () => {
+    const oblStore = useObligationsStore.getState()
+    const obl = oblStore.addObligation({
+      categoryId: "cat-1",
+      subcategory: "Banco de Chile",
+      detail: "Crédito de Consumo",
+      totalAmountCents: toMoney(287936),
+      totalInstallments: 60,
+      currentInstallment: 16,
+      installmentAmountCents: toMoney(287936),
+      startDate: "2026-10-16",
+      dueDay: 16,
+    })
+
+    const inst = Object.values(useObligationsStore.getState().installments).find(
+      (i) => i.obligationId === obl.id
+    )!
+
+    expect(inst.dueDate).toBe("2026-10-16")
+
+    const paymentsStore = usePaymentsStore.getState()
+    paymentsStore.moveToPreviousMonth(inst.id)
+
+    const updated = useObligationsStore.getState().installments[inst.id]!
+    expect(updated.dueDate).toBe("2026-09-16")
+    expect(updated.isOverdueRollover).toBeUndefined()
+  })
+
+  it("handles year boundary and day clamping correctly in moveToPreviousMonth", () => {
+    const oblStore = useObligationsStore.getState()
+    const obl = oblStore.addObligation({
+      categoryId: "cat-1",
+      subcategory: "Test Clamping",
+      detail: "Test",
+      totalAmountCents: toMoney(10000),
+      totalInstallments: 1,
+      currentInstallment: 1,
+      installmentAmountCents: toMoney(10000),
+      startDate: "2026-01-31",
+      dueDay: 31,
+    })
+
+    const inst = Object.values(useObligationsStore.getState().installments).find(
+      (i) => i.obligationId === obl.id
+    )!
+
+    const paymentsStore = usePaymentsStore.getState()
+    // Move from 2026-01-31 to 2025-12-31
+    paymentsStore.moveToPreviousMonth(inst.id)
+    expect(useObligationsStore.getState().installments[inst.id]!.dueDate).toBe("2025-12-31")
+
+    // Move from 2025-03-31 to 2025-02-28 (clamping)
+    useObligationsStore.setState((state) => ({
+      installments: {
+        ...state.installments,
+        [inst.id]: {
+          ...state.installments[inst.id]!,
+          dueDate: "2025-03-31",
+        },
+      },
+    }))
+    paymentsStore.moveToPreviousMonth(inst.id)
+    expect(useObligationsStore.getState().installments[inst.id]!.dueDate).toBe("2025-02-28")
+  })
 })

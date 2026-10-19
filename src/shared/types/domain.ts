@@ -65,6 +65,12 @@ export interface P2PMetadata {
   linkedPaymentDueDay?: number | undefined
 }
 
+export type DueRuleShift = 'NONE' | 'NEXT_BUSINESS' | 'PREV_BUSINESS'
+
+export type DueRule =
+  | { kind: 'FIXED_DAY'; day: number; shift?: DueRuleShift | undefined }
+  | { kind: 'LAST_BUSINESS_DAY' }
+
 export interface Obligation {
   id: UUID
   type?: ObligationType | undefined
@@ -79,6 +85,8 @@ export interface Obligation {
   p2pMetadata?: P2PMetadata | undefined
   startDate: ISODate    // When the first installment is due
   dueDay: number        // Day of month (1–31); clamped to month length at display
+  dueRule?: DueRule | undefined
+  annualRatePercentage?: number | undefined // Optional annual interest rate / CAE (e.g. 18.5)
   status: ObligationStatus
   createdAt: ISODate
   updatedAt: ISODate
@@ -98,6 +106,8 @@ export interface CreateObligationDTO {
   p2pMetadata?: P2PMetadata | undefined
   startDate: ISODate
   dueDay: number
+  dueRule?: DueRule | undefined
+  annualRatePercentage?: number | undefined
 }
 
 // ─── Installment ─────────────────────────────────────────────────────────────
@@ -118,6 +128,8 @@ export interface Installment {
   paidDate?: ISODate | undefined           // Required when status = PAID; drives period assignment
   period?: Period | undefined              // YYYY-MM extracted from paidDate; used for reconciliation
   notes?: string | undefined
+  originalDueDate?: ISODate | undefined
+  isOverdueRollover?: boolean | undefined
 }
 
 // ─── Income ──────────────────────────────────────────────────────────────────
@@ -134,6 +146,7 @@ export interface Income {
   period: Period               // "YYYY-MM" — the month this income applies to
   receivedDate?: ISODate | undefined
   categoryId?: UUID | undefined
+  payRule?: DueRule | undefined // Optional schedule rule (e.g. LAST_BUSINESS_DAY)
   createdAt: ISODate
 }
 
@@ -145,6 +158,7 @@ export interface CreateIncomeDTO {
   period: Period
   receivedDate?: ISODate
   categoryId?: UUID
+  payRule?: DueRule | undefined
 }
 
 // ─── Sync Metadata ───────────────────────────────────────────────────────────

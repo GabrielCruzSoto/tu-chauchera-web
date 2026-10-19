@@ -106,6 +106,99 @@ describe("Envelope & Migration Engine with Runtime Zod Validation", () => {
       expect(() => validateDomainPayload("credit_cards", validCcStore)).not.toThrow()
     })
 
+    it("validates and preserves type, isRecurringIndefinite and p2pMetadata in obligations store schema", () => {
+      const validOblStore = {
+        obligations: {
+          "exp-1": {
+            id: "exp-1",
+            type: "EXPENSE",
+            categoryId: "cat-servicios",
+            subcategory: "Enel Luz",
+            detail: "Luz mes",
+            totalAmountCents: 1200000,
+            totalInstallments: 60,
+            currentInstallment: 1,
+            installmentAmountCents: 20000,
+            isRecurringIndefinite: true,
+            startDate: "2026-09-01",
+            dueDay: 15,
+            status: "PENDING",
+            createdAt: "2026-09-01",
+            updatedAt: "2026-09-01",
+          },
+          "p2p-1": {
+            id: "p2p-1",
+            type: "P2P_DEBT",
+            categoryId: "cat-terceros",
+            subcategory: "Isis Paris",
+            detail: "Préstamo",
+            totalAmountCents: 500000,
+            totalInstallments: 5,
+            currentInstallment: 1,
+            installmentAmountCents: 100000,
+            startDate: "2026-09-01",
+            dueDay: 30,
+            status: "PENDING",
+            createdAt: "2026-09-01",
+            updatedAt: "2026-09-01",
+            p2pMetadata: {
+              role: "LENT_MY_CARD",
+              thirdPartyName: "Isis Paris",
+              productDescription: "Préstamo",
+              baseInstallmentAmountCents: 100000,
+              totalMonthlyChargeCents: 100000,
+            },
+          },
+        },
+        installments: {
+          "inst-1": {
+            id: "inst-1",
+            obligationId: "exp-1",
+            installmentNumber: 1,
+            dueDate: "2026-09-15",
+            amountCents: 20000,
+            status: "PENDING",
+            originalDueDate: "2026-09-15",
+            isOverdueRollover: false,
+          },
+        },
+      }
+
+      const validated = validateDomainPayload<any>("obligations", validOblStore)
+      expect(validated.obligations["exp-1"].type).toBe("EXPENSE")
+      expect(validated.obligations["exp-1"].isRecurringIndefinite).toBe(true)
+      expect(validated.obligations["p2p-1"].type).toBe("P2P_DEBT")
+      expect(validated.obligations["p2p-1"].p2pMetadata?.thirdPartyName).toBe("Isis Paris")
+      expect(validated.installments["inst-1"].originalDueDate).toBe("2026-09-15")
+    })
+
+    it("auto-heals legacy obligations where type was missing but characteristics match recurring expense", () => {
+      const legacyStore = {
+        obligations: {
+          "legacy-exp": {
+            id: "legacy-exp",
+            categoryId: "cat-servicios",
+            subcategory: "Aguas Andina",
+            detail: "Agua potable",
+            totalAmountCents: 1689000,
+            totalInstallments: 60,
+            currentInstallment: 1,
+            installmentAmountCents: 28150,
+            startDate: "2026-09-01",
+            dueDay: 30,
+            status: "PENDING",
+            createdAt: "2026-09-01",
+            updatedAt: "2026-09-01",
+          },
+        },
+        installments: {},
+      }
+
+      const validated = validateDomainPayload<any>("obligations", legacyStore)
+      expect(validated.obligations["legacy-exp"].type).toBe("EXPENSE")
+      expect(validated.obligations["legacy-exp"].isRecurringIndefinite).toBe(true)
+    })
+
     it("throws ZodError on corrupted or invalid payload shape", () => {
       const corruptedStore = {
         categories: {
