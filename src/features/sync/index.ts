@@ -1,1 +1,5 @@
-// sync feature — TODO
+export { StorageQuotaModal } from "./components/StorageQuotaModal"
+export type { StorageQuotaModalProps } from "./components/StorageQuotaModal"
+export { SyncStatusIndicator } from "./components/SyncStatusIndicator"
+export { useSyncStore, getSyncService } from "./store/syncSlice"
+export type { SyncState } from "./store/syncSlice"

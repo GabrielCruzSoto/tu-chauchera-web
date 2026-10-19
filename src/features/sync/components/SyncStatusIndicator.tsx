@@ -1,9 +1,18 @@
 import React, { useEffect } from "react"
 import { useSyncStore } from "../store/syncSlice"
+import { isDriveStorageQuotaError } from "@/shared/services/driveErrors"
 
 export const SyncStatusIndicator: React.FC = () => {
-  const { status, errorMessage, pendingMutations, lastSyncedAt, setOnlineStatus, forceResync } =
-    useSyncStore()
+  const {
+    status,
+    errorMessage,
+    pendingMutations,
+    lastSyncedAt,
+    isQuotaExceeded,
+    setQuotaExceeded,
+    setOnlineStatus,
+    forceResync,
+  } = useSyncStore()
 
   useEffect(() => {
     const handleOnline = () => setOnlineStatus(true)
@@ -75,11 +84,27 @@ export const SyncStatusIndicator: React.FC = () => {
 
       {status === "ERROR" && (
         <div className="flex items-center gap-2 text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-          <span className="font-medium" title={errorMessage ?? "Error de sincronización"}>
-            Error al sincronizar
-          </span>
+          <span
+            className={`w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0 ${
+              isQuotaExceeded || isDriveStorageQuotaError(errorMessage) ? "animate-pulse" : ""
+            }`}
+          />
+          {isQuotaExceeded || isDriveStorageQuotaError(errorMessage) ? (
+            <button
+              type="button"
+              onClick={() => setQuotaExceeded(true)}
+              className="font-medium hover:underline cursor-pointer flex items-center gap-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-rose-400 text-rose-300 hover:text-white"
+              title="Almacenamiento lleno en Google Drive. Haz clic para ver opciones."
+            >
+              Sin espacio en Drive
+            </button>
+          ) : (
+            <span className="font-medium" title={errorMessage ?? "Error de sincronización"}>
+              Error al sincronizar
+            </span>
+          )}
           <button
+            type="button"
             onClick={() => void forceResync()}
             className="min-h-[44px] sm:min-h-0 text-rose-300 hover:text-white underline cursor-pointer text-xs sm:text-[10px] flex items-center px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
           >

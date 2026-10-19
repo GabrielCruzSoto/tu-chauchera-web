@@ -13,6 +13,9 @@
  */
 import type { DataDomain, SyncMeta } from "@/shared/types/domain"
 import type { DriveStorageFileInfo } from "@/shared/types/settings"
+import { DriveStorageQuotaError, isDriveStorageQuotaError } from "./driveErrors"
+
+export { DriveStorageQuotaError, isDriveStorageQuotaError }
 
 const DRIVE_API_URL = "https://www.googleapis.com/drive/v3"
 const UPLOAD_API_URL = "https://www.googleapis.com/upload/drive/v3"
@@ -87,7 +90,7 @@ export class DriveClient {
       })
 
       if (!res.ok) {
-        throw new Error(`Failed to update Drive file ${fileName}: ${res.status} ${res.statusText}`)
+        await this.handleUploadError(res, fileName, "update")
       }
 
       const file = (await res.json()) as { id: string }
@@ -123,12 +126,66 @@ export class DriveClient {
     })
 
     if (!res.ok) {
-      throw new Error(`Failed to create Drive file ${fileName}: ${res.status} ${res.statusText}`)
+      await this.handleUploadError(res, fileName, "create")
     }
 
     const created = (await res.json()) as { id: string }
     this.fileIdCache.set(fileName, created.id)
     return created.id
+  }
+
+  private async handleUploadError(
+    res: Response,
+    fileName: string,
+    action: "create" | "update"
+  ): Promise<never> {
+    let errorJson: Record<string, unknown> | null = null
+    let errorText = ""
+
+    try {
+      errorText = await res.text()
+      errorJson = JSON.parse(errorText) as Record<string, unknown>
+    } catch {
+      // Body is not JSON or cannot be read
+    }
+
+    if (errorJson) {
+      const gError = (
+        errorJson.error && typeof errorJson.error === "object"
+          ? errorJson.error
+          : errorJson
+      ) as Record<string, unknown>
+
+      const message = typeof gError.message === "string" ? gError.message : ""
+      const errors = Array.isArray(gError.errors) ? gError.errors : []
+      const reasons: string[] = errors
+        .map((e: unknown) =>
+          e && typeof e === "object"
+            ? (e as Record<string, unknown>).reason
+            : undefined
+        )
+        .filter((r): r is string => typeof r === "string")
+
+      if (
+        reasons.includes("storageQuotaExceeded") ||
+        gError.reason === "storageQuotaExceeded" ||
+        message.includes("storage quota has been exceeded")
+      ) {
+        throw new DriveStorageQuotaError(
+          message || "The user's Drive storage quota has been exceeded."
+        )
+      }
+    }
+
+    if (
+      errorText.includes("storageQuotaExceeded") ||
+      errorText.includes("storage quota has been exceeded")
+    ) {
+      throw new DriveStorageQuotaError()
+    }
+
+    const verb = action === "update" ? "update" : "create"
+    throw new Error(`Failed to ${verb} Drive file ${fileName}: ${res.status} ${res.statusText}`)
   }
 
   /**

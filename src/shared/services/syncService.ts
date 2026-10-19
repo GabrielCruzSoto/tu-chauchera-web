@@ -9,7 +9,7 @@ export interface SyncStoreStateProvider {
   getCryptoKey: () => CryptoKey | null
   getDomainData: (domain: DataDomain) => unknown
   setDomainData: (domain: DataDomain, data: unknown) => void
-  onSyncStatusChange: (status: SyncStatus, error?: string | null) => void
+  onSyncStatusChange: (status: SyncStatus, error?: unknown) => void
 }
 
 export class SyncService {
@@ -75,8 +75,7 @@ export class SyncService {
 
       this.stateProvider.onSyncStatusChange("SYNCED")
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : "Sync upload failed"
-      this.stateProvider.onSyncStatusChange("ERROR", errorMsg)
+      this.stateProvider.onSyncStatusChange("ERROR", err)
     }
   }
 

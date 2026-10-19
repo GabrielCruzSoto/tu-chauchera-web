@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { DriveClient } from "./driveClient"
+import { DriveClient, DriveStorageQuotaError, isDriveStorageQuotaError } from "./driveClient"
 import type { SyncMeta } from "@/shared/types/domain"
 
 describe("DriveClient", () => {
@@ -105,5 +105,95 @@ describe("DriveClient", () => {
 
     await driveClient.wipeAllAppData()
     expect(fetchSpy).toHaveBeenCalledTimes(3)
+  })
+
+  describe("storage quota error handling", () => {
+    const quotaExceededResponse = {
+      error: {
+        code: 403,
+        message: "The user's Drive storage quota has been exceeded.",
+        errors: [{ reason: "storageQuotaExceeded" }],
+      },
+    }
+
+    it("throws DriveStorageQuotaError when creating a new file exceeds quota", async () => {
+      vi.spyOn(global, "fetch")
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ files: [] }), { status: 200 })
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify(quotaExceededResponse), {
+            status: 403,
+            statusText: "Forbidden",
+          })
+        )
+
+      const buffer = new TextEncoder().encode("test payload").buffer
+      await expect(
+        driveClient.uploadBinaryFile("obligations.enc", buffer)
+      ).rejects.toThrow(DriveStorageQuotaError)
+    })
+
+    it("throws DriveStorageQuotaError when updating an existing file exceeds quota", async () => {
+      vi.spyOn(global, "fetch")
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({ files: [{ id: "existing-id", name: "obligations.enc" }] }),
+            { status: 200 }
+          )
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify(quotaExceededResponse), {
+            status: 403,
+            statusText: "Forbidden",
+          })
+        )
+
+      const buffer = new TextEncoder().encode("test payload").buffer
+      await expect(
+        driveClient.uploadBinaryFile("obligations.enc", buffer)
+      ).rejects.toThrow(DriveStorageQuotaError)
+    })
+
+    it("throws standard Error for other HTTP failures", async () => {
+      vi.spyOn(global, "fetch")
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ files: [] }), { status: 200 })
+        )
+        .mockResolvedValueOnce(
+          new Response("Internal Server Error", {
+            status: 500,
+            statusText: "Internal Server Error",
+          })
+        )
+
+      const buffer = new TextEncoder().encode("test payload").buffer
+      await expect(
+        driveClient.uploadBinaryFile("obligations.enc", buffer)
+      ).rejects.toThrow(/Failed to create Drive file obligations.enc: 500/)
+    })
+
+    it("isDriveStorageQuotaError correctly identifies quota errors", () => {
+      expect(isDriveStorageQuotaError(new DriveStorageQuotaError())).toBe(true)
+      expect(
+        isDriveStorageQuotaError(
+          new Error("The user's Drive storage quota has been exceeded.")
+        )
+      ).toBe(true)
+      expect(
+        isDriveStorageQuotaError({
+          error: {
+            message: "The user's Drive storage quota has been exceeded.",
+            errors: [{ reason: "storageQuotaExceeded" }],
+          },
+        })
+      ).toBe(true)
+      expect(
+        isDriveStorageQuotaError("The user's Drive storage quota has been exceeded.")
+      ).toBe(true)
+      expect(isDriveStorageQuotaError(new Error("Network timeout"))).toBe(false)
+      expect(isDriveStorageQuotaError(null)).toBe(false)
+      expect(isDriveStorageQuotaError(undefined)).toBe(false)
+    })
   })
 })
