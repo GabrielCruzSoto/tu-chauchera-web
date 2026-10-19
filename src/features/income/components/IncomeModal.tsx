@@ -17,12 +17,28 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, incomeT
   const [type, setType] = useState<IncomeType>(incomeToEdit?.type ?? "FIXED")
   const [status, setStatus] = useState<IncomeStatus>(incomeToEdit?.status ?? "REAL")
   const [period, setPeriod] = useState(incomeToEdit?.period ?? initialPeriod)
+  const [payRuleKind, setPayRuleKind] = useState<"FIXED_DAY" | "LAST_BUSINESS_DAY">(() => {
+    return incomeToEdit?.payRule?.kind ?? "LAST_BUSINESS_DAY"
+  })
+  const [payDay, setPayDay] = useState<number>(() => {
+    if (incomeToEdit?.payRule?.kind === "FIXED_DAY") {
+      return incomeToEdit.payRule.day
+    }
+    return 30
+  })
   const [isRecurring, setIsRecurring] = useState(false)
   const [recurringMonths, setRecurringMonths] = useState<number>(12)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!description.trim() || amount <= 0) return
+
+    const resolvedPayRule =
+      type === "FIXED"
+        ? payRuleKind === "LAST_BUSINESS_DAY"
+          ? ({ kind: "LAST_BUSINESS_DAY" as const } satisfies import("@/shared/types/domain").DueRule)
+          : ({ kind: "FIXED_DAY" as const, day: Math.min(Math.max(1, payDay), 31) } satisfies import("@/shared/types/domain").DueRule)
+        : undefined
 
     if (incomeToEdit) {
       updateIncome(incomeToEdit.id, {
@@ -31,6 +47,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, incomeT
         type,
         status,
         period,
+        payRule: resolvedPayRule,
       })
     } else {
       const dto = {
@@ -39,6 +56,7 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, incomeT
         type,
         status,
         period,
+        payRule: resolvedPayRule,
       }
 
       if (isRecurring && type === "FIXED") {
@@ -113,6 +131,42 @@ export const IncomeModal: React.FC<IncomeModalProps> = ({ initialPeriod, incomeT
                 </select>
               </div>
             </div>
+
+            {/* Programación de Cobro / Fecha de Pago (Sueldo) */}
+            {type === "FIXED" && (
+              <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-medium text-slate-300">
+                    🗓️ Día en que Cobras
+                  </label>
+                  <select
+                    value={payRuleKind}
+                    onChange={(e) => setPayRuleKind(e.target.value as "FIXED_DAY" | "LAST_BUSINESS_DAY")}
+                    className="text-[11px] bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-300 cursor-pointer"
+                  >
+                    <option value="LAST_BUSINESS_DAY">Último Día Hábil (Recomendado Chile)</option>
+                    <option value="FIXED_DAY">Día Fijo del Mes</option>
+                  </select>
+                </div>
+                {payRuleKind === "FIXED_DAY" ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400">Día del mes:</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={31}
+                      value={payDay}
+                      onChange={(e) => setPayDay(Number(e.target.value))}
+                      className="w-20 px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs font-mono text-center"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-emerald-400/90 leading-tight">
+                    💼 Se ancla automáticamente al último día hábil bancario del mes (omite fines de semana y feriados).
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Estado del Ingreso: Real vs Estimado */}
             <div>

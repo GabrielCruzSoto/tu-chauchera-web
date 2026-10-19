@@ -3,6 +3,7 @@
  */
 import { create } from "zustand"
 import type { Income, CreateIncomeDTO, IncomesStore, UUID, Period, IncomeStatus } from "@/shared/types/domain"
+import { addMonthsToPeriod } from "@/shared/utils/date"
 import { useSyncStore } from "@/features/sync/store/syncSlice"
 
 export interface IncomeState {
@@ -75,8 +76,7 @@ export const useIncomeStore = create<IncomeState>((set) => ({
     const now = new Date().toISOString()
 
     for (let i = 0; i < maxMonths; i++) {
-      const current = new Date(year, month - 1 + i, 1)
-      const period = current.toISOString().slice(0, 7)
+      const period = addMonthsToPeriod(dto.period, i)
       const id = crypto.randomUUID()
 
       const inc: Income = {

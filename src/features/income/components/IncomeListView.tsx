@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { useIncomeStore, getIncomeBreakdownForPeriod } from "../store/incomeSlice"
 import { formatCLP, toMoney } from "@/shared/types/money"
+import { getLocalPeriod, addMonthsToPeriod } from "@/shared/utils/date"
 import { IncomeModal } from "./IncomeModal"
 import type { Income, IncomeStatus } from "@/shared/types/domain"
 
@@ -8,7 +9,7 @@ type FilterMode = "ALL" | "REAL" | "ESTIMATED"
 
 export const IncomeListView: React.FC = () => {
   const { incomes, removeIncome } = useIncomeStore()
-  const [currentPeriod, setCurrentPeriod] = useState(new Date().toISOString().slice(0, 7))
+  const [currentPeriod, setCurrentPeriod] = useState(getLocalPeriod())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [incomeToEdit, setIncomeToEdit] = useState<Income | null>(null)
   const [filterMode, setFilterMode] = useState<FilterMode>("ALL")
@@ -25,15 +26,11 @@ export const IncomeListView: React.FC = () => {
   })
 
   const handlePrevMonth = () => {
-    const [year, month] = currentPeriod.split("-").map(Number)
-    const prevDate = new Date(year!, month! - 2, 1)
-    setCurrentPeriod(prevDate.toISOString().slice(0, 7))
+    setCurrentPeriod((prev) => addMonthsToPeriod(prev, -1))
   }
 
   const handleNextMonth = () => {
-    const [year, month] = currentPeriod.split("-").map(Number)
-    const nextDate = new Date(year!, month!, 1)
-    setCurrentPeriod(nextDate.toISOString().slice(0, 7))
+    setCurrentPeriod((prev) => addMonthsToPeriod(prev, 1))
   }
 
   const handleOpenAddModal = () => {

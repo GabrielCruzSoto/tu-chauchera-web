@@ -4,13 +4,12 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 import { IncomeListView } from "./IncomeListView"
 import { useIncomeStore } from "../store/incomeSlice"
 import { toMoney } from "@/shared/types/money"
+import { getLocalPeriod, addMonthsToPeriod } from "@/shared/utils/date"
 import type { Income } from "@/shared/types/domain"
 
 describe("IncomeListView Component & Integration Flow", () => {
-  const currentMonthStr = new Date().toISOString().slice(0, 7)
-  const [yearNum, monthNum] = currentMonthStr.split("-").map(Number)
-  const nextMonthDate = new Date(yearNum!, monthNum!, 1)
-  const nextMonthStr = nextMonthDate.toISOString().slice(0, 7)
+  const currentMonthStr = getLocalPeriod()
+  const nextMonthStr = addMonthsToPeriod(currentMonthStr, 1)
 
   beforeEach(() => {
     vi.restoreAllMocks()
