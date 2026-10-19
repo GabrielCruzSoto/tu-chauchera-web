@@ -57,6 +57,18 @@ export interface CreatePurchaseDTO {
   thirdPartyName?: string | undefined
 }
 
+export interface UpdatePurchaseDTO {
+  accountId?: UUID | undefined
+  plasticId?: UUID | undefined
+  description?: string | undefined
+  purchaseDate?: ISODate | undefined
+  totalAmountCents?: number | undefined
+  totalInstallments?: number | undefined
+  firstInstallmentPeriod?: string | undefined
+  payerType?: 'PROPIO' | 'TERCERO' | undefined
+  thirdPartyName?: string | undefined
+}
+
 export interface CreditCardState {
   accounts: Record<UUID, CreditCardAccount>
   purchases: Record<UUID, CreditCardPurchase>
@@ -69,6 +81,8 @@ export interface CreditCardState {
   addPlastic: (accountId: UUID, holderName: string, lastFourDigits: string) => CreditCardPlastic | null
   removePlastic: (accountId: UUID, plasticId: UUID) => void
   addPurchase: (dto: CreatePurchaseDTO) => CreditCardPurchase
+  updatePurchase: (purchaseId: UUID, dto: UpdatePurchaseDTO) => CreditCardPurchase | null
+  deletePurchase: (purchaseId: UUID) => void
   addRepayment: (purchaseId: UUID, repayment: Omit<ThirdPartyRepayment, 'id'>) => void
   togglePeriodPaid: (accountId: UUID, period: string) => void
   resetCreditCards: () => void
@@ -301,6 +315,94 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
     useSyncStore.getState().queueSyncDomain('credit_cards')
 
     return newPurchase
+  },
+
+  updatePurchase: (purchaseId, dto) => {
+    const purchase = get().purchases[purchaseId]
+    if (!purchase) return null
+
+    const targetAccountId = dto.accountId ?? purchase.accountId
+    const account = get().accounts[targetAccountId]
+    const now = new Date().toISOString().split('T')[0] ?? ''
+
+    const newPurchaseDate = dto.purchaseDate ?? purchase.purchaseDate
+    const newTotalAmountCents =
+      dto.totalAmountCents !== undefined
+        ? toMoney(dto.totalAmountCents)
+        : purchase.totalAmountCents
+    const newPayerType = dto.payerType ?? purchase.payerType
+
+    // Recalculate firstInstallmentPeriod if firstInstallmentPeriod is given,
+    // OR if purchaseDate or accountId changed and firstInstallmentPeriod was not explicitly specified.
+    let firstInstallmentPeriod = purchase.firstInstallmentPeriod
+    if (dto.firstInstallmentPeriod !== undefined) {
+      firstInstallmentPeriod = dto.firstInstallmentPeriod
+    } else if (dto.purchaseDate !== undefined || dto.accountId !== undefined) {
+      firstInstallmentPeriod = account
+        ? calculateBillingPeriod(newPurchaseDate, account.closingDay, account.dueDay)
+        : calculateBillingPeriod(newPurchaseDate, 20, 5)
+    }
+
+    // Third party handling
+    let thirdPartyReceivable = purchase.thirdPartyReceivable
+    if (newPayerType === 'TERCERO') {
+      if (thirdPartyReceivable) {
+        const updatedCollected = thirdPartyReceivable.amountCollectedCents
+        const updatedStatus = calculateRepaymentStatus(newTotalAmountCents, updatedCollected)
+        thirdPartyReceivable = {
+          ...thirdPartyReceivable,
+          thirdPartyName: dto.thirdPartyName ?? thirdPartyReceivable.thirdPartyName,
+          totalOwedCents: newTotalAmountCents,
+          status: updatedStatus,
+        }
+      } else {
+        thirdPartyReceivable = {
+          id: crypto.randomUUID(),
+          thirdPartyName: dto.thirdPartyName || 'Tercero',
+          purchaseId,
+          totalOwedCents: newTotalAmountCents,
+          amountCollectedCents: toMoney(0),
+          status: 'PENDIENTE' as const,
+          repayments: [],
+        }
+      }
+    } else {
+      thirdPartyReceivable = undefined
+    }
+
+    const updatedPurchase: CreditCardPurchase = {
+      ...purchase,
+      accountId: targetAccountId,
+      plasticId: dto.plasticId ?? purchase.plasticId,
+      description: dto.description ?? purchase.description,
+      purchaseDate: newPurchaseDate,
+      totalAmountCents: newTotalAmountCents,
+      totalInstallments: dto.totalInstallments ?? purchase.totalInstallments,
+      firstInstallmentPeriod,
+      payerType: newPayerType,
+      thirdPartyReceivable,
+      updatedAt: now,
+    }
+
+    set((state) => ({
+      purchases: { ...state.purchases, [purchaseId]: updatedPurchase },
+    }))
+
+    useSyncStore.getState().queueSyncDomain('credit_cards')
+
+    return updatedPurchase
+  },
+
+  deletePurchase: (purchaseId) => {
+    set((state) => {
+      const nextPurchases = { ...state.purchases }
+      delete nextPurchases[purchaseId]
+      return {
+        purchases: nextPurchases,
+      }
+    })
+
+    useSyncStore.getState().queueSyncDomain('credit_cards')
   },
 
   addRepayment: (purchaseId, repaymentDto) => {

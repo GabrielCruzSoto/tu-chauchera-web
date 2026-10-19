@@ -1,5 +1,6 @@
 import type { CreditCardPurchase } from '@/shared/types/domain'
 import type { ParsedStatementTransaction } from '../parsers/falabellaParser'
+import { offsetPeriod } from './cycleCalculators'
 
 export interface EnhancedParsedTransaction extends ParsedStatementTransaction {
   isDuplicateOrOngoing: boolean
@@ -7,10 +8,43 @@ export interface EnhancedParsedTransaction extends ParsedStatementTransaction {
 }
 
 /**
+ * Checks if a parsed installment transaction matches an active existing installment plan.
+ * An ongoing installment match is only applicable for subsequent installments (currentInstallment > 1).
+ */
+function isOngoingInstallmentMatch(
+  tx: ParsedStatementTransaction,
+  p: CreditCardPurchase
+): boolean {
+  if (p.description.toLowerCase() !== tx.description.toLowerCase()) {
+    return false
+  }
+  if (p.totalInstallments !== tx.totalInstallments) {
+    return false
+  }
+
+  // If both define the first installment period, they must match
+  if (tx.firstInstallmentPeriod && p.firstInstallmentPeriod) {
+    return tx.firstInstallmentPeriod === p.firstInstallmentPeriod
+  }
+
+  // If existing purchase has a firstInstallmentPeriod, verify the plan has not already finished
+  if (p.firstInstallmentPeriod) {
+    const lastPeriod = offsetPeriod(p.firstInstallmentPeriod, p.totalInstallments - 1)
+    const txPeriod = tx.date.slice(0, 7) // YYYY-MM
+    // If the transaction period is after the plan's completion, it is not the same plan
+    if (txPeriod > lastPeriod) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
  * Checks a list of parsed transactions against existing card purchases.
  * Detects:
  * 1. Exact duplicate: Same description, same date, same amount (already imported).
- * 2. Ongoing installment: Same description and same total installments (already tracking this plan).
+ * 2. Ongoing installment: Subsequent installment (currentInstallment > 1) of an existing plan.
  */
 export function matchExistingPurchases(
   parsedTransactions: ParsedStatementTransaction[],
@@ -35,12 +69,10 @@ export function matchExistingPurchases(
     }
 
     // 2. Ongoing installment match
-    if (tx.totalInstallments > 1) {
-      const ongoingMatch = existingPurchases.find(
-        (p) =>
-          p.description.toLowerCase() === tx.description.toLowerCase() &&
-          p.totalInstallments === tx.totalInstallments
-      )
+    // Only subsequent installments (currentInstallment > 1) can match an existing plan.
+    // The initial installment (currentInstallment === 1) is always a new purchase unless caught by exactMatch.
+    if (tx.totalInstallments > 1 && tx.currentInstallment > 1) {
+      const ongoingMatch = existingPurchases.find((p) => isOngoingInstallmentMatch(tx, p))
 
       if (ongoingMatch) {
         return {

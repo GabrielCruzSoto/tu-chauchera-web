@@ -205,20 +205,24 @@ export function parseTenpoStatementText(rawText: string): ParsedStatementResult 
       }
     }
 
-    // Calculate firstInstallmentPeriod if installments and dueDate are available
+    // Calculate firstInstallmentPeriod if dueDate is available
     let firstInstallmentPeriod: string | undefined = undefined
-    if (dueDate && totalInstallments > 1) {
+    if (dueDate) {
       const [dueYStr = '2026', dueMStr = '01'] = dueDate.split('-')
       const dueY = parseInt(dueYStr, 10)
       const dueM = parseInt(dueMStr, 10)
 
-      let startYear = dueY
-      let startMonth = dueM - (currentInstallment - 1)
-      while (startMonth < 1) {
-        startMonth += 12
-        startYear -= 1
+      if (totalInstallments > 1) {
+        let startYear = dueY
+        let startMonth = dueM - (currentInstallment - 1)
+        while (startMonth < 1) {
+          startMonth += 12
+          startYear -= 1
+        }
+        firstInstallmentPeriod = `${startYear}-${String(startMonth).padStart(2, '0')}`
+      } else {
+        firstInstallmentPeriod = `${dueY}-${String(dueM).padStart(2, '0')}`
       }
-      firstInstallmentPeriod = `${startYear}-${String(startMonth).padStart(2, '0')}`
     }
 
     transactions.push({

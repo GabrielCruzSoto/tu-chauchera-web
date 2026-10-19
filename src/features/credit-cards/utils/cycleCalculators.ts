@@ -77,3 +77,24 @@ export function calculateRepaymentStatus(
   }
   return 'COBRADO_PARCIAL'
 }
+
+/**
+ * Calculates a new Period (YYYY-MM) shifted by deltaMonths (positive or negative).
+ */
+export function offsetPeriod(period: Period, deltaMonths: number): Period {
+  const [yearStr = '1970', monthStr = '01'] = period.split('-')
+  let year = parseInt(yearStr, 10)
+  let month = parseInt(monthStr, 10) + deltaMonths
+
+  while (month < 1) {
+    month += 12
+    year -= 1
+  }
+  while (month > 12) {
+    month -= 12
+    year += 1
+  }
+
+  const paddedMonth = month.toString().padStart(2, '0')
+  return `${year}-${paddedMonth}`
+}

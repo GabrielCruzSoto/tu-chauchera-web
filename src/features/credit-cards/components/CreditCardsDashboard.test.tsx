@@ -86,11 +86,14 @@ describe('CreditCardsDashboard', () => {
       primaryLastFour: '4321',
     })
 
+    const today = new Date().toISOString().slice(0, 10)
+    const currentPeriod = today.slice(0, 7)
     store.addPurchase({
       accountId: account.id,
       plasticId: account.plastics[0]!.id,
       description: 'Supermercado Lider',
-      purchaseDate: '2026-03-10',
+      purchaseDate: today,
+      firstInstallmentPeriod: currentPeriod,
       totalAmountCents: 90000,
       totalInstallments: 3,
       payerType: 'PROPIO',
@@ -107,11 +110,18 @@ describe('CreditCardsDashboard', () => {
     expect(screen.getByText(/Total Compras Registradas/i)).toBeInTheDocument()
     expect(screen.getByText(/Cupo Disponible Estimado/i)).toBeInTheDocument()
 
-    // Period selector buttons
+    // Default 3-month headers: Mes anterior, Mes actual y Próximo mes
+    expect(screen.getByText('Mes Anterior')).toBeInTheDocument()
+    expect(screen.getByText('Mes Actual')).toBeInTheDocument()
+    expect(screen.getByText('Próximo Mes')).toBeInTheDocument()
+
+    // Period selector buttons and filter controls
     expect(screen.getByRole('button', { name: '3M' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '6M' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '12M' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '24M' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/Indicar cantidad de períodos a mostrar/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Indicar período inicial/i)).toBeInTheDocument()
 
     // Table columns and purchase data
     expect(screen.getByText('Movimiento')).toBeInTheDocument()
