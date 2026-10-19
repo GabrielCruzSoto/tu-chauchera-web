@@ -3,11 +3,13 @@ import { LoginPage } from "@/features/auth/components/LoginPage"
 import { useAuthStore } from "@/store/authSlice"
 import { useSyncStore } from "@/features/sync/store/syncSlice"
 import { SyncStatusIndicator } from "@/features/sync/components/SyncStatusIndicator"
+import { StorageQuotaModal } from "@/features/sync/components/StorageQuotaModal"
 import { PageLoader } from "@/shared/components/ui/PageLoader"
 import { UserMenuDropdown } from "@/shared/components/layout/UserMenuDropdown"
 import { SupportModal } from "@/shared/components/ui/SupportModal"
 import { PrivacyPolicyPage } from "@/features/legal/components/PrivacyPolicyPage"
 import { TermsOfServicePage } from "@/features/legal/components/TermsOfServicePage"
+import { QuickExpenseModal } from "@/features/obligations/components/QuickExpenseModal"
 import "@/store/appReset"
 
 const ObligationsList = lazy(() =>
@@ -78,10 +80,11 @@ const navItems = [
 
 export const App: React.FC = () => {
   const { isAuthenticated, isUnlocked, logout, user } = useAuthStore()
-  const { hydrateFromDrive } = useSyncStore()
+  const { hydrateFromDrive, isQuotaExceeded, dismissQuotaModal, forceResync } = useSyncStore()
   const [activeTab, setActiveTab] = useState<"matrix" | "calendar" | "obligations" | "cards" | "income" | "settings">("matrix")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSupportOpen, setIsSupportOpen] = useState(false)
+  const [isQuickExpenseOpen, setIsQuickExpenseOpen] = useState(false)
   const [currentPath, setCurrentPath] = useState<string>(() =>
     typeof window !== "undefined" ? window.location.pathname : "/"
   )
@@ -136,6 +139,11 @@ export const App: React.FC = () => {
         "4": "obligations",
         "5": "cards",
         "6": "settings",
+      }
+      if ((e.key === "g" || e.key === "G") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault()
+        setIsQuickExpenseOpen(true)
+        return
       }
       const targetTab = keyMap[e.key]
       if (targetTab && !e.metaKey && !e.ctrlKey && !e.altKey) {
@@ -278,6 +286,16 @@ export const App: React.FC = () => {
 
           {/* Right Rail Utilities */}
           <div className="flex items-center gap-1.5 sm:gap-2 xl:gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsQuickExpenseOpen(true)}
+              title="Registrar Gasto Rápido (Débito/Efectivo) — Tecla G"
+              aria-label="Registrar Gasto Rápido"
+              className="min-h-[36px] xl:min-h-[38px] px-2.5 xl:px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/15 to-teal-500/20 hover:from-emerald-500/25 hover:to-teal-500/30 text-emerald-300 border border-emerald-500/40 hover:border-emerald-400 font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm shadow-emerald-950/40 active:scale-95"
+            >
+              <span className="text-sm font-bold" aria-hidden="true">⚡</span>
+              <span className="hidden sm:inline">Gasto Rápido</span>
+            </button>
             <SyncStatusIndicator />
             <UserMenuDropdown
               onOpenSettings={() => handleTabSelect("settings")}
@@ -380,6 +398,17 @@ export const App: React.FC = () => {
               <div className="flex flex-col gap-1.5">
                 <button
                   type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    setIsQuickExpenseOpen(true)
+                  }}
+                  className="w-full min-h-[44px] py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-emerald-600/20 to-teal-600/20 hover:bg-emerald-600/30 text-xs font-semibold text-emerald-300 border border-emerald-500/40 transition cursor-pointer flex items-center gap-2.5"
+                >
+                  <span className="text-base" aria-hidden="true">⚡</span>
+                  <span>Registrar Gasto Rápido</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => handleTabSelect("settings")}
                   className="w-full min-h-[44px] py-2.5 px-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 hover:text-white text-xs font-semibold text-slate-200 border border-slate-700/80 transition cursor-pointer flex items-center gap-2.5"
                 >
@@ -466,11 +495,24 @@ export const App: React.FC = () => {
         </Suspense>
       </main>
 
+      {isQuotaExceeded && (
+        <StorageQuotaModal
+          isOpen={isQuotaExceeded}
+          onClose={dismissQuotaModal}
+          onRetry={forceResync}
+        />
+      )}
+
       <SupportModal
         isOpen={isSupportOpen}
         onClose={() => setIsSupportOpen(false)}
         onOpenPrivacy={() => navigateTo("/privacidad")}
         onOpenTerms={() => navigateTo("/terminos")}
+      />
+
+      <QuickExpenseModal
+        isOpen={isQuickExpenseOpen}
+        onClose={() => setIsQuickExpenseOpen(false)}
       />
     </div>
   )

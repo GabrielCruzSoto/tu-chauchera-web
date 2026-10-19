@@ -6,13 +6,18 @@ import { useAuthStore } from "@/store/authSlice"
 import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
 import { useIncomeStore } from "@/features/income/store/incomeSlice"
 
+let mockSyncState = {
+  hydrateFromDrive: vi.fn(),
+  status: "IDLE",
+  lastSyncedAt: null,
+  isOnline: true,
+  isQuotaExceeded: false,
+  dismissQuotaModal: vi.fn(),
+  forceResync: vi.fn(),
+}
+
 vi.mock("@/features/sync/store/syncSlice", () => ({
-  useSyncStore: () => ({
-    hydrateFromDrive: vi.fn(),
-    status: "IDLE",
-    lastSyncedAt: null,
-    isOnline: true,
-  }),
+  useSyncStore: () => mockSyncState,
 }))
 
 describe("App Responsive Navigation", () => {
@@ -36,6 +41,16 @@ describe("App Responsive Navigation", () => {
       incomes: {},
       isLoaded: true,
     })
+
+    mockSyncState = {
+      hydrateFromDrive: vi.fn(),
+      status: "IDLE",
+      lastSyncedAt: null,
+      isOnline: true,
+      isQuotaExceeded: false,
+      dismissQuotaModal: vi.fn(),
+      forceResync: vi.fn(),
+    }
   })
 
   it("renders desktop navigation and mobile hamburger toggle button", async () => {
@@ -170,6 +185,32 @@ describe("App Responsive Navigation", () => {
     fireEvent.click(supportDrawerBtn)
 
     expect(await screen.findByRole("heading", { name: /centro de ayuda & soporte/i })).toBeInTheDocument()
+  })
+
+  it("renders StorageQuotaModal when isQuotaExceeded is true", async () => {
+    mockSyncState.isQuotaExceeded = true
+    render(<App />)
+
+    expect(
+      await screen.findByRole("heading", { name: /espacio insuficiente en google drive/i })
+    ).toBeInTheDocument()
+  })
+
+  it("opens QuickExpenseModal when clicking Gasto Rápido button in header", async () => {
+    render(<App />)
+
+    const quickExpenseBtn = screen.getByRole("button", { name: /Registrar Gasto Rápido/i })
+    fireEvent.click(quickExpenseBtn)
+
+    expect(await screen.findByRole("heading", { name: /Gasto Rápido/i })).toBeInTheDocument()
+  })
+
+  it("opens QuickExpenseModal when pressing 'g' keyboard shortcut", async () => {
+    render(<App />)
+
+    fireEvent.keyDown(window, { key: "g" })
+
+    expect(await screen.findByRole("heading", { name: /Gasto Rápido/i })).toBeInTheDocument()
   })
 })
 
