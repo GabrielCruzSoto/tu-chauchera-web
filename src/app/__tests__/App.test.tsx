@@ -58,7 +58,7 @@ describe("App Responsive Navigation", () => {
 
     const hamburgerBtn = screen.getByRole("button", { name: /Abrir menú/i })
     expect(hamburgerBtn).toBeInTheDocument()
-    expect(await screen.findByText("Matriz de Consolidación Financiera")).toBeInTheDocument()
+    expect(await screen.findByText(/Libre para gastar/i)).toBeInTheDocument()
   })
 
   it("opens mobile drawer when clicking hamburger button and closes it on close button", async () => {
@@ -97,7 +97,7 @@ describe("App Responsive Navigation", () => {
     fireEvent.click(hamburgerBtn)
 
     const mobileLinksContainer = screen.getByTestId("mobile-nav-links")
-    const obligationsLink = mobileLinksContainer.querySelector("button:nth-child(4)")
+    const obligationsLink = mobileLinksContainer.querySelector("button:nth-child(5)")
     expect(obligationsLink).toBeInTheDocument()
 
     fireEvent.click(obligationsLink!)
@@ -152,14 +152,14 @@ describe("App Responsive Navigation", () => {
     })
 
     rerender(<App />)
-    expect(await screen.findByText("Matriz de Consolidación Financiera")).toBeInTheDocument()
+    expect(await screen.findByText(/Libre para gastar/i)).toBeInTheDocument()
   })
 
-  it("switches tab using number keyboard shortcuts (1 - 6)", async () => {
+  it("switches tab using number keyboard shortcuts (1 - 7)", async () => {
     render(<App />)
 
-    // Press '2' for Flujos & Cuotas
-    fireEvent.keyDown(window, { key: "2" })
+    // Press '3' for Flujos & Cuotas
+    fireEvent.keyDown(window, { key: "3" })
     expect(await screen.findByRole("button", { name: /Mes anterior/i })).toBeInTheDocument()
   })
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { formatCLP } from "@/shared/types/money"
 import { usePaymentPlan } from "../hooks/usePaymentPlan"
+import { getBurdenBadgeConfig } from "../domain/burdenBadge"
 import type { DebtPayoffStrategy, PaymentWindow } from "../domain/types"
 
 interface PaymentWindowsViewProps {
@@ -11,30 +12,7 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
   const [strategy, setStrategy] = useState<DebtPayoffStrategy>("AVALANCHE")
   const { windows, metrics, prioritizedDebts } = usePaymentPlan(currentPeriod, strategy)
 
-  const getBurdenBadge = () => {
-    switch (metrics.burdenLevel) {
-      case "HEALTHY":
-        return {
-          label: "Saludable (<30%)",
-          color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-          desc: "Tu nivel de deuda está dentro de los límites recomendados.",
-        }
-      case "CAUTION":
-        return {
-          label: "Alerta (30% - 35%)",
-          color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-          desc: "Estás cerca del límite de sobreendeudamiento. Evita tomar nuevos créditos.",
-        }
-      case "CRITICAL":
-        return {
-          label: "Crítico (>35%)",
-          color: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-          desc: "Sobreendeudamiento detectado. Prioriza pagar capital y evalúa consolidar deudas.",
-        }
-    }
-  }
-
-  const badge = getBurdenBadge()
+  const badge = getBurdenBadgeConfig(metrics.burdenLevel)
 
   return (
     <div className="space-y-6">

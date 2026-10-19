@@ -12,6 +12,9 @@ import { TermsOfServicePage } from "@/features/legal/components/TermsOfServicePa
 import { QuickExpenseModal } from "@/features/obligations/components/QuickExpenseModal"
 import "@/store/appReset"
 
+const TodayHome = lazy(() =>
+  import("@/features/today").then((m) => ({ default: m.TodayHome }))
+)
 const ObligationsList = lazy(() =>
   import("@/features/obligations/components/ObligationsList").then((m) => ({ default: m.ObligationsList }))
 )
@@ -30,6 +33,13 @@ const SettingsView = lazy(() =>
 const CreditCardsDashboard = lazy(() =>
   import("@/features/credit-cards/components/CreditCardsDashboard").then((m) => ({ default: m.CreditCardsDashboard }))
 )
+const HomeIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+)
+
 const MatrixIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <rect width="7" height="9" x="3" y="3" rx="1" />
@@ -70,18 +80,21 @@ const CardsIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) 
   </svg>
 )
 
+type TabId = "today" | "matrix" | "calendar" | "obligations" | "cards" | "income" | "settings"
+
 const navItems = [
-  { id: "matrix", label: "Matriz Consolidada", shortLabel: "Matriz", shortcut: "1", icon: MatrixIcon },
-  { id: "calendar", label: "Flujos & Cuotas", shortLabel: "Flujos", shortcut: "2", icon: CalendarIcon },
-  { id: "income", label: "Ingresos", shortLabel: "Ingresos", shortcut: "3", icon: IncomeIcon },
-  { id: "obligations", label: "Obligaciones", shortLabel: "Obligaciones", shortcut: "4", icon: ObligationsIcon },
-  { id: "cards", label: "Tarjetas", shortLabel: "Tarjetas", shortcut: "5", icon: CardsIcon },
+  { id: "today", label: "Hoy", shortLabel: "Hoy", shortcut: "1", icon: HomeIcon },
+  { id: "matrix", label: "Matriz Consolidada", shortLabel: "Matriz", shortcut: "2", icon: MatrixIcon },
+  { id: "calendar", label: "Flujos & Cuotas", shortLabel: "Flujos", shortcut: "3", icon: CalendarIcon },
+  { id: "income", label: "Ingresos", shortLabel: "Ingresos", shortcut: "4", icon: IncomeIcon },
+  { id: "obligations", label: "Obligaciones", shortLabel: "Obligaciones", shortcut: "5", icon: ObligationsIcon },
+  { id: "cards", label: "Tarjetas", shortLabel: "Tarjetas", shortcut: "6", icon: CardsIcon },
 ] as const
 
 export const App: React.FC = () => {
   const { isAuthenticated, isUnlocked, logout, user } = useAuthStore()
   const { hydrateFromDrive, isQuotaExceeded, dismissQuotaModal, forceResync } = useSyncStore()
-  const [activeTab, setActiveTab] = useState<"matrix" | "calendar" | "obligations" | "cards" | "income" | "settings">("matrix")
+  const [activeTab, setActiveTab] = useState<TabId>("today")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSupportOpen, setIsSupportOpen] = useState(false)
   const [isQuickExpenseOpen, setIsQuickExpenseOpen] = useState(false)
@@ -132,13 +145,14 @@ export const App: React.FC = () => {
       ) {
         return
       }
-      const keyMap: Record<string, "matrix" | "calendar" | "obligations" | "cards" | "income" | "settings"> = {
-        "1": "matrix",
-        "2": "calendar",
-        "3": "income",
-        "4": "obligations",
-        "5": "cards",
-        "6": "settings",
+      const keyMap: Record<string, TabId> = {
+        "1": "today",
+        "2": "matrix",
+        "3": "calendar",
+        "4": "income",
+        "5": "obligations",
+        "6": "cards",
+        "7": "settings",
       }
       if ((e.key === "g" || e.key === "G") && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault()
@@ -181,7 +195,7 @@ export const App: React.FC = () => {
     )
   }
 
-  const handleTabSelect = (tab: "matrix" | "calendar" | "obligations" | "cards" | "income" | "settings") => {
+  const handleTabSelect = (tab: TabId) => {
     setActiveTab(tab)
     setIsMobileMenuOpen(false)
   }
@@ -223,11 +237,11 @@ export const App: React.FC = () => {
             {/* Brand Logo & Title with enhanced prominence and badge alignment */}
             <div
               className="flex items-center gap-3 cursor-pointer select-none group"
-              onClick={() => handleTabSelect("matrix")}
+              onClick={() => handleTabSelect("today")}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleTabSelect("matrix")}
-              aria-label="Ir a Matriz Consolidada"
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleTabSelect("today")}
+              aria-label="Ir a Inicio"
             >
               <div className="relative flex items-center justify-center p-1.5 rounded-xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-md group-hover:border-emerald-500/40 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-all duration-200">
                 <img
@@ -481,6 +495,9 @@ export const App: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-28 lg:pb-8">
         <Suspense fallback={<PageLoader text="Cargando página..." />}>
+          {activeTab === "today" && (
+            <TodayHome onNavigateToCalendar={() => handleTabSelect("calendar")} />
+          )}
           {activeTab === "matrix" && <FinancialMatrix />}
           {activeTab === "calendar" && <MonthlyInstallmentsView />}
           {activeTab === "cards" && <CreditCardsDashboard />}
