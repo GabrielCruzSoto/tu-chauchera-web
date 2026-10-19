@@ -256,5 +256,54 @@ describe("FinancialMatrix Component & Responsive Toggle", () => {
     expect(within(dialog).getByText(/Presté mi tarjeta/i)).toBeInTheDocument()
     expect(within(dialog).getByText(/Banco Falabella/i)).toBeInTheDocument()
   })
+
+  it("renders the status colors legend bar in the toolbar", () => {
+    render(<FinancialMatrix />)
+
+    const legend = screen.getByTestId("matrix-status-legend")
+    expect(legend).toBeInTheDocument()
+    expect(within(legend).getByText(/Estados de Montos/i)).toBeInTheDocument()
+    expect(within(legend).getByText("Pagado")).toBeInTheDocument()
+    expect(within(legend).getByText("Vencido")).toBeInTheDocument()
+    expect(within(legend).getByText("Por vencer")).toBeInTheDocument()
+    expect(within(legend).getByText("Plazo")).toBeInTheDocument()
+    expect(within(legend).getByText("Otro")).toBeInTheDocument()
+  })
+
+  it("applies status color styling and indicators to amounts in the matrix table", () => {
+    const currentPeriod = new Date().toISOString().slice(0, 7)
+
+    // Add installment with PAID status in the visible current period
+    useObligationsStore.setState((prev) => ({
+      ...prev,
+      installments: {
+        ...prev.installments,
+        "inst-paid": {
+          id: "inst-paid",
+          obligationId: "obl-1",
+          installmentNumber: 2,
+          amountCents: toMoney(50000),
+          dueDate: `${currentPeriod}-05`,
+          status: "PAID",
+          paidDate: `${currentPeriod}-04`,
+          period: currentPeriod,
+        },
+      },
+    }))
+
+    render(<FinancialMatrix />)
+
+    // Expand category to view subcategories
+    const expandBtn = screen.getByRole("button", { name: /Expandir Créditos/i })
+    fireEvent.click(expandBtn)
+
+    const subcatRow = screen.getByTestId("matrix-subcat-row-cat-1-banco")
+    expect(subcatRow).toBeInTheDocument()
+
+    // Find the paid amount badge in the row
+    const paidBadge = within(subcatRow).getByTitle(/Pagado/i)
+    expect(paidBadge).toBeInTheDocument()
+    expect(paidBadge).toHaveClass("text-emerald-300")
+  })
 })
 

@@ -201,4 +201,94 @@ describe("Financial Matrix Computation", () => {
     expect(cardSubcats![0]!.cells["2026-08"]).toBe(31550)
     expect(cardSubcats![0]!.total).toBe(123100)
   })
+
+  it("assigns accurate financial statuses to matrix cells (PAID, OVERDUE, DUE_SOON, SCHEDULED)", () => {
+    const categories: Record<string, Category> = {
+      "cat-1": { id: "cat-1", name: "Servicios", color: "sky", createdAt: "", updatedAt: "" },
+    }
+    const obligations: Record<string, Obligation> = {
+      "obl-1": {
+        id: "obl-1",
+        categoryId: "cat-1",
+        subcategory: "Luz",
+        detail: "Enel",
+        totalAmountCents: toMoney(120000),
+        totalInstallments: 4,
+        currentInstallment: 1,
+        installmentAmountCents: toMoney(30000),
+        startDate: "2026-08-05",
+        dueDay: 5,
+        status: "PENDING",
+        createdAt: "",
+        updatedAt: "",
+      },
+    }
+    const installments: Record<string, Installment> = {
+      "i-aug": {
+        id: "i-aug",
+        obligationId: "obl-1",
+        installmentNumber: 1,
+        dueDate: "2026-08-05",
+        amountCents: toMoney(30000),
+        status: "PAID",
+        paidDate: "2026-08-04",
+        period: "2026-08",
+      },
+      "i-sep": {
+        id: "i-sep",
+        obligationId: "obl-1",
+        installmentNumber: 2,
+        dueDate: "2026-09-05",
+        amountCents: toMoney(30000),
+        status: "PENDING",
+      },
+      "i-oct": {
+        id: "i-oct",
+        obligationId: "obl-1",
+        installmentNumber: 3,
+        dueDate: "2026-10-25",
+        amountCents: toMoney(30000),
+        status: "PENDING",
+      },
+      "i-nov": {
+        id: "i-nov",
+        obligationId: "obl-1",
+        installmentNumber: 4,
+        dueDate: "2026-11-25",
+        amountCents: toMoney(30000),
+        status: "PENDING",
+      },
+    }
+
+    const periods = ["2026-08", "2026-09", "2026-10", "2026-11"]
+    // Simulate reference date as 2026-10-10 (October 10, 2026)
+    const referenceDate = new Date("2026-10-10T12:00:00Z")
+
+    const matrix = computeFinancialMatrix(
+      categories,
+      obligations,
+      installments,
+      periods,
+      {},
+      {},
+      referenceDate
+    )
+
+    // In August (past): paid -> PAID
+    expect(matrix.categoryCellStatuses["cat-1"]?.["2026-08"]).toBe("PAID")
+    // In September (past): unpaid -> OVERDUE
+    expect(matrix.categoryCellStatuses["cat-1"]?.["2026-09"]).toBe("OVERDUE")
+    // In October (current month): due on 25th, reference is 10th -> DUE_SOON
+    expect(matrix.categoryCellStatuses["cat-1"]?.["2026-10"]).toBe("DUE_SOON")
+    // In November (future): -> SCHEDULED
+    expect(matrix.categoryCellStatuses["cat-1"]?.["2026-11"]).toBe("SCHEDULED")
+
+    // Subcategory matches as well
+    const subcat = matrix.subcategoriesByCategory["cat-1"]![0]!
+    expect(subcat.cellStatuses?.["2026-08"]).toBe("PAID")
+    expect(subcat.cellStatuses?.["2026-09"]).toBe("OVERDUE")
+    expect(subcat.cellStatuses?.["2026-10"]).toBe("DUE_SOON")
+    expect(subcat.cellStatuses?.["2026-11"]).toBe("SCHEDULED")
+  })
 })
+

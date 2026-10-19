@@ -4,6 +4,7 @@ import { formatCLP, toMoney } from "@/shared/types/money"
 import { useIncomeStore, getTotalIncomeForPeriod } from "@/features/income/store/incomeSlice"
 import type { Category } from "@/shared/types/domain"
 import { MatrixItemDetailModal, type MatrixItemDetailPayload } from "./MatrixItemDetailModal"
+import { getMatrixStatusConfig, MATRIX_STATUS_CONFIGS } from "../utils/matrixStatusStyles"
 
 type GroupByMode = "category" | "p2p" | "type"
 
@@ -28,6 +29,7 @@ export const FinancialMatrix: React.FC = () => {
       categoryName: subcat.categoryName || cat.name,
       categoryColor: subcat.categoryColor || cat.color,
       cells: subcat.cells,
+      cellStatuses: subcat.cellStatuses,
       totalInRange: subcat.total,
       periods: matrix.periods,
       obligationId: subcat.obligationId,
@@ -49,6 +51,7 @@ export const FinancialMatrix: React.FC = () => {
       name: p2p.personName,
       categoryName: p2p.categoryName,
       cells: p2p.cells,
+      cellStatuses: p2p.cellStatuses,
       totalInRange: p2p.total,
       periods: matrix.periods,
       obligationId: p2p.obligationId,
@@ -237,6 +240,51 @@ export const FinancialMatrix: React.FC = () => {
               <span>{areAllExpanded ? "Contraer subcategorías" : "Desglosar subcategorías"}</span>
             </button>
           )}
+        </div>
+
+        {/* Tier 3: Legend for Financial Matrix Cell Status Colors */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-slate-800/60 text-xs" data-testid="matrix-status-legend">
+          <div className="flex items-center gap-1.5 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
+            <span>🎨</span>
+            <span>Estados de Montos:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-emerald-300 bg-emerald-500/10 border-emerald-500/25"
+              title="Cuota pagada y saldada"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+              <span className="font-medium text-[11px]">Pagado</span>
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-rose-300 bg-rose-500/15 border-rose-500/30"
+              title="Cuota vencida no pagada en plazo"
+            >
+              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0 animate-pulse" />
+              <span className="font-semibold text-[11px]">Vencido</span>
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-amber-200 bg-amber-500/15 border-amber-500/30"
+              title="Cuota por vencer en el mes actual"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+              <span className="font-medium text-[11px]">Por vencer</span>
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-sky-200 bg-sky-500/10 border-sky-500/25"
+              title="Cuota programada a plazo futuro"
+            >
+              <span className="w-2 h-2 rounded-full bg-sky-400 shrink-0" />
+              <span className="font-medium text-[11px]">Plazo</span>
+            </span>
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-purple-200 bg-purple-500/10 border-purple-500/25"
+              title="Renegociado u otro estado"
+            >
+              <span className="w-2 h-2 rounded-full bg-purple-400 shrink-0" />
+              <span className="font-medium text-[11px]">Otro</span>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -430,15 +478,22 @@ export const FinancialMatrix: React.FC = () => {
 
                         {matrix.periods.map((period) => {
                           const amount = p2p.cells[period] ?? 0
+                          const status = p2p.cellStatuses?.[period]
+                          const config = getMatrixStatusConfig(status)
+
                           return (
                             <td
                               key={period}
-                              className={`px-3 sm:px-4 py-3 text-right font-mono tabular-nums text-xs whitespace-nowrap transition ${
-                                amount > 0 ? "text-slate-200 font-medium" : "text-slate-400/80 font-normal"
-                              }`}
+                              className="px-3 sm:px-4 py-3 text-right font-mono tabular-nums text-xs whitespace-nowrap transition"
                             >
                               {amount > 0 ? (
-                                formatCLP(toMoney(amount))
+                                <span
+                                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border font-mono text-xs ${config.badgeClass}`}
+                                  title={`${p2p.personName} (${period}): ${config.label} — ${formatCLP(toMoney(amount))}`}
+                                >
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${config.dotClass}`} />
+                                  <span>{formatCLP(toMoney(amount))}</span>
+                                </span>
                               ) : (
                                 <span className="text-slate-500" aria-label="Sin movimientos">—</span>
                               )}
@@ -513,17 +568,27 @@ export const FinancialMatrix: React.FC = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {matrix.periods.map((period) => {
                         const amount = p2p.cells[period] ?? 0
+                        const status = p2p.cellStatuses?.[period]
+                        const config = getMatrixStatusConfig(status)
+
                         return (
                           <div
                             key={period}
-                            className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/60 flex flex-col justify-between"
+                            className={`p-2.5 rounded-xl border flex flex-col justify-between ${
+                              amount > 0 ? `${config.badgeClass} bg-slate-950/70` : "bg-slate-950/60 border-slate-800/60"
+                            }`}
                           >
-                            <span className="text-[10px] font-semibold text-slate-400 uppercase font-mono">
-                              {period}
-                            </span>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-semibold text-slate-400 uppercase font-mono">
+                                {period}
+                              </span>
+                              {amount > 0 && (
+                                <span className={`w-1.5 h-1.5 rounded-full ${config.dotClass}`} />
+                              )}
+                            </div>
                             <span
                               className={`font-mono text-xs font-semibold mt-1 ${
-                                amount > 0 ? "text-amber-300" : "text-slate-400/80"
+                                amount > 0 ? config.textColor : "text-slate-500"
                               }`}
                             >
                               {amount > 0 ? (
@@ -614,17 +679,23 @@ export const FinancialMatrix: React.FC = () => {
                         {matrix.periods.map((period) => {
                           const amount = matrix.cells[cat.id]?.[period] ?? 0
                           const hasAmount = amount > 0
+                          const status = matrix.categoryCellStatuses?.[cat.id]?.[period]
+                          const config = getMatrixStatusConfig(status)
+
                           return (
                             <div
                               key={period}
                               className={`flex-shrink-0 px-2.5 py-1.5 rounded-xl border text-center transition min-w-[70px] ${
                                 hasAmount
-                                  ? "bg-slate-950/80 border-emerald-500/30 text-emerald-300"
+                                  ? `${config.badgeClass} bg-slate-950/80`
                                   : "bg-slate-950/40 border-slate-800/60 text-slate-400"
                               }`}
                             >
-                              <div className="text-[9px] uppercase font-mono text-slate-400 font-medium">{period.slice(5)}</div>
-                              <div className={`font-mono text-[11px] font-bold ${hasAmount ? "text-slate-100" : "text-slate-400"}`}>
+                              <div className="text-[9px] uppercase font-mono text-slate-400 font-medium flex items-center justify-center gap-1">
+                                <span>{period.slice(5)}</span>
+                                {hasAmount && <span className={`w-1.5 h-1.5 rounded-full ${config.dotClass}`} />}
+                              </div>
+                              <div className={`font-mono text-[11px] font-bold ${hasAmount ? config.textColor : "text-slate-400"}`}>
                                 {hasAmount ? formatCLP(toMoney(amount)) : "—"}
                               </div>
                             </div>
@@ -773,15 +844,22 @@ export const FinancialMatrix: React.FC = () => {
 
                           {matrix.periods.map((period) => {
                             const amount = matrix.cells[cat.id]?.[period] ?? 0
+                            const status = matrix.categoryCellStatuses?.[cat.id]?.[period]
+                            const config = getMatrixStatusConfig(status)
+
                             return (
                               <td
                                 key={period}
-                                className={`px-3 sm:px-4 py-3 sm:py-3.5 text-right font-mono tabular-nums text-xs whitespace-nowrap transition ${
-                                  amount > 0 ? "text-slate-200 font-medium" : "text-slate-400/80 font-normal"
-                                }`}
+                                className="px-3 sm:px-4 py-3 sm:py-3.5 text-right font-mono tabular-nums text-xs whitespace-nowrap transition"
                               >
                                 {amount > 0 ? (
-                                  formatCLP(toMoney(amount))
+                                  <span
+                                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border font-mono font-semibold text-xs ${config.badgeClass}`}
+                                    title={`${cat.name} (${period}): ${config.label} — ${formatCLP(toMoney(amount))}`}
+                                  >
+                                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${config.dotClass}`} />
+                                    <span>{formatCLP(toMoney(amount))}</span>
+                                  </span>
                                 ) : (
                                   <span className="text-slate-500" aria-label="Sin movimientos">—</span>
                                 )}
@@ -855,14 +933,25 @@ export const FinancialMatrix: React.FC = () => {
 
                                   {matrix.periods.map((period) => {
                                     const amount = subcat.cells[period] ?? 0
+                                    const status = subcat.cellStatuses?.[period]
+                                    const config = getMatrixStatusConfig(status)
+
                                     return (
                                       <td
                                         key={period}
-                                        className={`px-3 sm:px-4 py-2.5 text-right font-mono tabular-nums text-xs whitespace-nowrap ${
-                                          amount > 0 ? "text-slate-300 font-normal" : "text-slate-700"
-                                        }`}
+                                        className="px-3 sm:px-4 py-2.5 text-right font-mono tabular-nums text-xs whitespace-nowrap"
                                       >
-                                        {amount > 0 ? formatCLP(toMoney(amount)) : "—"}
+                                        {amount > 0 ? (
+                                          <span
+                                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border font-mono text-xs ${config.badgeClass}`}
+                                            title={`${subcat.name} (${period}): ${config.label} — ${formatCLP(toMoney(amount))}`}
+                                          >
+                                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${config.dotClass}`} />
+                                            <span>{formatCLP(toMoney(amount))}</span>
+                                          </span>
+                                        ) : (
+                                          <span className="text-slate-700" aria-label="Sin movimientos">—</span>
+                                        )}
                                       </td>
                                     )
                                   })}

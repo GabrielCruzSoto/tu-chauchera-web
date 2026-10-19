@@ -3,6 +3,7 @@ import type { ObligationType, P2PRole, Period } from "@/shared/types/domain"
 import { formatCLP, toMoney } from "@/shared/types/money"
 import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
 import { useCreditCardStore } from "@/features/credit-cards/store/creditCardSlice"
+import { getMatrixStatusConfig, type MatrixCellStatus } from "../utils/matrixStatusStyles"
 
 export interface MatrixItemDetailPayload {
   id: string
@@ -10,6 +11,7 @@ export interface MatrixItemDetailPayload {
   categoryName: string
   categoryColor?: string | undefined
   cells: Record<Period, number>
+  cellStatuses?: Record<Period, MatrixCellStatus | undefined> | undefined
   totalInRange: number
   periods: Period[]
   obligationId?: string | undefined
@@ -460,34 +462,32 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {item.periods.map((period) => {
                 const amount = item.cells[period] ?? 0
-                const instInPeriod = relatedInstallments.find((i) =>
-                  i.status === "PAID" && i.period ? i.period === period : i.dueDate.startsWith(period)
-                )
+                const status = item.cellStatuses?.[period]
+                const statusConfig = getMatrixStatusConfig(status)
 
                 return (
                   <div
                     key={period}
-                    className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/70 flex flex-col justify-between"
+                    className={`p-2.5 rounded-xl border flex flex-col justify-between ${
+                      amount > 0 ? `${statusConfig.badgeClass} bg-slate-950/70` : "bg-slate-950/60 border-slate-800/70"
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">
                         {period}
                       </span>
-                      {instInPeriod && (
+                      {amount > 0 && (
                         <span
-                          className={`text-[9px] px-1.5 py-0.2 rounded font-semibold ${
-                            instInPeriod.status === "PAID"
-                              ? "bg-emerald-500/20 text-emerald-400"
-                              : "bg-amber-500/20 text-amber-300"
-                          }`}
+                          className={`text-[9px] px-1.5 py-0.2 rounded font-semibold inline-flex items-center gap-1 ${statusConfig.badgeClass}`}
                         >
-                          {instInPeriod.status === "PAID" ? "Pagada" : "Pendiente"}
+                          <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotClass}`} />
+                          {statusConfig.label}
                         </span>
                       )}
                     </div>
                     <span
                       className={`font-mono text-xs font-bold mt-1.5 ${
-                        amount > 0 ? "text-slate-100" : "text-slate-500"
+                        amount > 0 ? statusConfig.textColor : "text-slate-500"
                       }`}
                     >
                       {amount > 0 ? formatCLP(toMoney(amount)) : "—"}

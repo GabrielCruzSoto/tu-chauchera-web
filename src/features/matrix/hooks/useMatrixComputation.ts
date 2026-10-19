@@ -18,7 +18,15 @@ import type {
 import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
 import { useCreditCardStore } from "@/features/credit-cards/store/creditCardSlice"
 import { calculateInstallmentPeriods } from "@/features/credit-cards/utils/cycleCalculators"
+import {
+  type MatrixCellStatus,
+  getInstallmentStatusForMatrix,
+  getCreditCardStatusForMatrix,
+  resolveCellStatus,
+} from "../utils/matrixStatusStyles"
+import { getLocalISODate, getLocalPeriod, generateLocalPeriodsRange } from "@/shared/utils/date"
 
+export { type MatrixCellStatus }
 export const CREDIT_CARDS_CATEGORY_ID: UUID = "system-credit-cards"
 
 export interface MatrixSubcategory {
@@ -28,6 +36,7 @@ export interface MatrixSubcategory {
   categoryName?: string | undefined
   categoryColor?: string | undefined
   cells: Record<Period, number> // period -> amountCents
+  cellStatuses?: Record<Period, MatrixCellStatus | undefined> | undefined
   total: number // total in range
   obligationId?: string | undefined
   obligationIds?: string[] | undefined
@@ -49,6 +58,7 @@ export interface P2PPersonGroup {
   productDescription?: string | undefined
   categoryName: string
   cells: Record<Period, number>
+  cellStatuses?: Record<Period, MatrixCellStatus | undefined> | undefined
   total: number
   obligationId?: string | undefined
   purchaseId?: string | undefined
@@ -60,6 +70,7 @@ export interface MatrixData {
   categories: Category[]
   periods: Period[]
   cells: Record<UUID, Record<Period, number>> // categoryId -> period -> amountCents
+  categoryCellStatuses: Record<UUID, Record<Period, MatrixCellStatus | undefined>>
   columnTotals: Record<Period, number> // period -> sum(amountCents)
   rowTotals: Record<UUID, number> // categoryId -> sum(amountCents)
   grandTotal: number
@@ -77,16 +88,7 @@ export interface MatrixData {
  * Generates an array of contiguous periods ("YYYY-MM") starting from a base period.
  */
 export function generatePeriodsRange(baseDate: Date, monthsCount = 6): Period[] {
-  const periods: Period[] = []
-  const current = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)
-
-  for (let i = 0; i < monthsCount; i++) {
-    const periodStr = current.toISOString().slice(0, 7)
-    periods.push(periodStr)
-    current.setMonth(current.getMonth() + 1)
-  }
-
-  return periods
+  return generateLocalPeriodsRange(baseDate, monthsCount)
 }
 
 /**
@@ -100,8 +102,11 @@ export function computeFinancialMatrix(
   installmentsMap: Record<UUID, Installment>,
   periods: Period[],
   creditCardAccountsMap: Record<UUID, CreditCardAccount> = {},
-  creditCardPurchasesMap: Record<UUID, CreditCardPurchase> = {}
+  creditCardPurchasesMap: Record<UUID, CreditCardPurchase> = {},
+  referenceDate: Date = new Date()
 ): MatrixData {
+  const todayStr = getLocalISODate(referenceDate)
+  const currentPeriod = getLocalPeriod(referenceDate)
   const categoriesList = [...Object.values(categoriesMap)]
 
   // If there are credit card accounts or purchases, append the virtual system category "Tarjetas de Crédito"
@@ -126,6 +131,11 @@ export function computeFinancialMatrix(
   const p2pMap: Record<string, P2PPersonGroup> = {}
   const periodTypeTotals: Record<Period, { expense: number; debt: number; p2p: number }> = {}
 
+  // Status accumulators
+  const catStatusesMap: Record<UUID, Record<Period, MatrixCellStatus[]>> = {}
+  const subcatStatusesMap: Record<string, Record<Period, MatrixCellStatus[]>> = {}
+  const p2pStatusesMap: Record<string, Record<Period, MatrixCellStatus[]>> = {}
+
   let grandTotal = 0
   let totalPersonalExpenses = 0
   let totalThirdPartyReceivables = 0
@@ -142,8 +152,10 @@ export function computeFinancialMatrix(
     rowTotals[cat.id] = 0
     subcatMap[cat.id] = {}
     subcategoriesByCategory[cat.id] = []
+    catStatusesMap[cat.id] = {}
     for (const period of periods) {
       cells[cat.id]![period] = 0
+      catStatusesMap[cat.id]![period] = []
     }
   }
 
@@ -279,6 +291,15 @@ export function computeFinancialMatrix(
         (existingSubcat.cells[targetPeriod] ?? 0) + inst.amountCents
       existingSubcat.total += inst.amountCents
 
+      const instStatus = getInstallmentStatusForMatrix(inst, targetPeriod, todayStr, currentPeriod)
+      catStatusesMap[catId] ??= {}
+      catStatusesMap[catId]![targetPeriod] ??= []
+      catStatusesMap[catId]![targetPeriod]!.push(instStatus)
+
+      subcatStatusesMap[existingSubcat.id] ??= {}
+      subcatStatusesMap[existingSubcat.id]![targetPeriod] ??= []
+      subcatStatusesMap[existingSubcat.id]![targetPeriod]!.push(instStatus)
+
       // P2P accumulation
       if (obl.type === "P2P_DEBT") {
         const personKey = `${obl.id}`
@@ -286,6 +307,9 @@ export function computeFinancialMatrix(
           p2pMap[personKey]!.cells[targetPeriod] =
             (p2pMap[personKey]!.cells[targetPeriod] ?? 0) + inst.amountCents
           p2pMap[personKey]!.total += inst.amountCents
+          p2pStatusesMap[personKey] ??= {}
+          p2pStatusesMap[personKey]![targetPeriod] ??= []
+          p2pStatusesMap[personKey]![targetPeriod]!.push(instStatus)
         }
       }
     }
@@ -377,6 +401,21 @@ export function computeFinancialMatrix(
           existingSubcat.cells[targetPeriod] = (existingSubcat.cells[targetPeriod] ?? 0) + installmentAmount
           existingSubcat.total += installmentAmount
 
+          const cardStatus = getCreditCardStatusForMatrix(
+            cardAccount,
+            targetPeriod,
+            todayStr,
+            currentPeriod,
+            purchase
+          )
+          catStatusesMap[cardCatId] ??= {}
+          catStatusesMap[cardCatId]![targetPeriod] ??= []
+          catStatusesMap[cardCatId]![targetPeriod]!.push(cardStatus)
+
+          subcatStatusesMap[existingSubcat.id] ??= {}
+          subcatStatusesMap[existingSubcat.id]![targetPeriod] ??= []
+          subcatStatusesMap[existingSubcat.id]![targetPeriod]!.push(cardStatus)
+
           // P2P group accumulation if third party
           if (isThirdParty) {
             const personKey = `cc-purchase-${purchase.id}`
@@ -398,15 +437,33 @@ export function computeFinancialMatrix(
             p2pMap[personKey]!.cells[targetPeriod] =
               (p2pMap[personKey]!.cells[targetPeriod] ?? 0) + installmentAmount
             p2pMap[personKey]!.total += installmentAmount
+            p2pStatusesMap[personKey] ??= {}
+            p2pStatusesMap[personKey]![targetPeriod] ??= []
+            p2pStatusesMap[personKey]![targetPeriod]!.push(cardStatus)
           }
         }
       })
     }
   }
 
-  // Populate sorted subcategories list per category
+  // Resolve category cell statuses
+  const categoryCellStatuses: Record<UUID, Record<Period, MatrixCellStatus | undefined>> = {}
+  for (const cat of categoriesList) {
+    categoryCellStatuses[cat.id] = {}
+    for (const period of periods) {
+      categoryCellStatuses[cat.id]![period] = resolveCellStatus(catStatusesMap[cat.id]?.[period] ?? [])
+    }
+  }
+
+  // Populate sorted subcategories list per category and resolve subcategory cell statuses
   for (const cat of categoriesList) {
     const subcats = Object.values(subcatMap[cat.id] ?? {})
+    for (const subcat of subcats) {
+      subcat.cellStatuses = {}
+      for (const period of periods) {
+        subcat.cellStatuses[period] = resolveCellStatus(subcatStatusesMap[subcat.id]?.[period] ?? [])
+      }
+    }
     subcats.sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }))
     subcategoriesByCategory[cat.id] = subcats
   }
@@ -414,11 +471,18 @@ export function computeFinancialMatrix(
   const p2pGroups = Object.values(p2pMap).sort((a, b) =>
     a.personName.localeCompare(b.personName, "es", { sensitivity: "base" })
   )
+  for (const p2p of p2pGroups) {
+    p2p.cellStatuses = {}
+    for (const period of periods) {
+      p2p.cellStatuses[period] = resolveCellStatus(p2pStatusesMap[p2p.id]?.[period] ?? [])
+    }
+  }
 
   return {
     categories: categoriesList,
     periods,
     cells,
+    categoryCellStatuses,
     columnTotals,
     rowTotals,
     grandTotal,
