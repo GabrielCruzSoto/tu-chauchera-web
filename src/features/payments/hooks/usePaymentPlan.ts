@@ -1,13 +1,19 @@
-import { useMemo } from "react"
-import type { Period } from "@/shared/types/domain"
-import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
-import { useCreditCardStore } from "@/features/credit-cards/store/creditCardSlice"
-import { useIncomeStore } from "@/features/income/store/incomeSlice"
-import { buildPaymentCalendar } from "../domain/buildPaymentCalendar"
-import { assignPaymentWindows } from "../domain/assignPaymentWindows"
-import { calculateFinancialHealth } from "../domain/calculateFinancialHealth"
-import { prioritizeDebts } from "../domain/prioritizeDebts"
-import type { DebtPayoffStrategy, PaymentWindow, FinancialHealthMetrics, PrioritizedDebt, PaymentItem } from "../domain/types"
+import { useMemo } from 'react'
+import type { Period } from '@/shared/types/domain'
+import { useObligationsStore } from '@/features/obligations/store/obligationsSlice'
+import { useCreditCardStore } from '@/features/credit-cards/store/creditCardSlice'
+import { useIncomeStore } from '@/features/income/store/incomeSlice'
+import { buildPaymentCalendar } from '../domain/buildPaymentCalendar'
+import { assignPaymentWindows } from '../domain/assignPaymentWindows'
+import { calculateFinancialHealth } from '../domain/calculateFinancialHealth'
+import { prioritizeDebts } from '../domain/prioritizeDebts'
+import type {
+  DebtPayoffStrategy,
+  PaymentWindow,
+  FinancialHealthMetrics,
+  PrioritizedDebt,
+  PaymentItem,
+} from '../domain/types'
 
 export interface UsePaymentPlanResult {
   period: Period
@@ -22,15 +28,18 @@ export interface UsePaymentPlanResult {
 /**
  * Reactive hook aggregating store data into payment planning windows and metrics.
  */
-export function usePaymentPlan(targetPeriod: Period, strategy: DebtPayoffStrategy = "AVALANCHE"): UsePaymentPlanResult {
-  const obligations = useObligationsStore((s) => s.obligations)
-  const installments = useObligationsStore((s) => s.installments)
-  const categories = useObligationsStore((s) => s.categories)
+export function usePaymentPlan(
+  targetPeriod: Period,
+  strategy: DebtPayoffStrategy = 'AVALANCHE',
+): UsePaymentPlanResult {
+  const obligations = useObligationsStore(s => s.obligations)
+  const installments = useObligationsStore(s => s.installments)
+  const categories = useObligationsStore(s => s.categories)
 
-  const creditCardAccounts = useCreditCardStore((s) => s.accounts)
-  const creditCardPurchases = useCreditCardStore((s) => s.purchases)
+  const creditCardAccounts = useCreditCardStore(s => s.accounts)
+  const creditCardPurchases = useCreditCardStore(s => s.purchases)
 
-  const incomes = useIncomeStore((s) => s.incomes)
+  const incomes = useIncomeStore(s => s.incomes)
 
   const calendarItems = useMemo(() => {
     return buildPaymentCalendar(
@@ -41,7 +50,7 @@ export function usePaymentPlan(targetPeriod: Period, strategy: DebtPayoffStrateg
         creditCardPurchases,
         categories,
       },
-      targetPeriod
+      targetPeriod,
     )
   }, [obligations, installments, creditCardAccounts, creditCardPurchases, categories, targetPeriod])
 
@@ -60,12 +69,12 @@ export function usePaymentPlan(targetPeriod: Period, strategy: DebtPayoffStrateg
         installments,
         categories,
       },
-      strategy
+      strategy,
     )
   }, [obligations, installments, categories, strategy])
 
   const pendingItemsCount = useMemo(() => {
-    return calendarItems.filter((i) => !i.isPaid).length
+    return calendarItems.filter(i => !i.isPaid).length
   }, [calendarItems])
 
   return {

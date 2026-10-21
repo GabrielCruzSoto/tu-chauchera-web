@@ -1,4 +1,5 @@
-import type { PaymentItem, PaymentWindow } from "./types"
+import { toMoney } from '@/shared/types/money'
+import type { PaymentItem, PaymentWindow } from './types'
 
 /**
  * Partitions calendar payment items into intuitive payment windows (Ventanas de Pago).
@@ -32,7 +33,7 @@ export function assignPaymentWindows(items: PaymentItem[]): PaymentWindow[] {
     description: string,
     startDay: number,
     endDay: number,
-    windowItems: PaymentItem[]
+    windowItems: PaymentItem[],
   ): PaymentWindow => {
     let totalAmountCents = 0
     let totalPendingCents = 0
@@ -59,28 +60,28 @@ export function assignPaymentWindows(items: PaymentItem[]): PaymentWindow[] {
         const normB = b.dueDay >= 25 ? b.dueDay - 32 : b.dueDay
         return normA - normB
       }),
-      totalAmountCents,
-      totalPendingCents,
-      totalPaidCents,
+      totalAmountCents: toMoney(totalAmountCents),
+      totalPendingCents: toMoney(totalPendingCents),
+      totalPaidCents: toMoney(totalPaidCents),
     }
   }
 
   return [
     summarizeWindow(
-      "window-salary-month-end",
-      "Ventana Sueldo / Fin e Inicio de Mes",
-      "Vencimientos entre el día 25 y el 5. Se pagan o reservan inmediatamente al recibir el sueldo.",
+      'window-salary-month-end',
+      'Ventana Sueldo / Fin e Inicio de Mes',
+      'Vencimientos entre el día 25 y el 5. Se pagan o reservan inmediatamente al recibir el sueldo.',
       25,
       5,
-      window1Items
+      window1Items,
     ),
     summarizeWindow(
-      "window-mid-month",
-      "Ventana Quincenal / Mitad de Mes",
-      "Vencimientos entre el día 6 y el 24. Fondos que deben separarse el día de cobro para evitar gastarlos.",
+      'window-mid-month',
+      'Ventana Quincenal / Mitad de Mes',
+      'Vencimientos entre el día 6 y el 24. Fondos que deben separarse el día de cobro para evitar gastarlos.',
       6,
       24,
-      window2Items
+      window2Items,
     ),
   ]
 }

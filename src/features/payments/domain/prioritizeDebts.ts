@@ -1,5 +1,6 @@
-import type { Obligation, Installment, Category, UUID } from "@/shared/types/domain"
-import type { DebtPayoffStrategy, PrioritizedDebt } from "./types"
+import type { Obligation, Installment, Category, UUID } from '@/shared/types/domain'
+import { toMoney } from '@/shared/types/money'
+import type { DebtPayoffStrategy, PrioritizedDebt } from './types'
 
 export interface DebtPrioritizationSources {
   obligations: Record<UUID, Obligation>
@@ -14,7 +15,7 @@ export interface DebtPrioritizationSources {
  */
 export function prioritizeDebts(
   sources: DebtPrioritizationSources,
-  strategy: DebtPayoffStrategy = "AVALANCHE"
+  strategy: DebtPayoffStrategy = 'AVALANCHE',
 ): PrioritizedDebt[] {
   const { obligations, installments, categories = {} } = sources
   const debts: PrioritizedDebt[] = []
@@ -22,39 +23,41 @@ export function prioritizeDebts(
   // Group installments by obligation to find pending ones
   const pendingByObligation: Record<UUID, Installment[]> = {}
   for (const inst of Object.values(installments)) {
-    if (inst.status === "PENDING") {
-      if (!pendingByObligation[inst.obligationId]) {
-        pendingByObligation[inst.obligationId] = []
-      }
-      pendingByObligation[inst.obligationId]!.push(inst)
+    if (inst.status === 'PENDING') {
+      const list = (pendingByObligation[inst.obligationId] ??= [])
+      list.push(inst)
     }
   }
 
   for (const obligation of Object.values(obligations)) {
-    if (obligation.status === "DELETED" || obligation.status === "PAID") continue
-    if (obligation.type !== "DEBT" && obligation.type !== "P2P_DEBT") continue
+    if (obligation.status === 'DELETED' || obligation.status === 'PAID') continue
+    if (obligation.type !== 'DEBT' && obligation.type !== 'P2P_DEBT') continue
 
-    const pendingInsts = pendingByObligation[obligation.id] || []
+    const pendingInsts = pendingByObligation[obligation.id] ?? []
     if (pendingInsts.length === 0) continue
 
     // Calculate remaining balance from pending installments
-    const remainingBalanceCents = pendingInsts.reduce((sum, inst) => sum + inst.amountCents, 0)
+    const remainingBalanceCents = toMoney(
+      pendingInsts.reduce((sum, inst) => sum + inst.amountCents, 0),
+    )
     const category = categories[obligation.categoryId]
 
     debts.push({
       id: obligation.id,
-      title: obligation.subcategory || obligation.detail || "Deuda",
-      categoryName: category?.name,
+      title: obligation.subcategory || obligation.detail || 'Deuda',
+      ...(category?.name !== undefined ? { categoryName: category.name } : {}),
       remainingBalanceCents,
       installmentAmountCents: obligation.installmentAmountCents,
       remainingInstallments: pendingInsts.length,
-      interestRatePercentage: obligation.annualRatePercentage,
+      ...(obligation.annualRatePercentage !== undefined
+        ? { interestRatePercentage: obligation.annualRatePercentage }
+        : {}),
       order: 0,
     })
   }
 
   // Sorting
-  if (strategy === "AVALANCHE") {
+  if (strategy === 'AVALANCHE') {
     debts.sort((a, b) => {
       const rateA = a.interestRatePercentage ?? 0
       const rateB = b.interestRatePercentage ?? 0

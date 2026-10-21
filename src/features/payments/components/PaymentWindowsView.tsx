@@ -1,35 +1,35 @@
-import React, { useState } from "react"
-import { formatCLP } from "@/shared/types/money"
-import { usePaymentPlan } from "../hooks/usePaymentPlan"
-import type { DebtPayoffStrategy, PaymentWindow } from "../domain/types"
+import React, { useState } from 'react'
+import { formatCLP } from '@/shared/types/money'
+import { usePaymentPlan } from '../hooks/usePaymentPlan'
+import type { DebtPayoffStrategy, PaymentWindow } from '../domain/types'
 
 interface PaymentWindowsViewProps {
   currentPeriod: string // YYYY-MM
 }
 
 export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentPeriod }) => {
-  const [strategy, setStrategy] = useState<DebtPayoffStrategy>("AVALANCHE")
+  const [strategy, setStrategy] = useState<DebtPayoffStrategy>('AVALANCHE')
   const { windows, metrics, prioritizedDebts } = usePaymentPlan(currentPeriod, strategy)
 
   const getBurdenBadge = () => {
     switch (metrics.burdenLevel) {
-      case "HEALTHY":
+      case 'HEALTHY':
         return {
-          label: "Saludable (<30%)",
-          color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-          desc: "Tu nivel de deuda está dentro de los límites recomendados.",
+          label: 'Saludable (<30%)',
+          color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+          desc: 'Tu nivel de deuda está dentro de los límites recomendados.',
         }
-      case "CAUTION":
+      case 'CAUTION':
         return {
-          label: "Alerta (30% - 35%)",
-          color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-          desc: "Estás cerca del límite de sobreendeudamiento. Evita tomar nuevos créditos.",
+          label: 'Alerta (30% - 35%)',
+          color: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+          desc: 'Estás cerca del límite de sobreendeudamiento. Evita tomar nuevos créditos.',
         }
-      case "CRITICAL":
+      case 'CRITICAL':
         return {
-          label: "Crítico (>35%)",
-          color: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-          desc: "Sobreendeudamiento detectado. Prioriza pagar capital y evalúa consolidar deudas.",
+          label: 'Crítico (>35%)',
+          color: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
+          desc: 'Sobreendeudamiento detectado. Prioriza pagar capital y evalúa consolidar deudas.',
         }
     }
   }
@@ -49,9 +49,11 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
             {formatCLP(metrics.totalCommittedCents)}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            Debe reservarse el día de pago ({metrics.totalMonthlyIncomeCents > 0
+            Debe reservarse el día de pago (
+            {metrics.totalMonthlyIncomeCents > 0
               ? `${Math.round((metrics.totalCommittedCents / metrics.totalMonthlyIncomeCents) * 100)}% de tu ingreso`
-              : "Sin ingresos registrados"})
+              : 'Sin ingresos registrados'}
+            )
           </div>
         </div>
 
@@ -61,7 +63,9 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Carga Financiera
             </span>
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge.color}`}>
+            <span
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badge.color}`}
+            >
               {badge.label}
             </span>
           </div>
@@ -78,7 +82,9 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
           <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
             Disponible Libre Mensual
           </div>
-          <div className={`text-2xl font-bold ${metrics.freeDisposableCents < 0 ? "text-rose-600" : "text-emerald-600"}`}>
+          <div
+            className={`text-2xl font-bold ${metrics.freeDisposableCents < 0 ? 'text-rose-600' : 'text-emerald-600'}`}
+          >
             {formatCLP(metrics.freeDisposableCents)}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
@@ -92,13 +98,17 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
         <div>
           <h3 className="text-lg font-semibold text-foreground">Ventanas de Pago</h3>
           <p className="text-sm text-muted-foreground">
-            Organiza tus desembolsos según las fechas en que ingresa tu dinero. Separa lo comprometido apenas cobres.
+            Organiza tus desembolsos según las fechas en que ingresa tu dinero. Separa lo
+            comprometido apenas cobres.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {windows.map((w: PaymentWindow) => (
-            <div key={w.id} className="rounded-xl border border-border bg-card shadow-xs overflow-hidden flex flex-col">
+            <div
+              key={w.id}
+              className="rounded-xl border border-border bg-card shadow-xs overflow-hidden flex flex-col"
+            >
               <div className="p-4 border-b border-border bg-muted/30">
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold text-foreground text-sm">{w.name}</h4>
@@ -123,7 +133,7 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
                     No hay obligaciones en esta ventana para este mes.
                   </p>
                 ) : (
-                  w.items.map((item) => (
+                  w.items.map(item => (
                     <div
                       key={item.id}
                       className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 hover:bg-muted/40 transition-colors text-sm"
@@ -153,11 +163,11 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
                         <span
                           className={`text-[10px] font-medium px-1.5 py-0.2 rounded ${
                             item.isPaid
-                              ? "bg-emerald-500/10 text-emerald-600"
-                              : "bg-amber-500/10 text-amber-600"
+                              ? 'bg-emerald-500/10 text-emerald-600'
+                              : 'bg-amber-500/10 text-amber-600'
                           }`}
                         >
-                          {item.isPaid ? "Pagado" : "Pendiente"}
+                          {item.isPaid ? 'Pagado' : 'Pendiente'}
                         </span>
                       </div>
                     </div>
@@ -174,30 +184,33 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
         <div className="p-5 rounded-xl border border-border bg-card shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h3 className="text-base font-semibold text-foreground">Estrategia de Pago Acelerado</h3>
+              <h3 className="text-base font-semibold text-foreground">
+                Estrategia de Pago Acelerado
+              </h3>
               <p className="text-xs text-muted-foreground">
-                Si cuentas con excedentes o deseas salir rápido de deudas, concéntralos en una sola obligación.
+                Si cuentas con excedentes o deseas salir rápido de deudas, concéntralos en una sola
+                obligación.
               </p>
             </div>
             <div className="flex rounded-lg border border-border p-1 bg-muted/40 text-xs">
               <button
                 type="button"
-                onClick={() => setStrategy("AVALANCHE")}
+                onClick={() => setStrategy('AVALANCHE')}
                 className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                  strategy === "AVALANCHE"
-                    ? "bg-background text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
+                  strategy === 'AVALANCHE'
+                    ? 'bg-background text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Avalancha (Tasa Alta)
               </button>
               <button
                 type="button"
-                onClick={() => setStrategy("SNOWBALL")}
+                onClick={() => setStrategy('SNOWBALL')}
                 className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                  strategy === "SNOWBALL"
-                    ? "bg-background text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
+                  strategy === 'SNOWBALL'
+                    ? 'bg-background text-foreground shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Bola de Nieve (Saldo Menor)
@@ -206,13 +219,13 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {prioritizedDebts.map((debt) => (
+            {prioritizedDebts.map(debt => (
               <div
                 key={debt.id}
                 className={`p-3.5 rounded-lg border text-sm ${
                   debt.order === 1
-                    ? "border-primary/50 bg-primary/5 ring-1 ring-primary/20"
-                    : "border-border bg-background"
+                    ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
+                    : 'border-border bg-background'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -244,7 +257,9 @@ export const PaymentWindowsView: React.FC<PaymentWindowsViewProps> = ({ currentP
                   {debt.interestRatePercentage !== undefined && (
                     <div className="flex justify-between text-muted-foreground">
                       <span>Tasa / CAE:</span>
-                      <span className="font-semibold text-purple-400">{debt.interestRatePercentage}% anual</span>
+                      <span className="font-semibold text-purple-400">
+                        {debt.interestRatePercentage}% anual
+                      </span>
                     </div>
                   )}
                 </div>

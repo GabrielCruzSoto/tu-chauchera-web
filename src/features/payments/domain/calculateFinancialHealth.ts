@@ -1,5 +1,6 @@
-import type { Income, Period } from "@/shared/types/domain"
-import type { FinancialHealthMetrics, FinancialBurdenLevel, PaymentItem } from "./types"
+import type { Income, Period } from '@/shared/types/domain'
+import { toMoney } from '@/shared/types/money'
+import type { FinancialHealthMetrics, FinancialBurdenLevel, PaymentItem } from './types'
 
 /**
  * Calculates essential financial health metrics:
@@ -13,7 +14,7 @@ import type { FinancialHealthMetrics, FinancialBurdenLevel, PaymentItem } from "
 export function calculateFinancialHealth(
   incomes: Income[],
   paymentItems: PaymentItem[],
-  targetPeriod: Period
+  targetPeriod: Period,
 ): FinancialHealthMetrics {
   // Sum incomes for target period
   let totalMonthlyIncomeCents = 0
@@ -39,22 +40,23 @@ export function calculateFinancialHealth(
 
   let financialBurdenPercentage = 0
   if (totalMonthlyIncomeCents > 0) {
-    financialBurdenPercentage = Math.round((totalDebtInstallmentsCents / totalMonthlyIncomeCents) * 1000) / 10
+    financialBurdenPercentage =
+      Math.round((totalDebtInstallmentsCents / totalMonthlyIncomeCents) * 1000) / 10
   }
 
-  let burdenLevel: FinancialBurdenLevel = "HEALTHY"
+  let burdenLevel: FinancialBurdenLevel = 'HEALTHY'
   if (financialBurdenPercentage > 35) {
-    burdenLevel = "CRITICAL"
+    burdenLevel = 'CRITICAL'
   } else if (financialBurdenPercentage >= 30) {
-    burdenLevel = "CAUTION"
+    burdenLevel = 'CAUTION'
   }
 
   return {
-    totalMonthlyIncomeCents,
-    totalDebtInstallmentsCents,
-    totalRecurringExpensesCents,
-    totalCommittedCents,
-    freeDisposableCents,
+    totalMonthlyIncomeCents: toMoney(totalMonthlyIncomeCents),
+    totalDebtInstallmentsCents: toMoney(totalDebtInstallmentsCents),
+    totalRecurringExpensesCents: toMoney(totalRecurringExpensesCents),
+    totalCommittedCents: toMoney(totalCommittedCents),
+    freeDisposableCents: toMoney(freeDisposableCents),
     financialBurdenPercentage,
     burdenLevel,
   }
