@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react"
-import { TERMS_OF_SERVICE_MD } from "../content/termsOfServiceContent"
+import React, { useState, useEffect } from 'react'
+import { TERMS_OF_SERVICE_MD } from '../content/termsOfServiceContent'
 
 interface TermsOfServicePageProps {
   onBack?: (() => void) | undefined
@@ -12,38 +12,44 @@ interface TableOfContentItem {
 }
 
 const TOC_ITEMS: TableOfContentItem[] = [
-  { id: "seccion-1", title: "1. Aceptación de Términos" },
-  { id: "seccion-2", title: "2. Identidad del Titular" },
-  { id: "seccion-3", title: "3. Modelo Local-First & Zero-Backend" },
-  { id: "seccion-4", title: "4. Descargo Financiero" },
-  { id: "seccion-5", title: "5. Autenticación y Seguridad" },
-  { id: "seccion-6", title: "6. Bóveda Criptográfica" },
-  { id: "seccion-7", title: "7. Licencia y Propiedad" },
-  { id: "seccion-8", title: "8. Conductas Prohibidas" },
-  { id: "seccion-9", title: "9. Exclusión de Responsabilidad" },
-  { id: "seccion-10", title: "10. Servicios de Terceros" },
-  { id: "seccion-11", title: "11. Modificaciones al Servicio" },
-  { id: "seccion-12", title: "12. Suspensión y Cierre" },
-  { id: "seccion-13", title: "13. Ley y Jurisdicción" },
-  { id: "seccion-14", title: "14. Misceláneos" },
-  { id: "seccion-15", title: "15. Canal de Contacto" },
+  { id: 'seccion-1', title: '1. Aceptación de Términos' },
+  { id: 'seccion-2', title: '2. Identidad del Titular' },
+  { id: 'seccion-3', title: '3. Modelo Local-First & Zero-Backend' },
+  { id: 'seccion-4', title: '4. Descargo Financiero' },
+  { id: 'seccion-5', title: '5. Autenticación y Seguridad' },
+  { id: 'seccion-6', title: '6. Bóveda Criptográfica' },
+  { id: 'seccion-7', title: '7. Licencia y Propiedad' },
+  { id: 'seccion-8', title: '8. Conductas Prohibidas' },
+  { id: 'seccion-9', title: '9. Exclusión de Responsabilidad' },
+  { id: 'seccion-10', title: '10. Servicios de Terceros' },
+  { id: 'seccion-11', title: '11. Modificaciones al Servicio' },
+  { id: 'seccion-12', title: '12. Suspensión y Cierre' },
+  { id: 'seccion-13', title: '13. Ley y Jurisdicción' },
+  { id: 'seccion-14', title: '14. Misceláneos' },
+  { id: 'seccion-15', title: '15. Canal de Contacto' },
 ]
 
-export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, onNavigateToPrivacy }) => {
+export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({
+  onBack,
+  onNavigateToPrivacy,
+}) => {
   const [copiedLink, setCopiedLink] = useState(false)
-  const [activeSection, setActiveSection] = useState<string>("seccion-1")
+  const [activeSection, setActiveSection] = useState<string>('seccion-1')
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" })
-    document.title = "Condiciones del Servicio — Tu Chauchera"
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    document.title = 'Condiciones del Servicio — Tu Chauchera'
     return () => {
-      document.title = "Tu Chauchera — Finanzas Personales"
+      document.title = 'Tu Chauchera — Finanzas Personales'
     }
   }, [])
 
   const handleCopyLink = async () => {
     try {
-      const url = typeof window !== "undefined" ? `${window.location.origin}/terminos` : "https://tu-chauchera.cl/terminos"
+      const url =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/terminos`
+          : 'https://tu-chauchera.cl/terminos'
       await navigator.clipboard.writeText(url)
       setCopiedLink(true)
       setTimeout(() => setCopiedLink(false), 2000)
@@ -53,11 +59,11 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
   }
 
   const handleDownloadMarkdown = () => {
-    const blob = new Blob([TERMS_OF_SERVICE_MD], { type: "text/markdown;charset=utf-8" })
+    const blob = new Blob([TERMS_OF_SERVICE_MD], { type: 'text/markdown;charset=utf-8' })
     const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
+    const link = document.createElement('a')
     link.href = url
-    link.download = "CONDICIONES_DEL_SERVICIO_TU_CHAUCHERA.md"
+    link.download = 'CONDICIONES_DEL_SERVICIO_TU_CHAUCHERA.md'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -68,7 +74,7 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
     setActiveSection(id)
     const elem = document.getElementById(id)
     if (elem) {
-      elem.scrollIntoView({ behavior: "smooth", block: "start" })
+      elem.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
@@ -76,14 +82,14 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
   const renderInline = (text: string): React.ReactNode => {
     const parts = text.split(/(\*\*.*?\*\*|`.*?`|\[.*?\]\(.*?\))/g)
     return parts.map((part, idx) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
+      if (part.startsWith('**') && part.endsWith('**')) {
         return (
           <strong key={idx} className="font-semibold text-slate-100">
             {part.slice(2, -2)}
           </strong>
         )
       }
-      if (part.startsWith("`") && part.endsWith("`")) {
+      if (part.startsWith('`') && part.endsWith('`')) {
         return (
           <code
             key={idx}
@@ -94,22 +100,25 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
         )
       }
       const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/)
-      if (linkMatch && linkMatch[1] && linkMatch[2]) {
-        const isInternal = linkMatch[2].startsWith("/") || linkMatch[2].startsWith("#")
+      if (linkMatch?.[1] && linkMatch[2]) {
+        const isPrivacyLink =
+          linkMatch[2] === '/privacidad' || linkMatch[2] === 'POLITICA_DE_PRIVACIDAD.md'
+        const isInternal =
+          isPrivacyLink || linkMatch[2].startsWith('/') || linkMatch[2].startsWith('#')
         return (
           <a
             key={idx}
-            href={linkMatch[2]}
+            href={isPrivacyLink ? '/privacidad' : linkMatch[2]}
             onClick={
-              linkMatch[2] === "/privacidad" && onNavigateToPrivacy
-                ? (e) => {
+              isPrivacyLink && onNavigateToPrivacy
+                ? e => {
                     e.preventDefault()
                     onNavigateToPrivacy()
                   }
                 : undefined
             }
-            target={isInternal ? undefined : "_blank"}
-            rel={isInternal ? undefined : "noopener noreferrer"}
+            target={isInternal ? undefined : '_blank'}
+            rel={isInternal ? undefined : 'noopener noreferrer'}
             className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition"
           >
             {linkMatch[1]}
@@ -122,34 +131,39 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
 
   // Parses and renders markdown blocks cleanly
   const renderContent = () => {
-    const lines = TERMS_OF_SERVICE_MD.split("\n")
+    const lines = TERMS_OF_SERVICE_MD.split('\n')
     const elements: React.ReactNode[] = []
     let currentQuote: string[] = []
     let inQuote = false
     let currentList: string[] = []
     let inList = false
-    let listType: "ul" | "ol" = "ul"
+    let listType: 'ul' | 'ol' = 'ul'
+    let currentCodeBlock: string[] = []
+    let inCodeBlock = false
     let sectionCounter = 0
 
     const flushQuote = (key: string) => {
       if (!inQuote || currentQuote.length === 0) return
-      const fullText = currentQuote.join(" ")
-      const isWarning = fullText.includes("⚠️") || fullText.includes("ADVERTENCIA") || fullText.includes("DECLARACIÓN EXPRESA")
-      const isDanger = fullText.includes("🚫") || fullText.includes("PROHIBICIÓN ESTRICTA")
+      const fullText = currentQuote.join(' ')
+      const isWarning =
+        fullText.includes('⚠️') ||
+        fullText.includes('ADVERTENCIA') ||
+        fullText.includes('DECLARACIÓN EXPRESA')
+      const isDanger = fullText.includes('🚫') || fullText.includes('PROHIBICIÓN ESTRICTA')
 
       elements.push(
         <div
           key={key}
           className={`my-5 p-4 sm:p-5 rounded-2xl border text-sm leading-relaxed ${
             isWarning
-              ? "bg-amber-950/20 border-amber-500/30 text-amber-200/90 shadow-lg shadow-amber-950/20"
+              ? 'bg-amber-950/20 border-amber-500/30 text-amber-200/90 shadow-lg shadow-amber-950/20'
               : isDanger
-              ? "bg-rose-950/20 border-rose-500/30 text-rose-200/90 shadow-lg shadow-rose-950/20"
-              : "bg-slate-900/60 border-slate-800 text-slate-300"
+                ? 'bg-rose-950/20 border-rose-500/30 text-rose-200/90 shadow-lg shadow-rose-950/20'
+                : 'bg-slate-900/60 border-slate-800 text-slate-300'
           }`}
         >
           {renderInline(fullText)}
-        </div>
+        </div>,
       )
       currentQuote = []
       inQuote = false
@@ -157,20 +171,26 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
 
     const flushList = (key: string) => {
       if (!inList || currentList.length === 0) return
-      if (listType === "ul") {
+      if (listType === 'ul') {
         elements.push(
-          <ul key={key} className="space-y-2.5 my-3 text-slate-300 text-sm leading-relaxed pl-1 sm:pl-2">
+          <ul
+            key={key}
+            className="space-y-2.5 my-3 text-slate-300 text-sm leading-relaxed pl-1 sm:pl-2"
+          >
             {currentList.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0" />
                 <span className="flex-1">{renderInline(item)}</span>
               </li>
             ))}
-          </ul>
+          </ul>,
         )
       } else {
         elements.push(
-          <ol key={key} className="space-y-2.5 my-3 text-slate-300 text-sm leading-relaxed pl-1 sm:pl-2">
+          <ol
+            key={key}
+            className="space-y-2.5 my-3 text-slate-300 text-sm leading-relaxed pl-1 sm:pl-2"
+          >
             {currentList.map((item, idx) => (
               <li key={idx} className="flex items-start gap-2.5">
                 <span className="font-mono text-xs font-semibold text-emerald-400 mt-0.5 shrink-0 bg-emerald-500/10 border border-emerald-500/20 rounded px-1.5 py-0.5">
@@ -179,7 +199,7 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
                 <span className="flex-1">{renderInline(item)}</span>
               </li>
             ))}
-          </ol>
+          </ol>,
         )
       }
       currentList = []
@@ -189,31 +209,58 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
     lines.forEach((line, index) => {
       const trimmed = line.trim()
 
+      // Handle Fenced Code Blocks (e.g. ASCII architecture diagrams)
+      if (trimmed.startsWith('```')) {
+        if (inList) flushList(`list-before-code-${index}`)
+        if (inQuote) flushQuote(`quote-before-code-${index}`)
+        if (inCodeBlock) {
+          elements.push(
+            <pre
+              key={`code-${index}`}
+              className="my-5 p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed"
+            >
+              <code>{currentCodeBlock.join('\n')}</code>
+            </pre>,
+          )
+          currentCodeBlock = []
+          inCodeBlock = false
+        } else {
+          inCodeBlock = true
+          currentCodeBlock = []
+        }
+        return
+      }
+
+      if (inCodeBlock) {
+        currentCodeBlock.push(line)
+        return
+      }
+
       // Handle Blockquotes
-      if (trimmed.startsWith(">")) {
+      if (trimmed.startsWith('>')) {
         flushList(`list-before-quote-${index}`)
         inQuote = true
-        currentQuote.push(trimmed.replace(/^>\s*/, ""))
+        currentQuote.push(trimmed.replace(/^>\s*/, ''))
         return
       } else if (inQuote) {
         flushQuote(`quote-${index}`)
       }
 
       // Handle Unordered Lists
-      if (trimmed.startsWith("- ")) {
-        if (inList && listType !== "ul") flushList(`list-switch-${index}`)
+      if (trimmed.startsWith('- ')) {
+        if (inList && listType !== 'ul') flushList(`list-switch-${index}`)
         inList = true
-        listType = "ul"
+        listType = 'ul'
         currentList.push(trimmed.slice(2))
         return
       }
 
       // Handle Ordered Lists (e.g. "1. ")
       const olMatch = trimmed.match(/^\d+\.\s+(.*)/)
-      if (olMatch && olMatch[1]) {
-        if (inList && listType !== "ol") flushList(`list-switch-ol-${index}`)
+      if (olMatch?.[1]) {
+        if (inList && listType !== 'ol') flushList(`list-switch-ol-${index}`)
         inList = true
-        listType = "ol"
+        listType = 'ol'
         currentList.push(olMatch[1])
         return
       }
@@ -224,39 +271,46 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
       }
 
       // Skip document title (rendered in page hero)
-      if (trimmed.startsWith("# ")) {
+      if (trimmed.startsWith('# ')) {
         return
       }
 
       // Horizontal rules
-      if (trimmed === "---") {
+      if (trimmed === '---') {
         elements.push(<hr key={`hr-${index}`} className="border-slate-800/80 my-8" />)
         return
       }
 
       // H2 Headings (Main Sections)
-      if (trimmed.startsWith("## ")) {
+      if (trimmed.startsWith('## ')) {
         sectionCounter++
         const sectionId = `seccion-${sectionCounter}`
-        const headingText = trimmed.replace("## ", "")
+        const headingText = trimmed.replace('## ', '')
         elements.push(
-          <div key={`h2-${index}`} id={sectionId} className="scroll-mt-24 pt-6 pb-2 border-b border-slate-800/60 mb-4">
+          <div
+            key={`h2-${index}`}
+            id={sectionId}
+            className="scroll-mt-24 pt-6 pb-2 border-b border-slate-800/60 mb-4"
+          >
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-3">
               <span className="w-2 h-6 rounded-full bg-emerald-500 inline-block shrink-0" />
               <span>{headingText}</span>
             </h2>
-          </div>
+          </div>,
         )
         return
       }
 
       // H3 Headings (Subsections)
-      if (trimmed.startsWith("### ")) {
-        const headingText = trimmed.replace("### ", "")
+      if (trimmed.startsWith('### ')) {
+        const headingText = trimmed.replace('### ', '')
         elements.push(
-          <h3 key={`h3-${index}`} className="text-base sm:text-lg font-semibold text-slate-100 mt-6 mb-2.5">
+          <h3
+            key={`h3-${index}`}
+            className="text-base sm:text-lg font-semibold text-slate-100 mt-6 mb-2.5"
+          >
             {headingText}
-          </h3>
+          </h3>,
         )
         return
       }
@@ -266,13 +320,13 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
         elements.push(
           <p key={`p-${index}`} className="text-sm text-slate-300 leading-relaxed my-2.5">
             {renderInline(trimmed)}
-          </p>
+          </p>,
         )
       }
     })
 
-    flushQuote("quote-end")
-    flushList("list-end")
+    flushQuote('quote-end')
+    flushList('list-end')
 
     return elements
   }
@@ -297,8 +351,18 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-200 transition cursor-pointer"
                 aria-label="Volver a la aplicación"
               >
-                <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <svg
+                  className="w-4 h-4 text-emerald-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
                 </svg>
                 <span>Volver</span>
               </button>
@@ -307,8 +371,18 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
                 href="/"
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-200 transition"
               >
-                <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                <svg
+                  className="w-4 h-4 text-emerald-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
                 </svg>
                 <span>Inicio</span>
               </a>
@@ -318,7 +392,9 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
 
             <div className="flex items-center gap-2">
               <span className="text-xl">🪙</span>
-              <span className="font-bold text-sm tracking-tight text-white hidden sm:inline">Tu Chauchera</span>
+              <span className="font-bold text-sm tracking-tight text-white hidden sm:inline">
+                Tu Chauchera
+              </span>
               <span className="text-xs text-slate-400">/ Legal</span>
             </div>
           </div>
@@ -332,8 +408,18 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
                 className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 hover:text-emerald-300 transition cursor-pointer"
               >
                 <span>Política de Privacidad</span>
-                <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-3.5 h-3.5 text-slate-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             ) : (
@@ -342,8 +428,18 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
                 className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 hover:text-emerald-300 transition"
               >
                 <span>Política de Privacidad</span>
-                <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-3.5 h-3.5 text-slate-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </a>
             )}
@@ -354,7 +450,12 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 hover:text-white transition cursor-pointer"
               title="Copiar enlace directo"
             >
-              <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-3.5 h-3.5 text-emerald-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -362,7 +463,7 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
                   d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                 />
               </svg>
-              <span>{copiedLink ? "✓ Copiado" : "Copiar Enlace"}</span>
+              <span>{copiedLink ? '✓ Copiado' : 'Copiar Enlace'}</span>
             </button>
 
             <button
@@ -373,7 +474,12 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
               title="Descargar documento en Markdown (.md)"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
               </svg>
               <span className="hidden sm:inline">Descargar .md</span>
               <span className="sm:hidden">.md</span>
@@ -387,8 +493,18 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
         {/* Document Hero */}
         <div className="mb-8 p-6 sm:p-8 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none hidden md:block">
-            <svg className="w-48 h-48 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="w-48 h-48 text-emerald-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
           </div>
 
@@ -413,7 +529,9 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
             </h1>
 
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-              Normas que regulan el acceso, licencias, responsabilidades y uso de <strong>Tu Chauchera</strong>. Software independiente de finanzas personales diseñado con arquitectura de conocimiento cero.
+              Normas que regulan el acceso, licencias, responsabilidades y uso de{' '}
+              <strong>Tu Chauchera</strong>. Software independiente de finanzas personales diseñado
+              con arquitectura de conocimiento cero.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-400 font-mono">
@@ -427,7 +545,10 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
               </div>
               <div>
                 <span className="text-slate-500">Contacto: </span>
-                <a href="mailto:tuchaucheracl@gmail.com" className="text-emerald-400 hover:underline">
+                <a
+                  href="mailto:tuchaucheracl@gmail.com"
+                  className="text-emerald-400 hover:underline"
+                >
                   tuchaucheracl@gmail.com
                 </a>
               </div>
@@ -441,14 +562,24 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
           <aside className="lg:col-span-4 sticky top-24 space-y-4">
             <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
               <div className="flex items-center gap-2 mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">
-                <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                <svg
+                  className="w-4 h-4 text-emerald-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h7"
+                  />
                 </svg>
                 <span>Índice del Documento</span>
               </div>
 
               <nav className="space-y-1 max-h-[60vh] overflow-y-auto pr-1">
-                {TOC_ITEMS.map((item) => {
+                {TOC_ITEMS.map(item => {
                   const isActive = activeSection === item.id
                   return (
                     <button
@@ -457,12 +588,14 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
                       onClick={() => scrollToSection(item.id)}
                       className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition cursor-pointer flex items-center justify-between gap-2 ${
                         isActive
-                          ? "bg-emerald-500/10 text-emerald-300 font-semibold border border-emerald-500/20"
-                          : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+                          ? 'bg-emerald-500/10 text-emerald-300 font-semibold border border-emerald-500/20'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                       }`}
                     >
                       <span className="truncate">{item.title}</span>
-                      {isActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                      )}
                     </button>
                   )
                 })}
@@ -474,8 +607,18 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
                   onClick={handleDownloadMarkdown}
                   className="w-full py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-xs font-semibold text-slate-200 hover:text-white transition flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <svg
+                    className="w-4 h-4 text-emerald-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
                   </svg>
                   <span>Descargar Copia (.md)</span>
                 </button>
@@ -493,7 +636,9 @@ export const TermsOfServicePage: React.FC<TermsOfServicePageProps> = ({ onBack, 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs text-slate-500 relative z-10">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Tu Chauchera. Proyecto de software libre y descentralizado.</p>
+          <p>
+            © {new Date().getFullYear()} Tu Chauchera. Proyecto de software libre y descentralizado.
+          </p>
           <div className="flex items-center gap-4">
             {onNavigateToPrivacy ? (
               <button

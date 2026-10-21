@@ -1,9 +1,9 @@
-import React from "react"
-import { render, screen, fireEvent } from "@testing-library/react"
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import { TermsOfServicePage } from "./TermsOfServicePage"
+import React from 'react'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TermsOfServicePage } from './TermsOfServicePage'
 
-describe("TermsOfServicePage Component", () => {
+describe('TermsOfServicePage Component', () => {
   const mockOnBack = vi.fn()
   const mockOnNavigateToPrivacy = vi.fn()
 
@@ -17,10 +17,15 @@ describe("TermsOfServicePage Component", () => {
     })
   })
 
-  it("renders main title, badges and key sections", () => {
+  it('renders main title, badges and key sections', () => {
     render(<TermsOfServicePage onBack={mockOnBack} onNavigateToPrivacy={mockOnNavigateToPrivacy} />)
 
-    expect(screen.getByRole("heading", { level: 1, name: /condiciones del servicio y términos de uso/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: /condiciones del servicio y términos de uso/i,
+      }),
+    ).toBeInTheDocument()
     expect(screen.getByText(/Vigente \(v1\.0\.0\)/i)).toBeInTheDocument()
     expect(screen.getAllByText(/Local-First & Zero-Backend/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText(/Sin Intermediación Financiera/i).length).toBeGreaterThanOrEqual(1)
@@ -31,67 +36,70 @@ describe("TermsOfServicePage Component", () => {
     expect(screen.getAllByText(/4\. Descargo Financiero/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText(/6\. Bóveda Criptográfica/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText(/13\. Ley/i).length).toBeGreaterThanOrEqual(1)
+
+    // ASCII Architecture diagram in fenced code block
+    expect(screen.getAllByText(/DISPOSITIVO DEL USUARIO/i).length).toBeGreaterThanOrEqual(1)
   })
 
-  it("calls onBack when clicking Volver button", () => {
+  it('calls onBack when clicking Volver button', () => {
     render(<TermsOfServicePage onBack={mockOnBack} onNavigateToPrivacy={mockOnNavigateToPrivacy} />)
 
-    const backBtn = screen.getByRole("button", { name: /volver a la aplicación/i })
+    const backBtn = screen.getByRole('button', { name: /volver a la aplicación/i })
     expect(backBtn).toBeInTheDocument()
 
     fireEvent.click(backBtn)
     expect(mockOnBack).toHaveBeenCalledTimes(1)
   })
 
-  it("calls onNavigateToPrivacy when clicking Privacy navigation button", () => {
+  it('calls onNavigateToPrivacy when clicking Privacy navigation button', () => {
     render(<TermsOfServicePage onBack={mockOnBack} onNavigateToPrivacy={mockOnNavigateToPrivacy} />)
 
-    const privacyBtns = screen.getAllByRole("button", { name: /política de privacidad/i })
+    const privacyBtns = screen.getAllByRole('button', { name: /política de privacidad/i })
     expect(privacyBtns.length).toBeGreaterThanOrEqual(1)
 
     fireEvent.click(privacyBtns[0]!)
     expect(mockOnNavigateToPrivacy).toHaveBeenCalledTimes(1)
   })
 
-  it("copies link to clipboard when clicking Copiar Enlace", async () => {
+  it('copies link to clipboard when clicking Copiar Enlace', async () => {
     render(<TermsOfServicePage onBack={mockOnBack} onNavigateToPrivacy={mockOnNavigateToPrivacy} />)
 
-    const copyBtn = screen.getByRole("button", { name: /copiar enlace/i })
+    const copyBtn = screen.getByRole('button', { name: /copiar enlace/i })
     fireEvent.click(copyBtn)
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expect.stringContaining("/terminos"))
-    expect(await screen.findByText("✓ Copiado")).toBeInTheDocument()
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expect.stringContaining('/terminos'))
+    expect(await screen.findByText('✓ Copiado')).toBeInTheDocument()
   })
 
-  it("handles markdown download trigger", () => {
-    const createObjectURLMock = vi.fn(() => "blob:mock-url")
+  it('handles markdown download trigger', () => {
+    const createObjectURLMock = vi.fn(() => 'blob:mock-url')
     const revokeObjectURLMock = vi.fn()
     global.URL.createObjectURL = createObjectURLMock
     global.URL.revokeObjectURL = revokeObjectURLMock
 
     render(<TermsOfServicePage onBack={mockOnBack} onNavigateToPrivacy={mockOnNavigateToPrivacy} />)
 
-    const downloadBtn = screen.getByRole("button", { name: /descargar documento en markdown/i })
+    const downloadBtn = screen.getByRole('button', { name: /descargar documento en markdown/i })
     expect(downloadBtn).toBeInTheDocument()
 
     fireEvent.click(downloadBtn)
     expect(createObjectURLMock).toHaveBeenCalled()
-    expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock-url")
+    expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:mock-url')
   })
 
-  it("scrolls to section when clicking an item from table of contents", () => {
+  it('scrolls to section when clicking an item from table of contents', () => {
     const scrollIntoViewMock = vi.fn()
-    const targetElem = document.createElement("div")
-    targetElem.id = "seccion-4"
+    const targetElem = document.createElement('div')
+    targetElem.id = 'seccion-4'
     targetElem.scrollIntoView = scrollIntoViewMock
     document.body.appendChild(targetElem)
 
     render(<TermsOfServicePage onBack={mockOnBack} onNavigateToPrivacy={mockOnNavigateToPrivacy} />)
 
-    const tocItemBtn = screen.getByRole("button", { name: /4\. Descargo Financiero/i })
+    const tocItemBtn = screen.getByRole('button', { name: /4\. Descargo Financiero/i })
     fireEvent.click(tocItemBtn)
 
-    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: "smooth", block: "start" })
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
     document.body.removeChild(targetElem)
   })
 })
