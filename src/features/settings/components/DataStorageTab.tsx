@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react"
-import { useAuthStore } from "@/store/authSlice"
-import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
-import { useIncomeStore } from "@/features/income/store/incomeSlice"
-import { useCreditCardStore } from "@/features/credit-cards/store/creditCardSlice"
-import { useSettingsStore } from "../store/settingsSlice"
-import { DriveClient } from "@/shared/services/driveClient"
-import { StorageStatsCard } from "./StorageStatsCard"
-import { WipeConfirmModal } from "./WipeConfirmModal"
-import { buildBackupPayload, triggerBackupDownload } from "@/shared/services/backupService"
-import { resetAllAppData } from "@/store/appReset"
-import type { DriveStorageMetrics } from "@/shared/types/settings"
+import React, { useState, useEffect, useCallback } from 'react'
+import { useAuthStore } from '@/store/authSlice'
+import { useObligationsStore } from '@/features/obligations/store/obligationsSlice'
+import { useIncomeStore } from '@/features/income/store/incomeSlice'
+import { useCreditCardStore } from '@/features/credit-cards/store/creditCardSlice'
+import { useSettingsStore } from '../store/settingsSlice'
+import { DriveClient } from '@/shared/services/driveClient'
+import { StorageStatsCard } from './StorageStatsCard'
+import { WipeConfirmModal } from './WipeConfirmModal'
+import { buildBackupPayload, triggerBackupDownload } from '@/shared/services/backupService'
+import { resetAllAppData } from '@/store/appReset'
+import { APP_SYSTEM_VERSION, CURRENT_SCHEMA_VERSION } from '@/shared/constants/version'
+import type { DriveStorageMetrics } from '@/shared/types/settings'
 
 export const DataStorageTab: React.FC = () => {
   const { accessToken } = useAuthStore()
@@ -39,16 +40,16 @@ export const DataStorageTab: React.FC = () => {
         totalSizeBytes: stats.totalBytes,
         files: stats.files,
         lastCheckedAt: new Date().toISOString(),
-        schemaVersion: meta?.schemaVersion ?? "v1.1.0",
+        schemaVersion: meta?.schemaVersion ?? CURRENT_SCHEMA_VERSION,
       })
     } catch (err) {
-      console.error("Failed to load storage metrics:", err)
+      console.error('Failed to load storage metrics:', err)
       // Fallback empty metrics if remote query fails
       setMetrics({
         totalSizeBytes: 0,
         files: [],
         lastCheckedAt: new Date().toISOString(),
-        schemaVersion: "v1.1.0",
+        schemaVersion: CURRENT_SCHEMA_VERSION,
       })
     } finally {
       setIsLoadingMetrics(false)
@@ -70,15 +71,16 @@ export const DataStorageTab: React.FC = () => {
           creditCards: { accounts, purchases },
           preferences,
         },
-        metrics?.schemaVersion ?? "v1.1.0"
+        metrics?.schemaVersion ?? CURRENT_SCHEMA_VERSION,
+        APP_SYSTEM_VERSION,
       )
 
       triggerBackupDownload(backupPayload)
-      setToastMessage("Respaldo JSON generado y descargado correctamente.")
+      setToastMessage('Respaldo JSON generado y descargado correctamente.')
       setTimeout(() => setToastMessage(null), 4000)
     } catch (err) {
-      console.error("Export backup failed:", err)
-      setToastMessage("Error al generar el archivo de respaldo.")
+      console.error('Export backup failed:', err)
+      setToastMessage('Error al generar el archivo de respaldo.')
     }
   }
 
@@ -89,7 +91,7 @@ export const DataStorageTab: React.FC = () => {
       resetAllAppData()
       setIsWipeModalOpen(false)
     } catch (err) {
-      console.error("Wipe failed:", err)
+      console.error('Wipe failed:', err)
       resetAllAppData()
       setIsWipeModalOpen(false)
       throw err
@@ -105,7 +107,8 @@ export const DataStorageTab: React.FC = () => {
           <span>💾</span> Almacenamiento & Gestión de Datos
         </h3>
         <p className="text-xs text-slate-400">
-          Administra la sincronización de archivos cifrados en Google Drive, copias de seguridad y reseteo de bóveda.
+          Administra la sincronización de archivos cifrados en Google Drive, copias de seguridad y
+          reseteo de bóveda.
         </p>
       </div>
 
@@ -141,7 +144,8 @@ export const DataStorageTab: React.FC = () => {
               <span>📥</span> Copia de Seguridad Descifrada (JSON)
             </h4>
             <p className="text-xs text-slate-400">
-              Descarga un archivo JSON completo e independiente con todas tus categorías, obligaciones, ingresos y pagos actuales.
+              Descarga un archivo JSON completo e independiente con todas tus categorías,
+              obligaciones, ingresos y pagos actuales.
             </p>
           </div>
 
@@ -155,7 +159,9 @@ export const DataStorageTab: React.FC = () => {
         </div>
 
         <div className="text-xs text-slate-400 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
-          💡 <span className="text-slate-300 font-medium">Nota de Privacidad:</span> El archivo JSON exportado contendrá tus datos en texto claro en tu dispositivo local. Guárdalo en un lugar seguro.
+          💡 <span className="text-slate-300 font-medium">Nota de Privacidad:</span> El archivo JSON
+          exportado contendrá tus datos en texto claro en tu dispositivo local. Guárdalo en un lugar
+          seguro.
         </div>
       </div>
 
@@ -167,7 +173,8 @@ export const DataStorageTab: React.FC = () => {
               <span>🚨</span> Zona de Peligro: Reseteo de Bóveda
             </h4>
             <p className="text-xs text-slate-400 mt-1 max-w-xl">
-              Elimina todos los archivos cifrados almacenados en tu Google Drive y reinicia la aplicación desde cero. Requiere confirmación explícita mediante frase de seguridad.
+              Elimina todos los archivos cifrados almacenados en tu Google Drive y reinicia la
+              aplicación desde cero. Requiere confirmación explícita mediante frase de seguridad.
             </p>
           </div>
 

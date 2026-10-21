@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState } from 'react'
 
 interface WipeConfirmModalProps {
   isOpen: boolean
@@ -7,7 +7,7 @@ interface WipeConfirmModalProps {
   onConfirm: () => Promise<void>
 }
 
-const CONFIRMATION_PHRASE = "ELIMINAR MIS DATOS"
+const CONFIRMATION_PHRASE = 'ELIMINAR MIS DATOS'
 
 export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
   isOpen,
@@ -15,7 +15,7 @@ export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
   onClose,
   onConfirm,
 }) => {
-  const [inputValue, setInputValue] = useState("")
+  const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   if (!isOpen) return null
@@ -33,7 +33,7 @@ export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
       setError(null)
       await onConfirm()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al eliminar los datos.")
+      setError(err instanceof Error ? err.message : 'Error al eliminar los datos.')
     }
   }
 
@@ -61,15 +61,16 @@ export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
         </div>
 
         <div className="text-xs text-slate-300 space-y-2 bg-rose-500/10 p-3.5 rounded-xl border border-rose-500/20">
-          <p>
-            Al confirmar, se eliminarán de forma permanente:
-          </p>
+          <p>Al confirmar, se eliminarán de forma permanente:</p>
           <ul className="list-disc list-inside space-y-1 text-slate-300">
             <li>Todas tus obligaciones, deudas y amortizaciones registradas.</li>
             <li>Todos tus ingresos y registros de flujo de caja.</li>
             <li>Todas las tarjetas de crédito, plásticos y compras asociadas.</li>
             <li>Todas las categorías personalizadas y preferencias de configuración.</li>
-            <li>Todos los archivos cifrados en tu <span className="font-mono text-white">appDataFolder</span> de Google Drive.</li>
+            <li>
+              Todos los archivos cifrados en tu{' '}
+              <span className="font-mono text-white">appDataFolder</span> de Google Drive.
+            </li>
           </ul>
         </div>
 
@@ -85,13 +86,14 @@ export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
               htmlFor="wipe-confirm-input"
               className="block text-xs font-semibold text-slate-300 mb-1.5"
             >
-              Para confirmar, escribe <span className="text-rose-400 font-mono select-all">"{CONFIRMATION_PHRASE}"</span>:
+              Para confirmar, escribe{' '}
+              <span className="text-rose-400 font-mono select-all">"{CONFIRMATION_PHRASE}"</span>:
             </label>
             <input
               id="wipe-confirm-input"
               type="text"
               value={inputValue}
-              onChange={(e) => {
+              onChange={e => {
                 setInputValue(e.target.value)
                 setError(null)
               }}
@@ -115,8 +117,8 @@ export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
               disabled={!isMatched || isLoading}
               className={`min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white shadow transition text-center flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${
                 isMatched && !isLoading
-                  ? "bg-rose-600 hover:bg-rose-500 cursor-pointer"
-                  : "bg-rose-900/40 text-slate-500 border border-rose-900/30 cursor-not-allowed"
+                  ? 'bg-rose-600 hover:bg-rose-500 cursor-pointer'
+                  : 'bg-rose-900/40 text-slate-500 border border-rose-900/30 cursor-not-allowed'
               }`}
             >
               {isLoading ? (
@@ -124,7 +126,7 @@ export const WipeConfirmModal: React.FC<WipeConfirmModalProps> = ({
                   <span className="animate-spin">🔄</span> Eliminando datos...
                 </>
               ) : (
-                "Eliminar Bóveda y Resetear"
+                'Eliminar Bóveda y Resetear'
               )}
             </button>
           </div>
