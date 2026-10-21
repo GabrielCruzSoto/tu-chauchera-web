@@ -1,25 +1,27 @@
 /**
  * Core domain types for Tu Chauchera.
  *
- * All money values use the Money branded type (integer CLP pesos).
+ * All money values use the Money branded type in integer CLP pesos
+ * (misnomer *Cents kept for schema compatibility — never multiply or divide by 100).
  * All dates are ISO 8601 strings (YYYY-MM-DD).
  * All periods are YYYY-MM strings.
  */
 import type { Money } from './money'
+import type { UserPreferences } from './settings'
 export type { Money }
 
 // ─── Identifiers ────────────────────────────────────────────────────────────
 
 export type UUID = string
-export type ISODate = string    // "YYYY-MM-DD"
-export type Period = string     // "YYYY-MM"
+export type ISODate = string // "YYYY-MM-DD"
+export type Period = string // "YYYY-MM"
 
 // ─── Category ───────────────────────────────────────────────────────────────
 
 export interface Category {
   id: UUID
-  name: string          // e.g., "Banco", "Servicios Básicos", "Suscripciones"
-  color: string         // Tailwind color class or hex
+  name: string // e.g., "Banco", "Servicios Básicos", "Suscripciones"
+  color: string // Tailwind color class or hex
   createdAt: ISODate
   updatedAt: ISODate
 }
@@ -35,22 +37,22 @@ export type ObligationStatus = 'PENDING' | 'PAID' | 'RENEGOTIATED' | 'DELETED'
 export type ObligationType = 'EXPENSE' | 'DEBT' | 'P2P_DEBT'
 
 export type P2PRole =
-  | 'LENT_MY_CARD'       // User lent credit card to third party (third party owes user)
-  | 'USED_THEIR_CARD'     // User used someone else's credit card (user owes third party)
-  | 'DIRECT_LOAN_GIVEN'   // User loaned cash/money to third party
-  | 'DIRECT_LOAN_TAKEN'   // User received cash loan from third party
+  | 'LENT_MY_CARD' // User lent credit card to third party (third party owes user)
+  | 'USED_THEIR_CARD' // User used someone else's credit card (user owes third party)
+  | 'DIRECT_LOAN_GIVEN' // User loaned cash/money to third party
+  | 'DIRECT_LOAN_TAKEN' // User received cash loan from third party
 
 export type MaintenanceSplitMode = 'FULL' | 'SPLIT_50_50' | 'CUSTOM_AMOUNT'
 export type CommissionMode = 'SPREAD_ACROSS_INSTALLMENTS' | 'FIRST_INSTALLMENT_ONLY'
 
 export interface CardFeeSurcharge {
   includeMaintenanceFee: boolean
-  maintenanceFeeAmountCents?: Money | undefined
+  maintenanceFeeAmountCents?: Money | undefined // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   maintenanceSplitMode?: MaintenanceSplitMode | undefined
-  customMaintenanceCents?: Money | undefined
+  customMaintenanceCents?: Money | undefined // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
 
   includeOneTimeCommission: boolean
-  totalCommissionCents?: Money | undefined
+  totalCommissionCents?: Money | undefined // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   commissionCollectionMode?: CommissionMode | undefined
 }
 
@@ -59,9 +61,9 @@ export interface P2PMetadata {
   thirdPartyName: string
   cardIssuer?: string | undefined
   productDescription: string
-  baseInstallmentAmountCents: Money
+  baseInstallmentAmountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   surcharges?: CardFeeSurcharge | undefined
-  totalMonthlyChargeCents: Money
+  totalMonthlyChargeCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   linkedPaymentDueDay?: number | undefined
 }
 
@@ -75,22 +77,22 @@ export interface Obligation {
   id: UUID
   type?: ObligationType | undefined
   categoryId: UUID
-  subcategory: string   // e.g., "Banco Estado - Crédito Hipotecario" or person name
-  detail: string        // Free-text description
-  totalAmountCents: Money
-  totalInstallments: number    // 1–600
-  currentInstallment: number   // 1 ≤ current ≤ total (the first installment number)
-  installmentAmountCents: Money
+  subcategory: string // e.g., "Banco Estado - Crédito Hipotecario" or person name
+  detail: string // Free-text description
+  totalAmountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
+  totalInstallments: number // 1–600
+  currentInstallment: number // 1 ≤ current ≤ total (the first installment number)
+  installmentAmountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   isRecurringIndefinite?: boolean | undefined
   p2pMetadata?: P2PMetadata | undefined
-  startDate: ISODate    // When the first installment is due
-  dueDay: number        // Day of month (1–31); clamped to month length at display
+  startDate: ISODate // When the first installment is due
+  dueDay: number // Day of month (1–31); clamped to month length at display
   dueRule?: DueRule | undefined
   annualRatePercentage?: number | undefined // Optional annual interest rate / CAE (e.g. 18.5)
   status: ObligationStatus
   createdAt: ISODate
   updatedAt: ISODate
-  renegotiatedFromId?: UUID | undefined   // Links to the original obligation when RENEGOTIATED
+  renegotiatedFromId?: UUID | undefined // Links to the original obligation when RENEGOTIATED
 }
 
 export interface CreateObligationDTO {
@@ -98,10 +100,10 @@ export interface CreateObligationDTO {
   categoryId: UUID
   subcategory: string
   detail: string
-  totalAmountCents: Money
+  totalAmountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   totalInstallments: number
   currentInstallment: number
-  installmentAmountCents: Money
+  installmentAmountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   isRecurringIndefinite?: boolean | undefined
   p2pMetadata?: P2PMetadata | undefined
   startDate: ISODate
@@ -121,12 +123,12 @@ export type InstallmentStatus = 'PENDING' | 'PAID' | 'RENEGOTIATED' | 'DELETED'
 export interface Installment {
   id: UUID
   obligationId: UUID
-  installmentNumber: number    // 1-based; matches obligation.currentInstallment + offset
-  dueDate: ISODate             // Computed from startDate + offset; dueDay clamped to month
-  amountCents: Money
+  installmentNumber: number // 1-based; matches obligation.currentInstallment + offset
+  dueDate: ISODate // Computed from startDate + offset; dueDay clamped to month
+  amountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   status: InstallmentStatus
-  paidDate?: ISODate | undefined           // Required when status = PAID; drives period assignment
-  period?: Period | undefined              // YYYY-MM extracted from paidDate; used for reconciliation
+  paidDate?: ISODate | undefined // Required when status = PAID; drives period assignment
+  period?: Period | undefined // YYYY-MM extracted from paidDate; used for reconciliation
   notes?: string | undefined
   originalDueDate?: ISODate | undefined
   isOverdueRollover?: boolean | undefined
@@ -140,10 +142,10 @@ export type IncomeStatus = 'REAL' | 'ESTIMATED'
 export interface Income {
   id: UUID
   description: string
-  amountCents: Money
+  amountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   type: IncomeType
   status?: IncomeStatus | undefined // 'REAL' (default) or 'ESTIMATED'
-  period: Period               // "YYYY-MM" — the month this income applies to
+  period: Period // "YYYY-MM" — the month this income applies to
   receivedDate?: ISODate | undefined
   categoryId?: UUID | undefined
   payRule?: DueRule | undefined // Optional schedule rule (e.g. LAST_BUSINESS_DAY)
@@ -152,7 +154,7 @@ export interface Income {
 
 export interface CreateIncomeDTO {
   description: string
-  amountCents: Money
+  amountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   type: IncomeType
   status?: IncomeStatus | undefined
   period: Period
@@ -163,7 +165,14 @@ export interface CreateIncomeDTO {
 
 // ─── Sync Metadata ───────────────────────────────────────────────────────────
 
-export type DataDomain = 'obligations' | 'incomes' | 'categories' | 'settings' | 'credit_cards'
+export type DataDomain =
+  'obligations' | 'incomes' | 'categories' | 'settings' | 'credit_cards' | 'preferences'
+
+/**
+ * Domains managed by SyncService (excludes 'settings', which holds the master
+ * password sentinel written exclusively by authSlice.setupMasterPassword).
+ */
+export type SyncableDomain = Exclude<DataDomain, 'settings'>
 
 export type SyncStatus = 'SYNCED' | 'SYNCING' | 'PENDING' | 'ERROR' | 'OFFLINE'
 
@@ -176,7 +185,7 @@ export interface SyncMeta {
   lastSyncedAt: ISODate
   driveFileIds: Partial<Record<DataDomain, string>>
   pendingChanges: boolean
-  schemaVersion: string        // e.g., "1.0.0" — for future migrations
+  schemaVersion: string // e.g., "v1.1.0" — for future migrations
 }
 
 // ─── Drive Storage Shape ──────────────────────────────────────────────────────
@@ -206,11 +215,21 @@ export interface CategoriesStore {
 /**
  * The decrypted JSON structure stored in settings.enc.
  * Contains the password sentinel (encrypted magic value for password verification).
+ * NEVER queued in SyncService — written exclusively during master password setup.
  */
 export interface SettingsStore {
-  passwordSentinel: string     // Base64-encoded ArrayBuffer from createPasswordSentinel()
+  passwordSentinel: string // Base64-encoded ArrayBuffer from createPasswordSentinel()
   schemaVersion?: string | undefined
   createdAt: ISODate
+}
+
+/**
+ * The decrypted JSON structure stored in preferences.enc.
+ * Separated from settings.enc to protect the master password sentinel.
+ */
+export interface PreferencesStore {
+  preferences: UserPreferences
+  schemaVersion?: string | undefined
 }
 
 // ─── Credit Cards & Third-Party Receivables ──────────────────────────────────
@@ -220,8 +239,8 @@ export type PlasticType = 'TITULAR' | 'ADICIONAL'
 export interface CreditCardPlastic {
   id: UUID
   accountId: UUID
-  holderName: string            // e.g., "Gabriel Cruz", "Laura Soto"
-  lastFourDigits: string        // e.g., "1234"
+  holderName: string // e.g., "Gabriel Cruz", "Laura Soto"
+  lastFourDigits: string // e.g., "1234"
   type: PlasticType
   createdAt: ISODate
   updatedAt: ISODate
@@ -229,16 +248,16 @@ export interface CreditCardPlastic {
 
 export interface CreditCardAccount {
   id: UUID
-  institution: string           // e.g., "Banco Santander", "Banco de Chile"
-  accountName: string           // e.g., "Visa Signature", "Mastercard Black"
-  creditLimitCents: Money       // Total assigned limit in CLP cents
+  institution: string // e.g., "Banco Santander", "Banco de Chile"
+  accountName: string // e.g., "Visa Signature", "Mastercard Black"
+  creditLimitCents: Money // Total assigned limit in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   hasInternationalLimit?: boolean | undefined
   internationalCreditLimitUSD?: number | undefined // Optional USD credit limit
-  monthlyMaintenanceFeeCents?: Money | undefined   // Optional fixed monthly maintenance fee in CLP (converted or native)
+  monthlyMaintenanceFeeCents?: Money | undefined // Optional fixed monthly maintenance fee in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   monthlyMaintenanceFeeCurrency?: 'CLP' | 'UF' | undefined
   monthlyMaintenanceFeeAmount?: number | undefined // Raw entered value (e.g. 0.15 UF or 4500 CLP)
-  closingDay: number            // Cycle closing day of month (1-31)
-  dueDay: number                // Payment due day of month (1-31)
+  closingDay: number // Cycle closing day of month (1-31)
+  dueDay: number // Payment due day of month (1-31)
   plastics: CreditCardPlastic[] // Primary + additional cards
   paidPeriods?: Period[] | undefined // List of billing periods (YYYY-MM) paid by user
   createdAt: ISODate
@@ -250,18 +269,18 @@ export type ThirdPartyReceivableStatus = 'PENDIENTE' | 'COBRADO_PARCIAL' | 'COBR
 
 export interface ThirdPartyRepayment {
   id: UUID
-  amountCents: Money
+  amountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   paymentDate: ISODate
-  destinationAccount?: string | undefined  // e.g., "Banco Estado Cuenta Corriente"
+  destinationAccount?: string | undefined // e.g., "Banco Estado Cuenta Corriente"
   notes?: string | undefined
 }
 
 export interface ThirdPartyReceivable {
   id: UUID
-  thirdPartyName: string        // Responsible contact person
+  thirdPartyName: string // Responsible contact person
   purchaseId: UUID
-  totalOwedCents: Money
-  amountCollectedCents: Money   // Sum of repayments
+  totalOwedCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
+  amountCollectedCents: Money // Sum of repayments in integer CLP pesos (misnomer *Cents kept for schema compatibility)
   status: ThirdPartyReceivableStatus
   repayments: ThirdPartyRepayment[]
 }
@@ -269,11 +288,11 @@ export interface ThirdPartyReceivable {
 export interface CreditCardPurchase {
   id: UUID
   accountId: UUID
-  plasticId: UUID               // Plastic used for the purchase
+  plasticId: UUID // Plastic used for the purchase
   description: string
   purchaseDate: ISODate
-  totalAmountCents: Money
-  totalInstallments: number     // 1 = single payment / no installments
+  totalAmountCents: Money // in integer CLP pesos (misnomer *Cents kept for schema compatibility)
+  totalInstallments: number // 1 = single payment / no installments
   firstInstallmentPeriod: Period // YYYY-MM calculated from purchaseDate vs closingDay
   payerType: PurchasePayerType
   thirdPartyReceivable?: ThirdPartyReceivable | undefined

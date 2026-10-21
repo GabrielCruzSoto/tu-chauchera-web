@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react"
-import { SUPPORT_EMAIL } from "@/shared/constants/support"
-import { APP_SYSTEM_VERSION, CURRENT_SCHEMA_VERSION } from "@/shared/constants/version"
+import React, { useEffect, useState } from 'react'
+import { SUPPORT_EMAIL } from '@/shared/constants/support'
+import { APP_SYSTEM_VERSION, CURRENT_SCHEMA_VERSION } from '@/shared/constants/version'
 
 export interface SupportModalProps {
   isOpen: boolean
@@ -22,13 +22,13 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         onClose()
       }
     }
 
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
   if (!isOpen) return null
@@ -39,9 +39,9 @@ export const SupportModal: React.FC<SupportModalProps> = ({
       `Fecha/Hora: ${new Date().toISOString()}`,
       `Versión App: ${APP_SYSTEM_VERSION}`,
       `Versión Schema: ${CURRENT_SCHEMA_VERSION}`,
-      `Navegador: ${typeof navigator !== "undefined" ? navigator.userAgent : "N/A"}`,
-      `Resolución: ${typeof window !== "undefined" ? `${window.innerWidth}x${window.innerHeight}` : "N/A"}`,
-    ].join("\n")
+      `Navegador: ${typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'}`,
+      `Resolución: ${typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'N/A'}`,
+    ].join('\n')
   }
 
   const handleCopyEmail = async () => {
@@ -74,7 +74,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     >
       <div
         className="w-full max-w-xl max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-6 text-slate-100 relative"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-800/80 pb-4">
@@ -105,7 +105,12 @@ export const SupportModal: React.FC<SupportModalProps> = ({
             className="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -133,7 +138,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 onClick={() => void handleCopyEmail()}
                 className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition cursor-pointer border border-slate-700"
               >
-                {copiedEmail ? "✓ Copiado" : "Copiar"}
+                {copiedEmail ? '✓ Copiado' : 'Copiar'}
               </button>
               <a
                 href={`mailto:${SUPPORT_EMAIL}?subject=Consulta%20Soporte%20Tu%20Chauchera`}
@@ -141,7 +146,12 @@ export const SupportModal: React.FC<SupportModalProps> = ({
               >
                 <span>Escribir</span>
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
                 </svg>
               </a>
             </div>
@@ -168,15 +178,20 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                   if (onOpenPrivacy) {
                     onOpenPrivacy()
                   } else {
-                    window.history.pushState({}, "", "/privacidad")
-                    window.dispatchEvent(new PopStateEvent("popstate"))
+                    window.history.pushState({}, '', '/privacidad')
+                    window.dispatchEvent(new PopStateEvent('popstate'))
                   }
                 }}
                 className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition cursor-pointer border border-slate-700 inline-flex items-center gap-1.5"
               >
                 <span>Leer Política</span>
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             </div>
@@ -203,15 +218,20 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                   if (onOpenTerms) {
                     onOpenTerms()
                   } else {
-                    window.history.pushState({}, "", "/terminos")
-                    window.dispatchEvent(new PopStateEvent("popstate"))
+                    window.history.pushState({}, '', '/terminos')
+                    window.dispatchEvent(new PopStateEvent('popstate'))
                   }
                 }}
                 className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition cursor-pointer border border-slate-700 inline-flex items-center gap-1.5"
               >
                 <span>Ver Términos</span>
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             </div>
@@ -229,7 +249,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
               onClick={() => void handleCopyDiagnostics()}
               className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold cursor-pointer underline underline-offset-2 transition"
             >
-              {copiedDiagnostics ? "✓ ¡Copiado al portapapeles!" : "Copiar diagnóstico"}
+              {copiedDiagnostics ? '✓ ¡Copiado al portapapeles!' : 'Copiar diagnóstico'}
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs font-mono bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-slate-300">
@@ -243,14 +263,16 @@ export const SupportModal: React.FC<SupportModalProps> = ({
             </div>
           </div>
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            Puedes adjuntar esta información técnica en tu mensaje para ayudarnos a resolver incidencias más rápidamente. No incluye datos financieros ni credenciales.
+            Puedes adjuntar esta información técnica en tu mensaje para ayudarnos a resolver
+            incidencias más rápidamente. No incluye datos financieros ni credenciales.
           </p>
         </div>
 
         {/* Footer info */}
         <div className="pt-2 text-center border-t border-slate-800/80">
           <p className="text-xs text-slate-400">
-            Tu Chauchera es una aplicación Local-First. Tu información financiera vive cifrada con tu clave maestra y nunca pasa por servidores externos.
+            Tu Chauchera es una aplicación Local-First. Tu información financiera vive cifrada con
+            tu clave maestra y nunca pasa por servidores externos.
           </p>
         </div>
       </div>

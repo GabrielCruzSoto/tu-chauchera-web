@@ -3,11 +3,11 @@
  */
 export class DriveStorageQuotaError extends Error {
   readonly code: number = 403
-  readonly reason: string = "storageQuotaExceeded"
+  readonly reason: string = 'storageQuotaExceeded'
 
   constructor(message = "The user's Drive storage quota has been exceeded.") {
     super(message)
-    this.name = "DriveStorageQuotaError"
+    this.name = 'DriveStorageQuotaError'
     Object.setPrototypeOf(this, new.target.prototype)
   }
 }
@@ -22,26 +22,26 @@ export function isDriveStorageQuotaError(err: unknown): boolean {
     return true
   }
 
-  if (typeof err === "object") {
+  if (typeof err === 'object') {
     const errorObj = err as Record<string, unknown>
 
-    if (errorObj.name === "DriveStorageQuotaError" || errorObj.reason === "storageQuotaExceeded") {
+    if (errorObj.name === 'DriveStorageQuotaError' || errorObj.reason === 'storageQuotaExceeded') {
       return true
     }
 
     if (
-      typeof errorObj.message === "string" &&
-      (errorObj.message.includes("storage quota has been exceeded") ||
-        errorObj.message.includes("storageQuotaExceeded"))
+      typeof errorObj.message === 'string' &&
+      (errorObj.message.includes('storage quota has been exceeded') ||
+        errorObj.message.includes('storageQuotaExceeded'))
     ) {
       return true
     }
 
-    if (errorObj.error && typeof errorObj.error === "object") {
+    if (errorObj.error && typeof errorObj.error === 'object') {
       const nested = errorObj.error as Record<string, unknown>
       if (
-        typeof nested.message === "string" &&
-        nested.message.includes("storage quota has been exceeded")
+        typeof nested.message === 'string' &&
+        nested.message.includes('storage quota has been exceeded')
       ) {
         return true
       }
@@ -49,7 +49,9 @@ export function isDriveStorageQuotaError(err: unknown): boolean {
         if (
           nested.errors.some(
             (e: unknown) =>
-              e && typeof e === "object" && (e as Record<string, unknown>).reason === "storageQuotaExceeded"
+              e &&
+              typeof e === 'object' &&
+              (e as Record<string, unknown>).reason === 'storageQuotaExceeded',
           )
         ) {
           return true
@@ -59,8 +61,8 @@ export function isDriveStorageQuotaError(err: unknown): boolean {
   }
 
   if (
-    typeof err === "string" &&
-    (err.includes("storage quota has been exceeded") || err.includes("storageQuotaExceeded"))
+    typeof err === 'string' &&
+    (err.includes('storage quota has been exceeded') || err.includes('storageQuotaExceeded'))
   ) {
     return true
   }

@@ -1,7 +1,7 @@
 /**
  * Types for Schema Versioning, Domain Envelopes and Migrations.
  */
-import type { DataDomain, ISODate } from "@/shared/types/domain"
+import type { DataDomain, ISODate } from '@/shared/types/domain'
 
 export type SchemaVersion = number // Numeric schema versions: 1, 2, 3...
 

@@ -1,4 +1,4 @@
-import React, { Component, type ErrorInfo, type ReactNode } from "react"
+import React, { Component, type ErrorInfo, type ReactNode } from 'react'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -20,7 +20,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error("[Tu Chauchera ErrorBoundary] Uncaught error:", error, errorInfo)
+    console.error('[Tu Chauchera ErrorBoundary] Uncaught error:', error, errorInfo)
   }
 
   private handleReset = (): void => {
@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       sessionStorage.clear()
       localStorage.clear()
     } finally {
-      window.location.href = "/"
+      window.location.href = '/'
     }
   }
 
@@ -59,7 +59,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           </div>
           <h1 className="text-2xl font-bold text-slate-100 mb-2">Algo salió mal</h1>
           <p className="text-sm text-slate-400 max-w-md mb-6 leading-relaxed">
-            Se ha producido un error inesperado al procesar la interfaz. Tu información local y cifrada permanece protegida.
+            Se ha producido un error inesperado al procesar la interfaz. Tu información local y
+            cifrada permanece protegida.
           </p>
 
           {this.state.error?.message && (

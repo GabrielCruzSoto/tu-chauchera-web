@@ -1,5 +1,5 @@
-import React from "react"
-import { Spinner } from "./Spinner"
+import React from 'react'
+import { Spinner } from './Spinner'
 
 export interface PageLoaderProps {
   text?: string
@@ -8,13 +8,13 @@ export interface PageLoaderProps {
 }
 
 export const PageLoader: React.FC<PageLoaderProps> = ({
-  text = "Cargando página...",
+  text = 'Cargando página...',
   fullScreen = false,
-  className = "",
+  className = '',
 }) => {
   const containerClasses = fullScreen
-    ? "fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md"
-    : "w-full min-h-[350px] flex flex-col items-center justify-center py-12"
+    ? 'fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md'
+    : 'w-full min-h-[350px] flex flex-col items-center justify-center py-12'
 
   return (
     <div
@@ -27,7 +27,7 @@ export const PageLoader: React.FC<PageLoaderProps> = ({
         <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur-lg pointer-events-none" />
 
         <div className="relative flex items-center justify-center">
-          <Spinner size="lg" color="emerald" label={text ? "" : "Cargando..."} />
+          <Spinner size="lg" color="emerald" label={text ? '' : 'Cargando...'} />
           <span className="absolute text-xl">💰</span>
         </div>
 

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect } from 'vitest'
 import {
   deriveKeyFromPassword,
   encryptData,
@@ -7,27 +7,27 @@ import {
   verifyPasswordSentinel,
   bufferToBase64,
   base64ToBuffer,
-} from "./crypto"
+} from './crypto'
 
-describe("crypto utils", () => {
-  it("derives a non-extractable CryptoKey from master password", async () => {
-    const key = await deriveKeyFromPassword("superSecretPassphrase123!")
+describe('crypto utils', () => {
+  it('derives a non-extractable CryptoKey from master password', async () => {
+    const key = await deriveKeyFromPassword('superSecretPassphrase123!')
     expect(key).toBeDefined()
-    expect(key.type).toBe("secret")
+    expect(key.type).toBe('secret')
     expect(key.extractable).toBe(false)
-    expect(key.algorithm.name).toBe("AES-GCM")
+    expect(key.algorithm.name).toBe('AES-GCM')
   })
 
-  it("throws when deriving key with empty password", async () => {
-    await expect(deriveKeyFromPassword("")).rejects.toThrow("Master password cannot be empty")
+  it('throws when deriving key with empty password', async () => {
+    await expect(deriveKeyFromPassword('')).rejects.toThrow('Master password cannot be empty')
   })
 
-  it("encrypts and decrypts structured JSON data correctly (round-trip)", async () => {
-    const key = await deriveKeyFromPassword("myMasterKey123")
+  it('encrypts and decrypts structured JSON data correctly (round-trip)', async () => {
+    const key = await deriveKeyFromPassword('myMasterKey123')
     const testData = {
-      id: "abc-123",
+      id: 'abc-123',
       amountCents: 450000,
-      nested: { foo: "bar", active: true },
+      nested: { foo: 'bar', active: true },
       items: [1, 2, 3],
     }
 
@@ -38,9 +38,9 @@ describe("crypto utils", () => {
     expect(decrypted).toEqual(testData)
   })
 
-  it("generates different ciphertexts for identical plaintext due to random IV", async () => {
-    const key = await deriveKeyFromPassword("myMasterKey123")
-    const data = { hello: "world" }
+  it('generates different ciphertexts for identical plaintext due to random IV', async () => {
+    const key = await deriveKeyFromPassword('myMasterKey123')
+    const data = { hello: 'world' }
 
     const encrypted1 = new Uint8Array(await encryptData(key, data))
     const encrypted2 = new Uint8Array(await encryptData(key, data))
@@ -51,18 +51,18 @@ describe("crypto utils", () => {
     expect(iv1).not.toEqual(iv2)
   })
 
-  it("fails to decrypt with a different password/key", async () => {
-    const key1 = await deriveKeyFromPassword("passwordOne123")
-    const key2 = await deriveKeyFromPassword("passwordTwo456")
+  it('fails to decrypt with a different password/key', async () => {
+    const key1 = await deriveKeyFromPassword('passwordOne123')
+    const key2 = await deriveKeyFromPassword('passwordTwo456')
 
-    const encrypted = await encryptData(key1, { secret: "data" })
+    const encrypted = await encryptData(key1, { secret: 'data' })
 
     await expect(decryptData(key2, encrypted)).rejects.toThrow()
   })
 
-  it("creates and verifies password sentinel successfully", async () => {
-    const key = await deriveKeyFromPassword("validMasterPassword")
-    const wrongKey = await deriveKeyFromPassword("invalidMasterPassword")
+  it('creates and verifies password sentinel successfully', async () => {
+    const key = await deriveKeyFromPassword('validMasterPassword')
+    const wrongKey = await deriveKeyFromPassword('invalidMasterPassword')
 
     const sentinel = await createPasswordSentinel(key)
 
@@ -73,7 +73,7 @@ describe("crypto utils", () => {
     expect(isInvalid).toBe(false)
   })
 
-  it("converts ArrayBuffer to Base64 and back losslessly", () => {
+  it('converts ArrayBuffer to Base64 and back losslessly', () => {
     const raw = new Uint8Array([0, 15, 255, 128, 42, 99])
     const b64 = bufferToBase64(raw.buffer)
     const restored = new Uint8Array(base64ToBuffer(b64))

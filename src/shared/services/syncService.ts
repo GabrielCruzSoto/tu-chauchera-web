@@ -1,33 +1,40 @@
 /**
  * SyncService coordinates debounced uploading of dirty domains to Google Drive.
  */
-import type { DataDomain, SyncStatus, SyncMeta } from "@/shared/types/domain"
-import type { DriveClient } from "./driveClient"
-import { encryptData } from "@/shared/utils/crypto"
+import type { DataDomain, SyncableDomain, SyncStatus, SyncMeta } from '@/shared/types/domain'
+import type { DriveClient } from './driveClient'
+import { encryptData } from '@/shared/utils/crypto'
+import { CURRENT_SCHEMA_VERSION } from '@/shared/constants/version'
 
 export interface SyncStoreStateProvider {
   getCryptoKey: () => CryptoKey | null
-  getDomainData: (domain: DataDomain) => unknown
-  setDomainData: (domain: DataDomain, data: unknown) => void
+  getDomainData: (domain: SyncableDomain) => unknown
+  setDomainData: (domain: SyncableDomain, data: unknown) => void
   onSyncStatusChange: (status: SyncStatus, error?: unknown) => void
 }
 
 export class SyncService {
-  private pendingDomains = new Set<DataDomain>()
+  private pendingDomains = new Set<SyncableDomain>()
   private debounceTimer: ReturnType<typeof setTimeout> | null = null
   private readonly debounceMs: number
 
   constructor(
     private readonly driveClient: DriveClient,
     private readonly stateProvider: SyncStoreStateProvider,
-    debounceMs = 1500
+    debounceMs = 1500,
   ) {
     this.debounceMs = debounceMs
   }
 
-  queueWrite(domain: DataDomain): void {
+  queueWrite(domain: SyncableDomain): void {
+    if ((domain as DataDomain) === 'settings') {
+      throw new Error(
+        'Cannot queue "settings" domain in SyncService: settings.enc is reserved for master password sentinel',
+      )
+    }
+
     this.pendingDomains.add(domain)
-    this.stateProvider.onSyncStatusChange("PENDING")
+    this.stateProvider.onSyncStatusChange('PENDING')
 
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer)
@@ -48,16 +55,26 @@ export class SyncService {
 
     const key = this.stateProvider.getCryptoKey()
     if (!key) {
-      this.stateProvider.onSyncStatusChange("ERROR", "No encryption key unlocked")
+      this.stateProvider.onSyncStatusChange('ERROR', 'No encryption key unlocked')
       return
     }
 
     const domainsToSync = Array.from(this.pendingDomains)
-    this.stateProvider.onSyncStatusChange("SYNCING")
+    this.stateProvider.onSyncStatusChange('SYNCING')
 
     try {
       for (const domain of domainsToSync) {
+        if ((domain as DataDomain) === 'settings') {
+          this.pendingDomains.delete(domain)
+          continue
+        }
+
         const payload = this.stateProvider.getDomainData(domain)
+        if (payload === null || payload === undefined) {
+          this.pendingDomains.delete(domain)
+          continue
+        }
+
         const encrypted = await encryptData(key, payload)
         await this.driveClient.writeDomain(domain, encrypted)
         this.pendingDomains.delete(domain)
@@ -69,13 +86,13 @@ export class SyncService {
         lastSyncedAt: new Date().toISOString(),
         driveFileIds: {},
         pendingChanges: false,
-        schemaVersion: "1.0.0",
+        schemaVersion: CURRENT_SCHEMA_VERSION,
       }
       await this.driveClient.writeMeta(meta)
 
-      this.stateProvider.onSyncStatusChange("SYNCED")
+      this.stateProvider.onSyncStatusChange('SYNCED')
     } catch (err: unknown) {
-      this.stateProvider.onSyncStatusChange("ERROR", err)
+      this.stateProvider.onSyncStatusChange('ERROR', err)
     }
   }
 

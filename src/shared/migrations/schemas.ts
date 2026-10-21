@@ -1,8 +1,8 @@
 /**
  * Zod validation schemas for domain payloads in runtime.
  */
-import { z } from "zod"
-import type { Money } from "@/shared/types/money"
+import { z } from 'zod'
+import type { Money } from '@/shared/types/money'
 import type {
   ObligationStatus,
   ObligationType,
@@ -22,6 +22,7 @@ import type {
   CategoriesStore,
   IncomesStore,
   SettingsStore,
+  PreferencesStore,
   CreditCardsStore,
   CreditCardAccount,
   CreditCardPlastic,
@@ -31,9 +32,19 @@ import type {
   PlasticType,
   PurchasePayerType,
   ThirdPartyReceivableStatus,
-} from "@/shared/types/domain"
+} from '@/shared/types/domain'
+import type {
+  UserPreferences,
+  CurrencyCode,
+  DateFormatPattern,
+  AppTheme,
+} from '@/shared/types/settings'
 
-const moneySchema = z.number().int().nonnegative().transform((val) => val as Money)
+const moneySchema = z
+  .number()
+  .int()
+  .nonnegative()
+  .transform(val => val as Money)
 
 export const categorySchema = z
   .object({
@@ -50,13 +61,20 @@ export const cardFeeSurchargeSchema = z
     includeMaintenanceFee: z.boolean(),
     maintenanceFeeAmountCents: moneySchema.optional(),
     maintenanceSplitMode: z
-      .enum(["FULL", "SPLIT_50_50", "CUSTOM_AMOUNT"] as const satisfies readonly MaintenanceSplitMode[])
+      .enum([
+        'FULL',
+        'SPLIT_50_50',
+        'CUSTOM_AMOUNT',
+      ] as const satisfies readonly MaintenanceSplitMode[])
       .optional(),
     customMaintenanceCents: moneySchema.optional(),
     includeOneTimeCommission: z.boolean(),
     totalCommissionCents: moneySchema.optional(),
     commissionCollectionMode: z
-      .enum(["SPREAD_ACROSS_INSTALLMENTS", "FIRST_INSTALLMENT_ONLY"] as const satisfies readonly CommissionMode[])
+      .enum([
+        'SPREAD_ACROSS_INSTALLMENTS',
+        'FIRST_INSTALLMENT_ONLY',
+      ] as const satisfies readonly CommissionMode[])
       .optional(),
   })
   .passthrough() satisfies z.ZodType<CardFeeSurcharge>
@@ -64,10 +82,10 @@ export const cardFeeSurchargeSchema = z
 export const p2pMetadataSchema = z
   .object({
     role: z.enum([
-      "LENT_MY_CARD",
-      "USED_THEIR_CARD",
-      "DIRECT_LOAN_GIVEN",
-      "DIRECT_LOAN_TAKEN",
+      'LENT_MY_CARD',
+      'USED_THEIR_CARD',
+      'DIRECT_LOAN_GIVEN',
+      'DIRECT_LOAN_TAKEN',
     ] as const satisfies readonly P2PRole[]),
     thirdPartyName: z.string(),
     cardIssuer: z.string().optional(),
@@ -81,19 +99,21 @@ export const p2pMetadataSchema = z
 
 export const dueRuleSchema = z.union([
   z.object({
-    kind: z.literal("FIXED_DAY"),
+    kind: z.literal('FIXED_DAY'),
     day: z.number().int().min(1).max(31),
-    shift: z.enum(["NONE", "NEXT_BUSINESS", "PREV_BUSINESS"]).optional(),
+    shift: z.enum(['NONE', 'NEXT_BUSINESS', 'PREV_BUSINESS']).optional(),
   }),
   z.object({
-    kind: z.literal("LAST_BUSINESS_DAY"),
+    kind: z.literal('LAST_BUSINESS_DAY'),
   }),
 ])
 
 export const obligationSchema = z
   .object({
     id: z.string().min(1),
-    type: z.enum(["EXPENSE", "DEBT", "P2P_DEBT"] as const satisfies readonly ObligationType[]).optional(),
+    type: z
+      .enum(['EXPENSE', 'DEBT', 'P2P_DEBT'] as const satisfies readonly ObligationType[])
+      .optional(),
     categoryId: z.string().min(1),
     subcategory: z.string(),
     detail: z.string(),
@@ -107,7 +127,12 @@ export const obligationSchema = z
     dueDay: z.number().int().min(1).max(31),
     dueRule: dueRuleSchema.optional(),
     annualRatePercentage: z.number().optional(),
-    status: z.enum(["PENDING", "PAID", "RENEGOTIATED", "DELETED"] as const satisfies readonly ObligationStatus[]),
+    status: z.enum([
+      'PENDING',
+      'PAID',
+      'RENEGOTIATED',
+      'DELETED',
+    ] as const satisfies readonly ObligationStatus[]),
     createdAt: z.string(),
     updatedAt: z.string(),
     renegotiatedFromId: z.string().optional(),
@@ -119,15 +144,16 @@ export const obligationSchema = z
 
     if (!resolvedType) {
       if (obl.p2pMetadata) {
-        resolvedType = "P2P_DEBT"
+        resolvedType = 'P2P_DEBT'
       } else if (obl.isRecurringIndefinite) {
-        resolvedType = "EXPENSE"
+        resolvedType = 'EXPENSE'
       } else if (
-        (obl.categoryId === "cat-servicios" || obl.categoryId === "cat-suscrip") &&
-        obl.totalInstallments === 60 &&
-        obl.totalAmountCents === obl.installmentAmountCents * 60
+        (obl.categoryId === 'cat-servicios' || obl.categoryId === 'cat-suscrip') &&
+        (obl.totalInstallments === 60 || obl.totalInstallments === 12) &&
+        (obl.totalAmountCents === obl.installmentAmountCents * 60 ||
+          obl.totalAmountCents === obl.installmentAmountCents * 12)
       ) {
-        resolvedType = "EXPENSE"
+        resolvedType = 'EXPENSE'
         resolvedRecurring = true
       }
     }
@@ -146,7 +172,12 @@ export const installmentSchema = z
     installmentNumber: z.number().int().min(1),
     dueDate: z.string(),
     amountCents: moneySchema,
-    status: z.enum(["PENDING", "PAID", "RENEGOTIATED", "DELETED"] as const satisfies readonly InstallmentStatus[]),
+    status: z.enum([
+      'PENDING',
+      'PAID',
+      'RENEGOTIATED',
+      'DELETED',
+    ] as const satisfies readonly InstallmentStatus[]),
     paidDate: z.string().optional(),
     period: z.string().optional(),
     notes: z.string().optional(),
@@ -160,8 +191,8 @@ export const incomeSchema = z
     id: z.string().min(1),
     description: z.string().min(1),
     amountCents: moneySchema,
-    type: z.enum(["FIXED", "VARIABLE"] as const satisfies readonly IncomeType[]),
-    status: z.enum(["REAL", "ESTIMATED"] as const satisfies readonly IncomeStatus[]).optional(),
+    type: z.enum(['FIXED', 'VARIABLE'] as const satisfies readonly IncomeType[]),
+    status: z.enum(['REAL', 'ESTIMATED'] as const satisfies readonly IncomeStatus[]).optional(),
     period: z.string(),
     receivedDate: z.string().optional(),
     categoryId: z.string().optional(),
@@ -202,13 +233,33 @@ export const settingsStoreSchema = z
   })
   .passthrough() satisfies z.ZodType<SettingsStore>
 
+export const userPreferencesSchema = z
+  .object({
+    currency: z.enum(['CLP', 'USD', 'EUR', 'UF'] as const satisfies readonly CurrencyCode[]),
+    dateFormat: z.enum([
+      'DD/MM/YYYY',
+      'YYYY-MM-DD',
+      'MM/DD/YYYY',
+    ] as const satisfies readonly DateFormatPattern[]),
+    theme: z.enum(['dark', 'light', 'system'] as const satisfies readonly AppTheme[]),
+    updatedAt: z.string(),
+  })
+  .passthrough() satisfies z.ZodType<UserPreferences>
+
+export const preferencesStoreSchema = z
+  .object({
+    preferences: userPreferencesSchema,
+    schemaVersion: z.string().optional(),
+  })
+  .passthrough() satisfies z.ZodType<PreferencesStore>
+
 export const creditCardPlasticSchema = z
   .object({
     id: z.string().min(1),
     accountId: z.string().min(1),
     holderName: z.string().min(1),
     lastFourDigits: z.string().min(1),
-    type: z.enum(["TITULAR", "ADICIONAL"] as const satisfies readonly PlasticType[]),
+    type: z.enum(['TITULAR', 'ADICIONAL'] as const satisfies readonly PlasticType[]),
     createdAt: z.string(),
     updatedAt: z.string(),
   })
@@ -223,7 +274,7 @@ export const creditCardAccountSchema = z
     hasInternationalLimit: z.boolean().optional(),
     internationalCreditLimitUSD: z.number().optional(),
     monthlyMaintenanceFeeCents: moneySchema.optional(),
-    monthlyMaintenanceFeeCurrency: z.enum(["CLP", "UF"]).optional(),
+    monthlyMaintenanceFeeCurrency: z.enum(['CLP', 'UF']).optional(),
     monthlyMaintenanceFeeAmount: z.number().optional(),
     closingDay: z.number().int().min(1).max(31),
     dueDay: z.number().int().min(1).max(31),
@@ -251,7 +302,11 @@ export const thirdPartyReceivableSchema = z
     purchaseId: z.string().min(1),
     totalOwedCents: moneySchema,
     amountCollectedCents: moneySchema,
-    status: z.enum(["PENDIENTE", "COBRADO_PARCIAL", "COBRADO_TOTAL"] as const satisfies readonly ThirdPartyReceivableStatus[]),
+    status: z.enum([
+      'PENDIENTE',
+      'COBRADO_PARCIAL',
+      'COBRADO_TOTAL',
+    ] as const satisfies readonly ThirdPartyReceivableStatus[]),
     repayments: z.array(thirdPartyRepaymentSchema),
   })
   .passthrough() satisfies z.ZodType<ThirdPartyReceivable>
@@ -266,7 +321,7 @@ export const creditCardPurchaseSchema = z
     totalAmountCents: moneySchema,
     totalInstallments: z.number().int().min(1),
     firstInstallmentPeriod: z.string(),
-    payerType: z.enum(["PROPIO", "TERCERO"] as const satisfies readonly PurchasePayerType[]),
+    payerType: z.enum(['PROPIO', 'TERCERO'] as const satisfies readonly PurchasePayerType[]),
     thirdPartyReceivable: thirdPartyReceivableSchema.optional(),
     createdAt: z.string(),
     updatedAt: z.string(),
@@ -280,4 +335,3 @@ export const creditCardsStoreSchema = z
     schemaVersion: z.string().optional(),
   })
   .passthrough() satisfies z.ZodType<CreditCardsStore>
-
