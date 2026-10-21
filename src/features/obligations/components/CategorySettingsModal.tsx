@@ -1,7 +1,7 @@
-import React, { useState } from "react"
-import { useObligationsStore } from "../store/obligationsSlice"
-import { CATEGORY_PALETTE } from "../constants/categories"
-import type { Category } from "@/shared/types/domain"
+import React, { useState } from 'react'
+import { useObligationsStore } from '../store/obligationsSlice'
+import { CATEGORY_PALETTE } from '../constants/categories'
+import type { Category } from '@/shared/types/domain'
 
 interface CategorySettingsModalProps {
   onClose: () => void
@@ -16,29 +16,29 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
     useObligationsStore()
 
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [nameInput, setNameInput] = useState("")
-  const [colorInput, setColorInput] = useState("emerald")
+  const [nameInput, setNameInput] = useState('')
+  const [colorInput, setColorInput] = useState('emerald')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const categoryList = Object.values(categories)
 
   // Count active obligations per category (status !== 'DELETED')
-  const activeObligations = Object.values(obligations).filter((o) => o.status !== "DELETED")
+  const activeObligations = Object.values(obligations).filter(o => o.status !== 'DELETED')
   const getUsageCount = (categoryId: string) => {
-    return activeObligations.filter((o) => o.categoryId === categoryId).length
+    return activeObligations.filter(o => o.categoryId === categoryId).length
   }
 
   const handleStartEdit = (cat: Category) => {
     setEditingId(cat.id)
     setNameInput(cat.name)
-    setColorInput(cat.color || "emerald")
+    setColorInput(cat.color || 'emerald')
     setErrorMessage(null)
   }
 
   const handleCancelEdit = () => {
     setEditingId(null)
-    setNameInput("")
-    setColorInput("emerald")
+    setNameInput('')
+    setColorInput('emerald')
     setErrorMessage(null)
   }
 
@@ -47,7 +47,7 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
     const trimmedName = nameInput.trim()
 
     if (!trimmedName) {
-      setErrorMessage("El nombre de la categoría no puede estar vacío.")
+      setErrorMessage('El nombre de la categoría no puede estar vacío.')
       return
     }
 
@@ -65,8 +65,8 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
       if (onCategoryCreated) {
         onCategoryCreated(created)
       }
-      setNameInput("")
-      setColorInput("emerald")
+      setNameInput('')
+      setColorInput('emerald')
       setErrorMessage(null)
     }
   }
@@ -75,7 +75,7 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
     const count = getUsageCount(categoryId)
     if (count > 0) {
       setErrorMessage(
-        `No se puede eliminar la categoría porque está en uso por ${count} obligación(es) activa(s).`
+        `No se puede eliminar la categoría porque está en uso por ${count} obligación(es) activa(s).`,
       )
       return
     }
@@ -126,10 +126,13 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
           )}
 
           {/* Category Form (Create or Edit) */}
-          <form onSubmit={handleSave} className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+          <form
+            onSubmit={handleSave}
+            className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3"
+          >
             <div className="flex justify-between items-center">
               <span className="text-xs font-semibold text-slate-300">
-                {editingId ? "Editar Categoría" : "Nueva Categoría"}
+                {editingId ? 'Editar Categoría' : 'Nueva Categoría'}
               </span>
               {editingId && (
                 <button
@@ -148,7 +151,7 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
                   type="text"
                   placeholder="Nombre de categoría (ej. Seguros Médicos)"
                   value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
+                  onChange={e => setNameInput(e.target.value)}
                   className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
                 />
               </div>
@@ -163,7 +166,9 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
                       title={opt.label}
                       onClick={() => setColorInput(key)}
                       className={`min-h-[32px] min-w-[32px] w-8 h-8 rounded-full ${opt.dotClass} cursor-pointer transition ${
-                        colorInput === key ? "ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110" : "opacity-60 hover:opacity-100"
+                        colorInput === key
+                          ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110'
+                          : 'opacity-60 hover:opacity-100'
                       }`}
                     />
                   ))}
@@ -176,16 +181,16 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
                 type="submit"
                 className="min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-semibold text-white cursor-pointer shadow transition"
               >
-                {editingId ? "Guardar Cambios" : "+ Agregar Categoría"}
+                {editingId ? 'Guardar Cambios' : '+ Agregar Categoría'}
               </button>
             </div>
           </form>
 
           {/* Existing Categories List */}
           <div className="space-y-2 divide-y divide-slate-800/40">
-            {categoryList.map((cat) => {
+            {categoryList.map(cat => {
               const usageCount = getUsageCount(cat.id)
-              const colorOption = CATEGORY_PALETTE[cat.color] || CATEGORY_PALETTE.emerald
+              const colorOption = CATEGORY_PALETTE[cat.color] ?? CATEGORY_PALETTE.emerald
 
               return (
                 <div
@@ -193,11 +198,14 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
                   className="flex items-center justify-between py-2.5 px-2 hover:bg-slate-800/30 rounded-lg transition"
                 >
                   <div className="flex items-center gap-3">
-                    <span className={`w-3.5 h-3.5 rounded-full ${colorOption?.dotClass} flex-shrink-0`} />
+                    <span
+                      className={`w-3.5 h-3.5 rounded-full ${colorOption?.dotClass} flex-shrink-0`}
+                    />
                     <div>
                       <div className="text-sm font-medium text-white">{cat.name}</div>
                       <div className="text-[11px] text-slate-400">
-                        {usageCount} {usageCount === 1 ? "obligación activa" : "obligaciones activas"}
+                        {usageCount}{' '}
+                        {usageCount === 1 ? 'obligación activa' : 'obligaciones activas'}
                       </div>
                     </div>
                   </div>
@@ -215,8 +223,8 @@ export const CategorySettingsModal: React.FC<CategorySettingsModalProps> = ({
                       onClick={() => handleDelete(cat.id)}
                       className={`min-h-[36px] px-3 py-1.5 text-xs rounded-lg cursor-pointer transition ${
                         usageCount > 0
-                          ? "bg-slate-800/50 text-slate-600 cursor-not-allowed"
-                          : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20"
+                          ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed'
+                          : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20'
                       }`}
                     >
                       Eliminar

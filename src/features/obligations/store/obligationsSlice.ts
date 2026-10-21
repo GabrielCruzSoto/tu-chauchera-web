@@ -1,7 +1,7 @@
 /**
  * Zustand Slice for Obligation and Category management with eager Installments.
  */
-import { create } from "zustand"
+import { create } from 'zustand'
 import type {
   Obligation,
   Installment,
@@ -13,13 +13,17 @@ import type {
   UUID,
   Money,
   ISODate,
-} from "@/shared/types/domain"
-import { generateInstallments } from "../utils/installmentGenerator"
-import { DEFAULT_CATEGORIES } from "../constants/categories"
-import { getLocalISODate } from "@/shared/utils/date"
-import { useSyncStore } from "@/features/sync/store/syncSlice"
+} from '@/shared/types/domain'
+import {
+  generateInstallments,
+  INDEFINITE_INSTALLMENTS_HORIZON,
+} from '../utils/installmentGenerator'
+import { DEFAULT_CATEGORIES } from '../constants/categories'
+import { getLocalISODate } from '@/shared/utils/date'
+import { toMoney } from '@/shared/types/money'
+import { useSyncStore } from '@/features/sync/store/syncSlice'
 
-export type QuickExpensePaymentMethod = "DEBIT" | "CASH" | "TRANSFER"
+export type QuickExpensePaymentMethod = 'DEBIT' | 'CASH' | 'TRANSFER'
 
 export interface CreateQuickExpenseDTO {
   categoryId: UUID
@@ -68,7 +72,7 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
     })
   },
 
-  setObligationsData: (data) => {
+  setObligationsData: data => {
     const currentCategories = get().categories
     const normalizedObligations: Record<UUID, Obligation> = {}
 
@@ -78,23 +82,28 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
 
       if (!resolvedType) {
         if (obl.p2pMetadata) {
-          resolvedType = "P2P_DEBT"
+          resolvedType = 'P2P_DEBT'
         } else if (obl.isRecurringIndefinite) {
-          resolvedType = "EXPENSE"
+          resolvedType = 'EXPENSE'
         } else {
           const cat = currentCategories[obl.categoryId]
-          const catName = cat?.name?.toLowerCase() ?? ""
+          const catName = cat?.name?.toLowerCase() ?? ''
           const isRecurringCat =
-            obl.categoryId === "cat-servicios" ||
-            obl.categoryId === "cat-suscrip" ||
-            catName.includes("servicio") ||
-            catName.includes("suscrip")
+            obl.categoryId === 'cat-servicios' ||
+            obl.categoryId === 'cat-suscrip' ||
+            catName.includes('servicio') ||
+            catName.includes('suscrip')
 
-          if (isRecurringCat && obl.totalInstallments === 60 && obl.totalAmountCents === obl.installmentAmountCents * 60) {
-            resolvedType = "EXPENSE"
+          if (
+            isRecurringCat &&
+            (obl.totalInstallments === 60 || obl.totalInstallments === 12) &&
+            (obl.totalAmountCents === obl.installmentAmountCents * 60 ||
+              obl.totalAmountCents === obl.installmentAmountCents * 12)
+          ) {
+            resolvedType = 'EXPENSE'
             resolvedRecurring = true
           } else {
-            resolvedType = "DEBT"
+            resolvedType = 'DEBT'
           }
         }
       }
@@ -113,30 +122,31 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
     })
   },
 
-  setCategoriesData: (data) => {
-    set((state) => {
+  setCategoriesData: data => {
+    set(state => {
       const updatedObligations = { ...state.obligations }
       let hasChanges = false
 
       for (const [id, obl] of Object.entries(updatedObligations)) {
-        if (!obl.type || obl.type === "DEBT") {
+        if (!obl.type || obl.type === 'DEBT') {
           const cat = data.categories[obl.categoryId]
-          const catName = cat?.name?.toLowerCase() ?? ""
+          const catName = cat?.name?.toLowerCase() ?? ''
           const isRecurringCat =
-            obl.categoryId === "cat-servicios" ||
-            obl.categoryId === "cat-suscrip" ||
-            catName.includes("servicio") ||
-            catName.includes("suscrip")
+            obl.categoryId === 'cat-servicios' ||
+            obl.categoryId === 'cat-suscrip' ||
+            catName.includes('servicio') ||
+            catName.includes('suscrip')
 
           if (
             isRecurringCat &&
-            obl.totalInstallments === 60 &&
-            obl.totalAmountCents === obl.installmentAmountCents * 60 &&
+            (obl.totalInstallments === 60 || obl.totalInstallments === 12) &&
+            (obl.totalAmountCents === obl.installmentAmountCents * 60 ||
+              obl.totalAmountCents === obl.installmentAmountCents * 12) &&
             !obl.p2pMetadata
           ) {
             updatedObligations[id] = {
               ...obl,
-              type: "EXPENSE",
+              type: 'EXPENSE',
               isRecurringIndefinite: true,
             }
             hasChanges = true
@@ -151,7 +161,7 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
     })
   },
 
-  addCategory: (dto) => {
+  addCategory: dto => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
     const newCategory: Category = {
@@ -162,19 +172,19 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       updatedAt: now,
     }
 
-    set((state) => ({
+    set(state => ({
       categories: {
         ...state.categories,
         [id]: newCategory,
       },
     }))
 
-    useSyncStore.getState().queueSyncDomain("categories")
+    useSyncStore.getState().queueSyncDomain('categories')
     return newCategory
   },
 
   updateCategory: (id, updates) => {
-    set((state) => {
+    set(state => {
       const existing = state.categories[id]
       if (!existing) return state
 
@@ -190,28 +200,40 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       }
     })
 
-    useSyncStore.getState().queueSyncDomain("categories")
+    useSyncStore.getState().queueSyncDomain('categories')
   },
 
-  deleteCategory: (id) => {
-    set((state) => {
+  deleteCategory: id => {
+    set(state => {
       const copy = { ...state.categories }
       delete copy[id]
       return { categories: copy }
     })
 
-    useSyncStore.getState().queueSyncDomain("categories")
+    useSyncStore.getState().queueSyncDomain('categories')
   },
 
-  addObligation: (dto) => {
+  addObligation: dto => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
 
+    const isRecurringIndefinite =
+      dto.isRecurringIndefinite ?? (dto.type === 'EXPENSE' && dto.totalInstallments === 12)
+    const effectiveTotalInstallments = isRecurringIndefinite
+      ? Math.max(dto.totalInstallments, INDEFINITE_INSTALLMENTS_HORIZON)
+      : dto.totalInstallments
+    const effectiveTotalAmountCents = isRecurringIndefinite
+      ? toMoney(dto.installmentAmountCents * effectiveTotalInstallments)
+      : dto.totalAmountCents
+
     const newObligation: Obligation = {
-      type: dto.type ?? "DEBT",
+      type: dto.type ?? 'DEBT',
       ...dto,
+      totalInstallments: effectiveTotalInstallments,
+      totalAmountCents: effectiveTotalAmountCents,
+      isRecurringIndefinite,
       id,
-      status: "PENDING",
+      status: 'PENDING',
       createdAt: now,
       updatedAt: now,
     }
@@ -222,7 +244,7 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       installmentsMap[inst.id] = inst
     }
 
-    set((state) => ({
+    set(state => ({
       obligations: {
         ...state.obligations,
         [id]: newObligation,
@@ -233,27 +255,27 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       },
     }))
 
-    useSyncStore.getState().queueSyncDomain("obligations")
+    useSyncStore.getState().queueSyncDomain('obligations')
     return newObligation
   },
 
-  addQuickExpense: (dto) => {
+  addQuickExpense: dto => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
     const expenseDate = dto.date ?? getLocalISODate()
     const dueDay = parseInt(expenseDate.slice(8, 10), 10) || 1
     const period = expenseDate.slice(0, 7)
     const methodLabels: Record<QuickExpensePaymentMethod, string> = {
-      DEBIT: "Tarjeta de Débito",
-      CASH: "Efectivo",
-      TRANSFER: "Transferencia",
+      DEBIT: 'Tarjeta de Débito',
+      CASH: 'Efectivo',
+      TRANSFER: 'Transferencia',
     }
-    const paymentMethod = dto.paymentMethod ?? "DEBIT"
-    const paymentMethodLabel = methodLabels[paymentMethod] ?? "Débito"
+    const paymentMethod = dto.paymentMethod ?? 'DEBIT'
+    const paymentMethodLabel = methodLabels[paymentMethod] ?? 'Débito'
 
     const newObligation: Obligation = {
       id,
-      type: "EXPENSE",
+      type: 'EXPENSE',
       categoryId: dto.categoryId,
       subcategory: dto.description.trim(),
       detail: dto.notes ? `${paymentMethodLabel} — ${dto.notes.trim()}` : paymentMethodLabel,
@@ -264,7 +286,7 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       isRecurringIndefinite: false,
       startDate: expenseDate,
       dueDay,
-      status: "PAID",
+      status: 'PAID',
       createdAt: now,
       updatedAt: now,
     }
@@ -276,13 +298,13 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       installmentNumber: 1,
       dueDate: expenseDate,
       amountCents: dto.amountCents,
-      status: "PAID",
+      status: 'PAID',
       paidDate: expenseDate,
       period,
       notes: `Gasto puntual (${paymentMethodLabel})`,
     }
 
-    set((state) => ({
+    set(state => ({
       obligations: {
         ...state.obligations,
         [id]: newObligation,
@@ -293,7 +315,7 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       },
     }))
 
-    useSyncStore.getState().queueSyncDomain("obligations")
+    useSyncStore.getState().queueSyncDomain('obligations')
     return newObligation
   },
 
@@ -322,13 +344,32 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
   },
 
   updateObligation: (id, updates) => {
-    set((state) => {
+    set(state => {
       const existing = state.obligations[id]
       if (!existing) return state
+
+      const isRecurringIndefinite = updates.isRecurringIndefinite ?? existing.isRecurringIndefinite
+      let effectiveTotalInstallments = updates.totalInstallments ?? existing.totalInstallments
+      let effectiveTotalAmountCents = updates.totalAmountCents ?? existing.totalAmountCents
+      const effectiveInstallmentAmountCents =
+        updates.installmentAmountCents ?? existing.installmentAmountCents
+
+      if (isRecurringIndefinite) {
+        effectiveTotalInstallments = Math.max(
+          effectiveTotalInstallments,
+          INDEFINITE_INSTALLMENTS_HORIZON,
+        )
+        effectiveTotalAmountCents = toMoney(
+          effectiveInstallmentAmountCents * effectiveTotalInstallments,
+        )
+      }
 
       const updatedObligation: Obligation = {
         ...existing,
         ...updates,
+        totalInstallments: effectiveTotalInstallments,
+        totalAmountCents: effectiveTotalAmountCents,
+        isRecurringIndefinite,
         updatedAt: new Date().toISOString(),
       }
 
@@ -336,12 +377,12 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
 
       // Collect existing installments for this obligation
       const currentObligationInstallments = Object.values(state.installments).filter(
-        (i) => i.obligationId === id
+        i => i.obligationId === id,
       )
 
       // Remove old PENDING installments for this obligation
       for (const inst of currentObligationInstallments) {
-        if (inst.status === "PENDING") {
+        if (inst.status === 'PENDING') {
           delete newInstallmentsMap[inst.id]
         }
       }
@@ -350,22 +391,30 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       let adjustedInstallments = currentObligationInstallments
       if (updates.currentInstallment !== undefined) {
         const newCurrent = updates.currentInstallment
-        adjustedInstallments = currentObligationInstallments.map((inst) => {
-          if (inst.installmentNumber < newCurrent && inst.status !== "PAID" && inst.status !== "RENEGOTIATED") {
+        adjustedInstallments = currentObligationInstallments.map(inst => {
+          if (
+            inst.installmentNumber < newCurrent &&
+            inst.status !== 'PAID' &&
+            inst.status !== 'RENEGOTIATED'
+          ) {
             const updatedInst: Installment = {
               ...inst,
-              status: "PAID",
+              status: 'PAID',
               paidDate: inst.paidDate ?? inst.dueDate,
-              period: inst.period ?? (inst.dueDate !== "—" ? inst.dueDate.slice(0, 7) : undefined),
-              notes: inst.notes ?? "Amortización registrada",
+              period: inst.period ?? (inst.dueDate !== '—' ? inst.dueDate.slice(0, 7) : undefined),
+              notes: inst.notes ?? 'Amortización registrada',
             }
             newInstallmentsMap[inst.id] = updatedInst
             return updatedInst
-          } else if (inst.installmentNumber >= newCurrent && inst.status === "PAID" && inst.notes?.includes("Amortización")) {
+          } else if (
+            inst.installmentNumber >= newCurrent &&
+            inst.status === 'PAID' &&
+            inst.notes?.includes('Amortización')
+          ) {
             // Revert auto-amortized installments back to PENDING if user decreased paid count
             const updatedInst: Installment = {
               ...inst,
-              status: "PENDING",
+              status: 'PENDING',
               paidDate: undefined,
               period: undefined,
               notes: undefined,
@@ -392,26 +441,26 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       }
     })
 
-    useSyncStore.getState().queueSyncDomain("obligations")
+    useSyncStore.getState().queueSyncDomain('obligations')
   },
 
-  softDeleteObligation: (id) => {
-    set((state) => {
+  softDeleteObligation: id => {
+    set(state => {
       const existing = state.obligations[id]
       if (!existing) return state
 
       const updatedObligation: Obligation = {
         ...existing,
-        status: "DELETED",
+        status: 'DELETED',
         updatedAt: new Date().toISOString(),
       }
 
       const newInstallments = { ...state.installments }
       for (const [instId, inst] of Object.entries(newInstallments)) {
-        if (inst.obligationId === id && inst.status === "PENDING") {
+        if (inst.obligationId === id && inst.status === 'PENDING') {
           newInstallments[instId] = {
             ...inst,
-            status: "DELETED",
+            status: 'DELETED',
           }
         }
       }
@@ -425,6 +474,6 @@ export const useObligationsStore = create<ObligationsState>((set, get) => ({
       }
     })
 
-    useSyncStore.getState().queueSyncDomain("obligations")
+    useSyncStore.getState().queueSyncDomain('obligations')
   },
 }))

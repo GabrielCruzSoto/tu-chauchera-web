@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react"
-import { useObligationsStore, type QuickExpensePaymentMethod } from "../store/obligationsSlice"
-import { formatCLP, toMoney } from "@/shared/types/money"
-import { getLocalISODate } from "@/shared/utils/date"
+import React, { useState, useEffect } from 'react'
+import { useObligationsStore, type QuickExpensePaymentMethod } from '../store/obligationsSlice'
+import { formatCLP, toMoney } from '@/shared/types/money'
+import { getLocalISODate } from '@/shared/utils/date'
 
 interface QuickExpenseModalProps {
   isOpen: boolean
@@ -17,15 +17,15 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
   const { categories, addQuickExpense } = useObligationsStore()
 
   const categoryList = Object.values(categories).sort((a, b) =>
-    a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+    a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
   )
 
-  const [description, setDescription] = useState("")
-  const [amount, setAmount] = useState<number | "">("")
-  const [categoryId, setCategoryId] = useState<string>(() => categoryList[0]?.id ?? "")
-  const [paymentMethod, setPaymentMethod] = useState<QuickExpensePaymentMethod>("DEBIT")
+  const [description, setDescription] = useState('')
+  const [amount, setAmount] = useState<number | ''>('')
+  const [categoryId, setCategoryId] = useState<string>(() => categoryList[0]?.id ?? '')
+  const [paymentMethod, setPaymentMethod] = useState<QuickExpensePaymentMethod>('DEBIT')
   const [date, setDate] = useState<string>(getLocalISODate())
-  const [notes, setNotes] = useState("")
+  const [notes, setNotes] = useState('')
 
   // Update default category when categories load or change
   useEffect(() => {
@@ -39,12 +39,12 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
     if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         onClose()
       }
     }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
   if (!isOpen) return null
@@ -63,9 +63,9 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
     })
 
     // Reset fields
-    setDescription("")
-    setAmount("")
-    setNotes("")
+    setDescription('')
+    setAmount('')
+    setNotes('')
     setDate(getLocalISODate())
 
     onSuccess?.()
@@ -82,7 +82,7 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
     >
       <div
         className="w-full sm:max-w-md max-h-[92vh] sm:max-h-[85vh] rounded-t-2xl sm:rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl flex flex-col overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex justify-between items-center px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-800 flex-shrink-0 bg-slate-900/90">
@@ -91,7 +91,10 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
               ⚡
             </span>
             <div>
-              <h3 id="quick-expense-modal-title" className="text-base sm:text-lg font-bold text-white">
+              <h3
+                id="quick-expense-modal-title"
+                className="text-base sm:text-lg font-bold text-white"
+              >
                 Gasto Rápido (Débito / Caja)
               </h3>
               <p className="text-[11px] text-slate-400">
@@ -115,7 +118,10 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
             {/* Monto */}
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label htmlFor="quick-expense-amount" className="block text-xs font-semibold text-slate-300">
+                <label
+                  htmlFor="quick-expense-amount"
+                  className="block text-xs font-semibold text-slate-300"
+                >
                   Monto del Gasto (CLP) <span className="text-rose-400">*</span>
                 </label>
                 {amount && Number(amount) > 0 && (
@@ -131,7 +137,7 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
                 min={1}
                 step={1}
                 value={amount}
-                onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))}
+                onChange={e => setAmount(e.target.value === '' ? '' : Number(e.target.value))}
                 required
                 autoFocus
                 placeholder="Ej. 12500"
@@ -141,7 +147,10 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
 
             {/* Descripción / Comercio */}
             <div>
-              <label htmlFor="quick-expense-description" className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label
+                htmlFor="quick-expense-description"
+                className="block text-xs font-semibold text-slate-300 mb-1.5"
+              >
                 Descripción / Comercio <span className="text-rose-400">*</span>
               </label>
               <input
@@ -149,7 +158,7 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
                 name="description"
                 type="text"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={e => setDescription(e.target.value)}
                 required
                 placeholder="Ej. Almuerzo, Supermercado Lider, Farmacia, Uber"
                 className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
@@ -158,18 +167,21 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
 
             {/* Categoría */}
             <div>
-              <label htmlFor="quick-expense-category" className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label
+                htmlFor="quick-expense-category"
+                className="block text-xs font-semibold text-slate-300 mb-1.5"
+              >
                 Categoría <span className="text-rose-400">*</span>
               </label>
               <select
                 id="quick-expense-category"
                 name="categoryId"
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
+                onChange={e => setCategoryId(e.target.value)}
                 required
                 className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
               >
-                {categoryList.map((cat) => (
+                {categoryList.map(cat => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
@@ -185,33 +197,33 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
               <div className="grid grid-cols-3 gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod("DEBIT")}
+                  onClick={() => setPaymentMethod('DEBIT')}
                   className={`min-h-[40px] px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                    paymentMethod === "DEBIT"
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
-                      : "text-slate-400 hover:text-slate-200 border border-transparent"
+                    paymentMethod === 'DEBIT'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 border border-transparent'
                   }`}
                 >
                   <span>💳 Débito</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod("CASH")}
+                  onClick={() => setPaymentMethod('CASH')}
                   className={`min-h-[40px] px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                    paymentMethod === "CASH"
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
-                      : "text-slate-400 hover:text-slate-200 border border-transparent"
+                    paymentMethod === 'CASH'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 border border-transparent'
                   }`}
                 >
                   <span>💵 Efectivo</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod("TRANSFER")}
+                  onClick={() => setPaymentMethod('TRANSFER')}
                   className={`min-h-[40px] px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                    paymentMethod === "TRANSFER"
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
-                      : "text-slate-400 hover:text-slate-200 border border-transparent"
+                    paymentMethod === 'TRANSFER'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 border border-transparent'
                   }`}
                 >
                   <span>📲 Transf.</span>
@@ -222,7 +234,10 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
             {/* Fecha y Notas */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label htmlFor="quick-expense-date" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label
+                  htmlFor="quick-expense-date"
+                  className="block text-xs font-semibold text-slate-300 mb-1.5"
+                >
                   Fecha
                 </label>
                 <input
@@ -230,14 +245,17 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
                   name="date"
                   type="date"
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={e => setDate(e.target.value)}
                   required
                   className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm font-mono focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
                 />
               </div>
 
               <div>
-                <label htmlFor="quick-expense-notes" className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label
+                  htmlFor="quick-expense-notes"
+                  className="block text-xs font-semibold text-slate-300 mb-1.5"
+                >
                   Detalle / Comprobante (opcional)
                 </label>
                 <input
@@ -245,7 +263,7 @@ export const QuickExpenseModal: React.FC<QuickExpenseModalProps> = ({
                   name="notes"
                   type="text"
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={e => setNotes(e.target.value)}
                   placeholder="Ej. Boleta #1029"
                   className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
                 />

@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react"
-import { useObligationsStore } from "../store/obligationsSlice"
-import { formatCLP, toMoney } from "@/shared/types/money"
-import type { Obligation, ObligationType } from "@/shared/types/domain"
-import { ObligationFormModal } from "./ObligationFormModal"
-import { CategorySettingsModal } from "./CategorySettingsModal"
-import { CategoryBadge } from "./CategoryBadge"
+import React, { useState, useMemo } from 'react'
+import { useObligationsStore } from '../store/obligationsSlice'
+import { formatCLP, toMoney } from '@/shared/types/money'
+import type { Obligation, ObligationType } from '@/shared/types/domain'
+import { ObligationFormModal } from './ObligationFormModal'
+import { CategorySettingsModal } from './CategorySettingsModal'
+import { CategoryBadge } from './CategoryBadge'
 
 export const ObligationsList: React.FC = () => {
   const { obligations, installments, softDeleteObligation } = useObligationsStore()
@@ -15,18 +15,18 @@ export const ObligationsList: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   // Filters & View Mode
-  const [searchQuery, setSearchQuery] = useState("")
-  const [typeFilter, setTypeFilter] = useState<"ALL" | ObligationType>("ALL")
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+  const [searchQuery, setSearchQuery] = useState('')
+  const [typeFilter, setTypeFilter] = useState<'ALL' | ObligationType>('ALL')
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
-  const activeObligations = Object.values(obligations).filter((o) => o.status !== "DELETED")
+  const activeObligations = Object.values(obligations).filter(o => o.status !== 'DELETED')
 
   // Filtered List
   const filteredObligations = useMemo(() => {
-    return activeObligations.filter((obl) => {
+    return activeObligations.filter(obl => {
       // Type filter
-      const oblType = obl.type ?? "DEBT"
-      if (typeFilter !== "ALL" && oblType !== typeFilter) {
+      const oblType = obl.type ?? 'DEBT'
+      if (typeFilter !== 'ALL' && oblType !== typeFilter) {
         return false
       }
 
@@ -49,14 +49,17 @@ export const ObligationsList: React.FC = () => {
   }, [activeObligations, typeFilter, searchQuery])
 
   // Summary Metrics
-  const totalMonthlyCommitment = activeObligations.reduce((sum, o) => sum + o.installmentAmountCents, 0)
-  
+  const totalMonthlyCommitment = activeObligations.reduce(
+    (sum, o) => sum + o.installmentAmountCents,
+    0,
+  )
+
   // Real remaining pending debt balance
   const totalDebtRemainingBalance = activeObligations
-    .filter((o) => o.type !== "EXPENSE")
+    .filter(o => o.type !== 'EXPENSE')
     .reduce((sum, o) => {
-      const relInst = Object.values(installments).filter((i) => i.obligationId === o.id)
-      const pendingInst = relInst.filter((i) => i.status === "PENDING")
+      const relInst = Object.values(installments).filter(i => i.obligationId === o.id)
+      const pendingInst = relInst.filter(i => i.status === 'PENDING')
       if (relInst.length > 0) {
         return sum + pendingInst.reduce((acc, inst) => acc + inst.amountCents, 0)
       }
@@ -70,9 +73,9 @@ export const ObligationsList: React.FC = () => {
     if (!obl) return
 
     const p2p = obl.p2pMetadata
-    const person = p2p?.thirdPartyName || obl.subcategory
-    const card = p2p?.cardIssuer ? ` (${p2p.cardIssuer})` : ""
-    const product = p2p?.productDescription || obl.detail
+    const person = p2p?.thirdPartyName ?? obl.subcategory
+    const card = p2p?.cardIssuer ? ` (${p2p.cardIssuer})` : ''
+    const product = p2p?.productDescription ?? obl.detail
     const total = formatCLP(obl.installmentAmountCents)
 
     let msg = `Hola ${person}! Te comparto el detalle de tu cuota mensual por la compra de "${product}"${card}:\n`
@@ -145,7 +148,8 @@ export const ObligationsList: React.FC = () => {
             Total Obligaciones
           </div>
           <div className="text-xl font-bold font-mono text-white mt-1">
-            {activeObligations.length} <span className="text-xs font-normal text-slate-400">registradas</span>
+            {activeObligations.length}{' '}
+            <span className="text-xs font-normal text-slate-400">registradas</span>
           </div>
         </div>
 
@@ -154,7 +158,8 @@ export const ObligationsList: React.FC = () => {
             Compromiso Mensual Total
           </div>
           <div className="text-xl font-bold font-mono text-emerald-300 mt-1">
-            {formatCLP(toMoney(totalMonthlyCommitment))} <span className="text-xs font-normal text-slate-400">/ mes</span>
+            {formatCLP(toMoney(totalMonthlyCommitment))}{' '}
+            <span className="text-xs font-normal text-slate-400">/ mes</span>
           </div>
         </div>
 
@@ -172,17 +177,19 @@ export const ObligationsList: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-slate-900/40 p-3 rounded-2xl border border-slate-800/80">
         {/* Search input */}
         <div className="relative flex-1">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+            🔍
+          </span>
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre, detalle, tarjeta o persona..."
             className="w-full h-10 pl-9 pr-3.5 bg-slate-950/80 border border-slate-800 rounded-xl text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition"
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery("")}
+              onClick={() => setSearchQuery('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
             >
               ✕
@@ -193,41 +200,41 @@ export const ObligationsList: React.FC = () => {
         {/* Type Filter Buttons */}
         <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
           <button
-            onClick={() => setTypeFilter("ALL")}
+            onClick={() => setTypeFilter('ALL')}
             className={`min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border whitespace-nowrap ${
-              typeFilter === "ALL"
-                ? "bg-slate-800 text-white border-slate-700"
-                : "text-slate-400 border-transparent hover:bg-slate-800/50"
+              typeFilter === 'ALL'
+                ? 'bg-slate-800 text-white border-slate-700'
+                : 'text-slate-400 border-transparent hover:bg-slate-800/50'
             }`}
           >
             Todos ({activeObligations.length})
           </button>
           <button
-            onClick={() => setTypeFilter("EXPENSE")}
+            onClick={() => setTypeFilter('EXPENSE')}
             className={`min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border whitespace-nowrap ${
-              typeFilter === "EXPENSE"
-                ? "bg-sky-500/20 text-sky-300 border-sky-500/40"
-                : "text-slate-400 border-transparent hover:bg-slate-800/50"
+              typeFilter === 'EXPENSE'
+                ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                : 'text-slate-400 border-transparent hover:bg-slate-800/50'
             }`}
           >
             💡 Gastos
           </button>
           <button
-            onClick={() => setTypeFilter("DEBT")}
+            onClick={() => setTypeFilter('DEBT')}
             className={`min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border whitespace-nowrap ${
-              typeFilter === "DEBT"
-                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                : "text-slate-400 border-transparent hover:bg-slate-800/50"
+              typeFilter === 'DEBT'
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                : 'text-slate-400 border-transparent hover:bg-slate-800/50'
             }`}
           >
             🏦 Deudas
           </button>
           <button
-            onClick={() => setTypeFilter("P2P_DEBT")}
+            onClick={() => setTypeFilter('P2P_DEBT')}
             className={`min-h-[36px] px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border whitespace-nowrap ${
-              typeFilter === "P2P_DEBT"
-                ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                : "text-slate-400 border-transparent hover:bg-slate-800/50"
+              typeFilter === 'P2P_DEBT'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                : 'text-slate-400 border-transparent hover:bg-slate-800/50'
             }`}
           >
             👥 Terceros
@@ -236,19 +243,23 @@ export const ObligationsList: React.FC = () => {
           {/* View toggle (List vs Grid) */}
           <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-0.5 ml-2 text-xs">
             <button
-              onClick={() => setViewMode("list")}
+              onClick={() => setViewMode('list')}
               title="Vista en Listado / Tabla"
               className={`p-1.5 rounded-lg transition cursor-pointer ${
-                viewMode === "list" ? "bg-slate-800 text-emerald-400" : "text-slate-500 hover:text-slate-300"
+                viewMode === 'list'
+                  ? 'bg-slate-800 text-emerald-400'
+                  : 'text-slate-500 hover:text-slate-300'
               }`}
             >
               📋
             </button>
             <button
-              onClick={() => setViewMode("grid")}
+              onClick={() => setViewMode('grid')}
               title="Vista en Tarjetas"
               className={`p-1.5 rounded-lg transition cursor-pointer ${
-                viewMode === "grid" ? "bg-slate-800 text-emerald-400" : "text-slate-500 hover:text-slate-300"
+                viewMode === 'grid'
+                  ? 'bg-slate-800 text-emerald-400'
+                  : 'text-slate-500 hover:text-slate-300'
               }`}
             >
               🗂️
@@ -262,12 +273,14 @@ export const ObligationsList: React.FC = () => {
         <div className="p-8 sm:p-12 text-center rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-xl">
           <div className="text-4xl mb-3">💳</div>
           <h3 className="text-base sm:text-lg font-medium text-slate-200">
-            {activeObligations.length === 0 ? "No hay obligaciones registradas" : "No hay resultados para tu búsqueda"}
+            {activeObligations.length === 0
+              ? 'No hay obligaciones registradas'
+              : 'No hay resultados para tu búsqueda'}
           </h3>
           <p className="text-xs sm:text-sm text-slate-400 max-w-sm mx-auto mt-1 mb-5">
             {activeObligations.length === 0
-              ? "Ingresa tus gastos recurrentes, créditos bancarios o compras compartidas con terceros para proyectar automáticamente todas sus cuotas."
-              : "Prueba modificando el texto del buscador o cambiando el filtro de tipo de registro."}
+              ? 'Ingresa tus gastos recurrentes, créditos bancarios o compras compartidas con terceros para proyectar automáticamente todas sus cuotas.'
+              : 'Prueba modificando el texto del buscador o cambiando el filtro de tipo de registro.'}
           </p>
           {activeObligations.length === 0 && (
             <button
@@ -278,7 +291,7 @@ export const ObligationsList: React.FC = () => {
             </button>
           )}
         </div>
-      ) : viewMode === "list" ? (
+      ) : viewMode === 'list' ? (
         /* ─── VISTA 1: LISTADO / TABLA COMPACTA Y CLARA (DEFAULT) ─── */
         <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-xl shadow-2xl">
           <table className="w-full text-left text-xs border-collapse">
@@ -306,13 +319,15 @@ export const ObligationsList: React.FC = () => {
             </thead>
 
             <tbody className="divide-y divide-slate-800/60">
-              {filteredObligations.map((obl) => {
-                const relatedInst = Object.values(installments).filter((i) => i.obligationId === obl.id)
-                const paidCount = relatedInst.filter((i) => i.status === "PAID").length
-                const pendingCount = relatedInst.filter((i) => i.status === "PENDING").length
-                const isExpense = obl.type === "EXPENSE"
-                const isP2P = obl.type === "P2P_DEBT"
-                const isLent = obl.p2pMetadata?.role === "LENT_MY_CARD"
+              {filteredObligations.map(obl => {
+                const relatedInst = Object.values(installments).filter(
+                  i => i.obligationId === obl.id,
+                )
+                const paidCount = relatedInst.filter(i => i.status === 'PAID').length
+                const pendingCount = relatedInst.filter(i => i.status === 'PENDING').length
+                const isExpense = obl.type === 'EXPENSE'
+                const isP2P = obl.type === 'P2P_DEBT'
+                const isLent = obl.p2pMetadata?.role === 'LENT_MY_CARD'
 
                 const progressPercent =
                   obl.totalInstallments > 0
@@ -328,11 +343,13 @@ export const ObligationsList: React.FC = () => {
                     <td className="px-4 sm:px-5 py-3.5">
                       <div className="space-y-0.5">
                         <div className="text-sm font-bold text-white flex items-center gap-1.5">
-                          <span>{isP2P ? "👤" : isExpense ? "💡" : "🏦"}</span>
+                          <span>{isP2P ? '👤' : isExpense ? '💡' : '🏦'}</span>
                           <span className="truncate">{obl.subcategory}</span>
                         </div>
                         {obl.detail && (
-                          <div className="text-xs text-slate-300 truncate max-w-xs">{obl.detail}</div>
+                          <div className="text-xs text-slate-300 truncate max-w-xs">
+                            {obl.detail}
+                          </div>
                         )}
                         {isP2P && obl.p2pMetadata?.cardIssuer && (
                           <div className="text-[11px] text-amber-400/90 flex items-center gap-1">
@@ -353,22 +370,22 @@ export const ObligationsList: React.FC = () => {
                             <span
                               className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
                                 obl.isRecurringIndefinite
-                                  ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
+                                  ? 'bg-sky-500/15 text-sky-300 border-sky-500/30'
                                   : obl.totalInstallments === 1
-                                  ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
-                                  : "bg-teal-500/15 text-teal-300 border-teal-500/30"
+                                    ? 'bg-violet-500/15 text-violet-300 border-violet-500/30'
+                                    : 'bg-teal-500/15 text-teal-300 border-teal-500/30'
                               }`}
                             >
                               {obl.isRecurringIndefinite
-                                ? "💡 Gasto Fijo"
+                                ? '💡 Gasto Fijo'
                                 : obl.totalInstallments === 1
-                                ? "⚡ Momentáneo"
-                                : "🗓️ Plazo Fijo"}
+                                  ? '⚡ Momentáneo'
+                                  : '🗓️ Plazo Fijo'}
                             </span>
                           )}
                           {isP2P && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                              {isLent ? "💳 Presté Tarjeta" : "👥 P2P"}
+                              {isLent ? '💳 Presté Tarjeta' : '👥 P2P'}
                             </span>
                           )}
                           {!isExpense && !isP2P && (
@@ -388,11 +405,11 @@ export const ObligationsList: React.FC = () => {
                       <div className="text-[10px] text-slate-400">
                         {isExpense
                           ? obl.isRecurringIndefinite
-                            ? "estimado/mes"
+                            ? 'estimado/mes'
                             : obl.totalInstallments === 1
-                            ? "monto único"
-                            : `${obl.totalInstallments} meses`
-                          : "por cuota"}
+                              ? 'monto único'
+                              : `${obl.totalInstallments} meses`
+                          : 'por cuota'}
                       </div>
                     </td>
 
@@ -401,15 +418,23 @@ export const ObligationsList: React.FC = () => {
                       {isExpense ? (
                         obl.isRecurringIndefinite ? (
                           <div className="space-y-0.5">
-                            <span className="text-xs font-medium text-sky-300">Mensual permanente</span>
-                            <div className="text-[11px] text-slate-400">Día {obl.dueDay} de cada mes</div>
+                            <span className="text-xs font-medium text-sky-300">
+                              Mensual permanente
+                            </span>
+                            <div className="text-[11px] text-slate-400">
+                              Día {obl.dueDay} de cada mes
+                            </div>
                           </div>
                         ) : obl.totalInstallments === 1 ? (
                           <div className="space-y-0.5">
-                            <span className={`text-xs font-medium ${paidCount > 0 ? "text-emerald-300" : "text-violet-300"}`}>
-                              {paidCount > 0 ? "✅ Pagado" : "⚡ Pago puntual"}
+                            <span
+                              className={`text-xs font-medium ${paidCount > 0 ? 'text-emerald-300' : 'text-violet-300'}`}
+                            >
+                              {paidCount > 0 ? '✅ Pagado' : '⚡ Pago puntual'}
                             </span>
-                            <div className="text-[11px] text-slate-400">Día {obl.dueDay} • {obl.startDate.slice(0, 7)}</div>
+                            <div className="text-[11px] text-slate-400">
+                              Día {obl.dueDay} • {obl.startDate.slice(0, 7)}
+                            </div>
                           </div>
                         ) : (
                           <div className="space-y-1 max-w-[140px] mx-auto">
@@ -457,7 +482,9 @@ export const ObligationsList: React.FC = () => {
                             {formatCLP(obl.totalAmountCents)}
                           </div>
                           <div className="text-[10px] text-slate-500">
-                            {isExpense && obl.totalInstallments === 1 ? "Pago puntual" : "Monto total"}
+                            {isExpense && obl.totalInstallments === 1
+                              ? 'Pago puntual'
+                              : 'Monto total'}
                           </div>
                         </div>
                       )}
@@ -473,7 +500,7 @@ export const ObligationsList: React.FC = () => {
                             title="Copiar cobro WhatsApp para el tercero"
                             className="min-h-[32px] px-2 py-1 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
                           >
-                            <span>{copiedId === obl.id ? "✅" : "📲"}</span>
+                            <span>{copiedId === obl.id ? '✅' : '📲'}</span>
                             <span className="hidden sm:inline">WhatsApp</span>
                           </button>
                         )}
@@ -511,12 +538,12 @@ export const ObligationsList: React.FC = () => {
       ) : (
         /* ─── VISTA 2: TARJETAS EN CUADRÍCULA ─── */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredObligations.map((obl) => {
-            const relatedInst = Object.values(installments).filter((i) => i.obligationId === obl.id)
-            const paidCount = relatedInst.filter((i) => i.status === "PAID").length
-            const pendingCount = relatedInst.filter((i) => i.status === "PENDING").length
-            const isExpense = obl.type === "EXPENSE"
-            const isP2P = obl.type === "P2P_DEBT"
+          {filteredObligations.map(obl => {
+            const relatedInst = Object.values(installments).filter(i => i.obligationId === obl.id)
+            const paidCount = relatedInst.filter(i => i.status === 'PAID').length
+            const pendingCount = relatedInst.filter(i => i.status === 'PENDING').length
+            const isExpense = obl.type === 'EXPENSE'
+            const isP2P = obl.type === 'P2P_DEBT'
 
             return (
               <div
@@ -531,22 +558,24 @@ export const ObligationsList: React.FC = () => {
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
                             obl.isRecurringIndefinite
-                              ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
+                              ? 'bg-sky-500/15 text-sky-300 border-sky-500/30'
                               : obl.totalInstallments === 1
-                              ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
-                              : "bg-teal-500/15 text-teal-300 border-teal-500/30"
+                                ? 'bg-violet-500/15 text-violet-300 border-violet-500/30'
+                                : 'bg-teal-500/15 text-teal-300 border-teal-500/30'
                           }`}
                         >
                           {obl.isRecurringIndefinite
-                            ? "💡 Gasto Fijo"
+                            ? '💡 Gasto Fijo'
                             : obl.totalInstallments === 1
-                            ? "⚡ Momentáneo"
-                            : "🗓️ Plazo Fijo"}
+                              ? '⚡ Momentáneo'
+                              : '🗓️ Plazo Fijo'}
                         </span>
                       )}
                       {isP2P && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                          {obl.p2pMetadata?.role === "LENT_MY_CARD" ? "💳 Tarjeta Prestada" : "👥 P2P"}
+                          {obl.p2pMetadata?.role === 'LENT_MY_CARD'
+                            ? '💳 Tarjeta Prestada'
+                            : '👥 P2P'}
                         </span>
                       )}
                     </div>
@@ -580,7 +609,9 @@ export const ObligationsList: React.FC = () => {
                     <h4 className="font-bold text-white text-base flex items-center gap-1.5">
                       {obl.subcategory}
                     </h4>
-                    {obl.detail && <p className="text-xs text-slate-400 line-clamp-1">{obl.detail}</p>}
+                    {obl.detail && (
+                      <p className="text-xs text-slate-400 line-clamp-1">{obl.detail}</p>
+                    )}
                     {isP2P && obl.p2pMetadata?.cardIssuer && (
                       <p className="text-[11px] text-amber-300/80 mt-0.5">
                         💳 {obl.p2pMetadata.cardIssuer}
@@ -594,53 +625,59 @@ export const ObligationsList: React.FC = () => {
                     <span>
                       {isExpense
                         ? obl.isRecurringIndefinite
-                          ? "Monto mensual estimado:"
+                          ? 'Monto mensual estimado:'
                           : obl.totalInstallments === 1
-                          ? "Monto puntual:"
-                          : "Monto mensual:"
-                        : "Monto por cuota:"}
+                            ? 'Monto puntual:'
+                            : 'Monto mensual:'
+                        : 'Monto por cuota:'}
                     </span>
-                    <span className="font-semibold text-white">{formatCLP(obl.installmentAmountCents)}</span>
+                    <span className="font-semibold text-white">
+                      {formatCLP(obl.installmentAmountCents)}
+                    </span>
                   </div>
 
                   {(!isExpense || !obl.isRecurringIndefinite) && (
                     <div className="flex justify-between text-xs text-slate-400">
                       <span>Total compromiso:</span>
-                      <span className="font-medium text-slate-300">{formatCLP(obl.totalAmountCents)}</span>
+                      <span className="font-medium text-slate-300">
+                        {formatCLP(obl.totalAmountCents)}
+                      </span>
                     </div>
                   )}
 
                   <div className="flex justify-between text-xs text-slate-400">
-                    <span>{isExpense ? "Frecuencia / Vencimiento:" : "Progreso cuotas:"}</span>
+                    <span>{isExpense ? 'Frecuencia / Vencimiento:' : 'Progreso cuotas:'}</span>
                     <span
                       className={`font-medium ${
                         isExpense
                           ? obl.isRecurringIndefinite
-                            ? "text-sky-300"
+                            ? 'text-sky-300'
                             : obl.totalInstallments === 1
-                            ? "text-violet-300"
-                            : "text-teal-300"
-                          : "text-emerald-400"
+                              ? 'text-violet-300'
+                              : 'text-teal-300'
+                          : 'text-emerald-400'
                       }`}
                     >
                       {isExpense
                         ? obl.isRecurringIndefinite
                           ? `Mensual (Día ${obl.dueDay})`
                           : obl.totalInstallments === 1
-                          ? `${paidCount > 0 ? "Pagado" : "Pago puntual"} (Día ${obl.dueDay})`
-                          : `${paidCount} de ${obl.totalInstallments} meses`
+                            ? `${paidCount > 0 ? 'Pagado' : 'Pago puntual'} (Día ${obl.dueDay})`
+                            : `${paidCount} de ${obl.totalInstallments} meses`
                         : `${paidCount} pagadas / ${pendingCount} pendientes (${obl.totalInstallments} total)`}
                     </span>
                   </div>
 
-                  {isP2P && obl.p2pMetadata?.role === "LENT_MY_CARD" && (
+                  {isP2P && obl.p2pMetadata?.role === 'LENT_MY_CARD' && (
                     <div className="pt-2">
                       <button
                         type="button"
                         onClick={() => handleCopyWhatsApp(obl.id)}
                         className="w-full min-h-[36px] px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition"
                       >
-                        <span>{copiedId === obl.id ? "✅ ¡Copiado!" : "📲 Copiar Cobro WhatsApp"}</span>
+                        <span>
+                          {copiedId === obl.id ? '✅ ¡Copiado!' : '📲 Copiar Cobro WhatsApp'}
+                        </span>
                       </button>
                     </div>
                   )}

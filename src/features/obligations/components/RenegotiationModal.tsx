@@ -1,8 +1,8 @@
-import React, { useState } from "react"
-import type { Obligation } from "@/shared/types/domain"
-import { usePaymentsStore } from "../store/paymentsSlice"
-import { toMoney } from "@/shared/types/money"
-import { getLocalISODate } from "@/shared/utils/date"
+import React, { useState } from 'react'
+import type { Obligation } from '@/shared/types/domain'
+import { usePaymentsStore } from '../store/paymentsSlice'
+import { toMoney } from '@/shared/types/money'
+import { getLocalISODate } from '@/shared/utils/date'
 
 interface RenegotiationModalProps {
   oldObligation: Obligation
@@ -62,7 +62,9 @@ export const RenegotiationModal: React.FC<RenegotiationModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md">
       <div className="w-full sm:max-w-lg max-h-[90vh] sm:max-h-[85vh] rounded-t-2xl sm:rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl flex flex-col">
         <div className="flex justify-between items-center px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-800 flex-shrink-0">
-          <h3 className="text-base sm:text-lg font-bold text-white">Refinanciar / Repactar Deuda</h3>
+          <h3 className="text-base sm:text-lg font-bold text-white">
+            Refinanciar / Repactar Deuda
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -78,16 +80,24 @@ export const RenegotiationModal: React.FC<RenegotiationModalProps> = ({
             <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 space-y-1">
               <div className="font-semibold">⚠️ Congelamiento de estructura anterior:</div>
               <p>
-                Las cuotas pendientes a partir de la <strong>#{fromInstallmentNumber}</strong> quedarán archivadas como <strong>RENEGOCIADAS</strong> manteniendo tu historial intacto. Se creará un nuevo plan de cuotas activo.
+                Las cuotas pendientes a partir de la <strong>#{fromInstallmentNumber}</strong>{' '}
+                quedarán archivadas como <strong>RENEGOCIADAS</strong> manteniendo tu historial
+                intacto. Se creará un nuevo plan de cuotas activo.
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Nombre Nuevo Plan</label>
+              <label
+                htmlFor="renegotiate-plan-name"
+                className="block text-xs font-medium text-slate-300 mb-1"
+              >
+                Nombre Nuevo Plan
+              </label>
               <input
+                id="renegotiate-plan-name"
                 type="text"
                 value={subcategory}
-                onChange={(e) => setSubcategory(e.target.value)}
+                onChange={e => setSubcategory(e.target.value)}
                 required
                 className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
               />
@@ -95,24 +105,36 @@ export const RenegotiationModal: React.FC<RenegotiationModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Nuevo Total (CLP)</label>
+                <label
+                  htmlFor="renegotiate-total-amount"
+                  className="block text-xs font-medium text-slate-300 mb-1"
+                >
+                  Nuevo Total (CLP)
+                </label>
                 <input
+                  id="renegotiate-total-amount"
                   type="number"
                   min={0}
-                  value={totalAmount || ""}
-                  onChange={(e) => handleTotalChange(Number(e.target.value))}
+                  value={totalAmount || ''}
+                  onChange={e => handleTotalChange(Number(e.target.value))}
                   required
                   className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Nueva Cuota (CLP)</label>
+                <label
+                  htmlFor="renegotiate-installment-amount"
+                  className="block text-xs font-medium text-slate-300 mb-1"
+                >
+                  Nueva Cuota (CLP)
+                </label>
                 <input
+                  id="renegotiate-installment-amount"
                   type="number"
                   min={0}
-                  value={installmentAmount || ""}
-                  onChange={(e) => setInstallmentAmount(Number(e.target.value))}
+                  value={installmentAmount || ''}
+                  onChange={e => setInstallmentAmount(Number(e.target.value))}
                   required
                   className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                 />
@@ -121,37 +143,55 @@ export const RenegotiationModal: React.FC<RenegotiationModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Cant. Cuotas</label>
+                <label
+                  htmlFor="renegotiate-total-installments"
+                  className="block text-xs font-medium text-slate-300 mb-1"
+                >
+                  Cant. Cuotas
+                </label>
                 <input
+                  id="renegotiate-total-installments"
                   type="number"
                   min={1}
                   max={600}
                   value={totalInstallments}
-                  onChange={(e) => handleInstallmentsChange(Number(e.target.value))}
+                  onChange={e => handleInstallmentsChange(Number(e.target.value))}
                   required
                   className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Día de Pago</label>
+                <label
+                  htmlFor="renegotiate-due-day"
+                  className="block text-xs font-medium text-slate-300 mb-1"
+                >
+                  Día de Pago
+                </label>
                 <input
+                  id="renegotiate-due-day"
                   type="number"
                   min={1}
                   max={31}
                   value={dueDay}
-                  onChange={(e) => setDueDay(Number(e.target.value))}
+                  onChange={e => setDueDay(Number(e.target.value))}
                   required
                   className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Fecha Inicio</label>
+                <label
+                  htmlFor="renegotiate-start-date"
+                  className="block text-xs font-medium text-slate-300 mb-1"
+                >
+                  Fecha Inicio
+                </label>
                 <input
+                  id="renegotiate-start-date"
                   type="date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={e => setStartDate(e.target.value)}
                   required
                   className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                 />
