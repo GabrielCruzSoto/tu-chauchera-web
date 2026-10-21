@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useMemo } from "react"
-import type { ObligationType, P2PRole, Period } from "@/shared/types/domain"
-import { formatCLP, toMoney } from "@/shared/types/money"
-import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
-import { useCreditCardStore } from "@/features/credit-cards/store/creditCardSlice"
-import { getMatrixStatusConfig, type MatrixCellStatus } from "../utils/matrixStatusStyles"
+import React, { useEffect, useState, useMemo } from 'react'
+import type { ObligationType, P2PRole, Period } from '@/shared/types/domain'
+import { formatCLP, toMoney } from '@/shared/types/money'
+import { useObligationsStore } from '@/features/obligations/store/obligationsSlice'
+import { useCreditCardStore } from '@/features/credit-cards/store/creditCardSlice'
+import { getMatrixStatusConfig, type MatrixCellStatus } from '../utils/matrixStatusStyles'
 
 export interface MatrixItemDetailPayload {
   id: string
@@ -45,12 +45,12 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
   useEffect(() => {
     if (!isOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         onClose()
       }
     }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
   // Resolve obligation details if present
@@ -66,7 +66,9 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
     }
     // Fallback search by subcategory name
     const found = Object.values(obligations).find(
-      (o) => o.status !== "DELETED" && o.subcategory.trim().toLowerCase() === item.name.trim().toLowerCase()
+      o =>
+        o.status !== 'DELETED' &&
+        o.subcategory.trim().toLowerCase() === item.name.trim().toLowerCase(),
     )
     return found ?? null
   }, [item, obligations])
@@ -75,35 +77,37 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
   const relatedInstallments = useMemo(() => {
     if (!resolvedObligation) return []
     return Object.values(installments)
-      .filter((i) => i.obligationId === resolvedObligation.id && i.status !== "DELETED")
-      .sort((a, b) => a.installmentNumber - b.installmentNumber || a.dueDate.localeCompare(b.dueDate))
+      .filter(i => i.obligationId === resolvedObligation.id && i.status !== 'DELETED')
+      .sort(
+        (a, b) => a.installmentNumber - b.installmentNumber || a.dueDate.localeCompare(b.dueDate),
+      )
   }, [resolvedObligation, installments])
 
   // Calculate installment metrics
   const paidInstallmentsCount = useMemo(() => {
-    return relatedInstallments.filter((i) => i.status === "PAID").length
+    return relatedInstallments.filter(i => i.status === 'PAID').length
   }, [relatedInstallments])
 
   const pendingInstallmentsCount = useMemo(() => {
-    return relatedInstallments.filter((i) => i.status === "PENDING").length
+    return relatedInstallments.filter(i => i.status === 'PENDING').length
   }, [relatedInstallments])
 
   const totalPaidCents = useMemo(() => {
     return relatedInstallments
-      .filter((i) => i.status === "PAID")
+      .filter(i => i.status === 'PAID')
       .reduce((sum, i) => sum + i.amountCents, 0)
   }, [relatedInstallments])
 
   const remainingBalanceCents = useMemo(() => {
     if (relatedInstallments.length > 0) {
       return relatedInstallments
-        .filter((i) => i.status === "PENDING")
+        .filter(i => i.status === 'PENDING')
         .reduce((sum, i) => sum + i.amountCents, 0)
     }
     if (resolvedObligation) {
       const remainingCount = Math.max(
         0,
-        resolvedObligation.totalInstallments - (resolvedObligation.currentInstallment - 1)
+        resolvedObligation.totalInstallments - (resolvedObligation.currentInstallment - 1),
       )
       return remainingCount * resolvedObligation.installmentAmountCents
     }
@@ -133,56 +137,56 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
   if (!isOpen || !item) return null
 
   // Role labels and badges
-  const role = item.p2pRole || resolvedObligation?.p2pMetadata?.role
-  const isP2P = item.type === "P2P_DEBT" || resolvedObligation?.type === "P2P_DEBT" || !!role
-  const isExpense = item.type === "EXPENSE" || resolvedObligation?.type === "EXPENSE"
+  const role = item.p2pRole ?? resolvedObligation?.p2pMetadata?.role
+  const isP2P = item.type === 'P2P_DEBT' || resolvedObligation?.type === 'P2P_DEBT' || !!role
+  const isExpense = item.type === 'EXPENSE' || resolvedObligation?.type === 'EXPENSE'
 
   const roleBadge = () => {
-    if (role === "LENT_MY_CARD") {
+    if (role === 'LENT_MY_CARD') {
       return {
-        label: "💳 Presté mi tarjeta (Por cobrar)",
-        classes: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+        label: '💳 Presté mi tarjeta (Por cobrar)',
+        classes: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
       }
     }
-    if (role === "USED_THEIR_CARD") {
+    if (role === 'USED_THEIR_CARD') {
       return {
-        label: "🛍️ Usé tarjeta ajena (Por pagar)",
-        classes: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+        label: '🛍️ Usé tarjeta ajena (Por pagar)',
+        classes: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
       }
     }
-    if (role === "DIRECT_LOAN_GIVEN") {
+    if (role === 'DIRECT_LOAN_GIVEN') {
       return {
-        label: "🤝 Préstamo otorgado (Por cobrar)",
-        classes: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+        label: '🤝 Préstamo otorgado (Por cobrar)',
+        classes: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
       }
     }
-    if (role === "DIRECT_LOAN_TAKEN") {
+    if (role === 'DIRECT_LOAN_TAKEN') {
       return {
-        label: "🤝 Préstamo recibido (Por pagar)",
-        classes: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+        label: '🤝 Préstamo recibido (Por pagar)',
+        classes: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
       }
     }
     if (isP2P) {
       return {
-        label: "👥 Deuda con terceros",
-        classes: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+        label: '👥 Deuda con terceros',
+        classes: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
       }
     }
     if (isExpense) {
       return {
-        label: "💡 Gasto Recurrente",
-        classes: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+        label: '💡 Gasto Recurrente',
+        classes: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
       }
     }
     if (resolvedCardAccount) {
       return {
-        label: "💳 Tarjeta de Crédito",
-        classes: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+        label: '💳 Tarjeta de Crédito',
+        classes: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
       }
     }
     return {
-      label: "🏦 Crédito / Deuda",
-      classes: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+      label: '🏦 Crédito / Deuda',
+      classes: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
     }
   }
 
@@ -191,19 +195,13 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
   // Copy WhatsApp summary message
   const handleCopyWhatsApp = () => {
     const person =
-      item.thirdPartyName ||
-      resolvedObligation?.p2pMetadata?.thirdPartyName ||
-      item.name
-    const card =
-      item.cardIssuer || resolvedObligation?.p2pMetadata?.cardIssuer
-        ? ` (${item.cardIssuer || resolvedObligation?.p2pMetadata?.cardIssuer})`
-        : ""
+      item.thirdPartyName ?? resolvedObligation?.p2pMetadata?.thirdPartyName ?? item.name
+    const cardIssuer = item.cardIssuer ?? resolvedObligation?.p2pMetadata?.cardIssuer
+    const card = cardIssuer ? ` (${cardIssuer})` : ''
     const product =
-      item.productDescription ||
-      resolvedObligation?.p2pMetadata?.productDescription ||
-      item.detail ||
-      resolvedObligation?.detail ||
-      item.name
+      item.productDescription ??
+      resolvedObligation?.p2pMetadata?.productDescription ??
+      ((item.detail ?? '') || (resolvedObligation?.detail ?? '') || item.name)
 
     const monthlyAmount = resolvedObligation?.installmentAmountCents
       ? formatCLP(resolvedObligation.installmentAmountCents)
@@ -211,11 +209,11 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
 
     const dueDayText = resolvedObligation?.dueDay
       ? `\n• Día acordado de pago: ${resolvedObligation.dueDay} de cada mes.`
-      : ""
+      : ''
 
     const cuotaProgress = resolvedObligation?.totalInstallments
       ? `\n• Cuota: ${resolvedObligation.currentInstallment} de ${resolvedObligation.totalInstallments}`
-      : ""
+      : ''
 
     let msg = `Hola ${person}! Te comparto el detalle de tu compromiso por "${product}"${card}:\n`
     msg += `• Monto mensual: ${monthlyAmount}`
@@ -232,10 +230,9 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
   }
 
   const detailText =
-    item.detail ||
-    resolvedObligation?.detail ||
-    item.productDescription ||
-    resolvedObligation?.p2pMetadata?.productDescription
+    (item.detail ?? '') ||
+    (resolvedObligation?.detail ?? '') ||
+    (item.productDescription ?? resolvedObligation?.p2pMetadata?.productDescription)
 
   return (
     <div
@@ -243,7 +240,7 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
       aria-modal="true"
       aria-labelledby="matrix-item-modal-title"
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md transition-opacity"
-      onClick={(e) => {
+      onClick={e => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
@@ -256,7 +253,9 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
               <span className="font-semibold text-slate-300 uppercase tracking-wider text-[11px]">
                 {item.categoryName}
               </span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badge.classes}`}>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badge.classes}`}
+              >
                 {badge.label}
               </span>
             </div>
@@ -267,9 +266,7 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
               {item.name}
             </h2>
             {detailText && detailText !== item.name && (
-              <p className="text-xs text-slate-400 line-clamp-2">
-                {detailText}
-              </p>
+              <p className="text-xs text-slate-400 line-clamp-2">{detailText}</p>
             )}
           </div>
 
@@ -309,65 +306,82 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
                 {resolvedObligation
                   ? formatCLP(resolvedObligation.installmentAmountCents)
                   : resolvedPurchase
-                  ? formatCLP(toMoney(Math.round(resolvedPurchase.totalAmountCents / (resolvedPurchase.totalInstallments || 1))))
-                  : formatCLP(toMoney(Math.round(item.totalInRange / (item.periods.length || 1))))}
+                    ? formatCLP(
+                        toMoney(
+                          Math.round(
+                            resolvedPurchase.totalAmountCents /
+                              (resolvedPurchase.totalInstallments || 1),
+                          ),
+                        ),
+                      )
+                    : formatCLP(
+                        toMoney(Math.round(item.totalInRange / (item.periods.length || 1))),
+                      )}
               </span>
               <span className="text-[10px] text-slate-500 mt-0.5">
                 {resolvedObligation?.dueDay
                   ? `Vence día ${resolvedObligation.dueDay} de cada mes`
-                  : "Por período activo"}
+                  : 'Por período activo'}
               </span>
             </div>
 
             {/* Total Debt / Remaining Balance */}
             <div className="col-span-2 sm:col-span-1 p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 flex flex-col justify-between">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                {isExpense ? "Tipo de Compromiso" : "Saldo Restante Total"}
+                {isExpense ? 'Tipo de Compromiso' : 'Saldo Restante Total'}
               </span>
               <span className="font-mono text-base sm:text-lg font-bold text-amber-300 mt-1">
                 {isExpense
-                  ? "Gasto Fijo / Mensual"
+                  ? 'Gasto Fijo / Mensual'
                   : remainingBalanceCents > 0
-                  ? formatCLP(toMoney(remainingBalanceCents))
-                  : resolvedObligation?.totalAmountCents
-                  ? formatCLP(resolvedObligation.totalAmountCents)
-                  : "Al día"}
+                    ? formatCLP(toMoney(remainingBalanceCents))
+                    : resolvedObligation?.totalAmountCents
+                      ? formatCLP(resolvedObligation.totalAmountCents)
+                      : 'Al día'}
               </span>
               <span className="text-[10px] text-slate-500 mt-0.5">
                 {resolvedObligation?.isRecurringIndefinite
-                  ? "Recurrente indefinido"
+                  ? 'Recurrente indefinido'
                   : resolvedObligation
-                  ? `${paidInstallmentsCount} pagadas / ${resolvedObligation.totalInstallments} totales`
-                  : "Conforme a programación"}
+                    ? `${paidInstallmentsCount} pagadas / ${resolvedObligation.totalInstallments} totales`
+                    : 'Conforme a programación'}
               </span>
             </div>
           </div>
 
           {/* Progress Bar (if structured installments) */}
-          {resolvedObligation && !resolvedObligation.isRecurringIndefinite && resolvedObligation.totalInstallments > 1 && (
-            <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/60 space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-medium text-slate-300">
-                  Progreso de Cuotas: Cuota {resolvedObligation.currentInstallment} de {resolvedObligation.totalInstallments}
-                </span>
-                <span className="font-mono text-emerald-400 font-semibold">
-                  {Math.round((paidInstallmentsCount / resolvedObligation.totalInstallments) * 100)}% pagado
-                </span>
+          {resolvedObligation &&
+            !resolvedObligation.isRecurringIndefinite &&
+            resolvedObligation.totalInstallments > 1 && (
+              <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/60 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-medium text-slate-300">
+                    Progreso de Cuotas: Cuota {resolvedObligation.currentInstallment} de{' '}
+                    {resolvedObligation.totalInstallments}
+                  </span>
+                  <span className="font-mono text-emerald-400 font-semibold">
+                    {Math.round(
+                      (paidInstallmentsCount / resolvedObligation.totalInstallments) * 100,
+                    )}
+                    % pagado
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.min(100, Math.round((paidInstallmentsCount / resolvedObligation.totalInstallments) * 100))}%`,
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-slate-400">
+                  <span>
+                    {paidInstallmentsCount} cuotas saldadas ({formatCLP(toMoney(totalPaidCents))})
+                  </span>
+                  <span>{pendingInstallmentsCount} cuotas pendientes</span>
+                </div>
               </div>
-              <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                <div
-                  className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
-                  style={{
-                    width: `${Math.min(100, Math.round((paidInstallmentsCount / resolvedObligation.totalInstallments) * 100))}%`,
-                  }}
-                />
-              </div>
-              <div className="flex justify-between items-center text-[10px] text-slate-400">
-                <span>{paidInstallmentsCount} cuotas saldadas ({formatCLP(toMoney(totalPaidCents))})</span>
-                <span>{pendingInstallmentsCount} cuotas pendientes</span>
-              </div>
-            </div>
-          )}
+            )}
 
           {/* Detailed Specifications Box */}
           <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
@@ -379,32 +393,41 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {item.thirdPartyName && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Persona / Tercero:</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                    Persona / Tercero:
+                  </span>
                   <span className="font-medium text-white">{item.thirdPartyName}</span>
                 </div>
               )}
 
-              {(item.productDescription || resolvedObligation?.p2pMetadata?.productDescription) && (
+              {(item.productDescription ?? resolvedObligation?.p2pMetadata?.productDescription) && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Producto / Concepto:</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                    Producto / Concepto:
+                  </span>
                   <span className="font-medium text-slate-200">
-                    🛍️ {item.productDescription || resolvedObligation?.p2pMetadata?.productDescription}
+                    🛍️{' '}
+                    {item.productDescription ?? resolvedObligation?.p2pMetadata?.productDescription}
                   </span>
                 </div>
               )}
 
-              {(item.cardIssuer || resolvedObligation?.p2pMetadata?.cardIssuer) && (
+              {(item.cardIssuer ?? resolvedObligation?.p2pMetadata?.cardIssuer) && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Medio de Pago / Tarjeta:</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                    Medio de Pago / Tarjeta:
+                  </span>
                   <span className="font-medium text-amber-300">
-                    💳 {item.cardIssuer || resolvedObligation?.p2pMetadata?.cardIssuer}
+                    💳 {item.cardIssuer ?? resolvedObligation?.p2pMetadata?.cardIssuer}
                   </span>
                 </div>
               )}
 
               {resolvedCardAccount && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Cuenta Bancaria:</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                    Cuenta Bancaria:
+                  </span>
                   <span className="font-medium text-white">
                     {resolvedCardAccount.institution} - {resolvedCardAccount.accountName}
                   </span>
@@ -413,21 +436,29 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
 
               {resolvedObligation?.startDate && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Fecha de Inicio:</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                    Fecha de Inicio:
+                  </span>
                   <span className="font-medium text-slate-200">{resolvedObligation.startDate}</span>
                 </div>
               )}
 
               {resolvedObligation?.dueDay && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Día de Vencimiento:</span>
-                  <span className="font-medium text-slate-200">Día {resolvedObligation.dueDay} de cada mes</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                    Día de Vencimiento:
+                  </span>
+                  <span className="font-medium text-slate-200">
+                    Día {resolvedObligation.dueDay} de cada mes
+                  </span>
                 </div>
               )}
 
               {resolvedObligation?.totalAmountCents && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Monto Total Contratado:</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                    Monto Total Contratado:
+                  </span>
                   <span className="font-mono font-medium text-slate-200">
                     {formatCLP(resolvedObligation.totalAmountCents)}
                   </span>
@@ -436,11 +467,15 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
 
               {resolvedObligation?.p2pMetadata?.surcharges?.includeMaintenanceFee && (
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold">Recargo Mantención:</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                    Recargo Mantención:
+                  </span>
                   <span className="font-medium text-amber-300">
                     {resolvedObligation.p2pMetadata.surcharges.maintenanceFeeAmountCents
-                      ? formatCLP(resolvedObligation.p2pMetadata.surcharges.maintenanceFeeAmountCents)
-                      : "Incluido"}
+                      ? formatCLP(
+                          resolvedObligation.p2pMetadata.surcharges.maintenanceFeeAmountCents,
+                        )
+                      : 'Incluido'}
                   </span>
                 </div>
               )}
@@ -460,7 +495,7 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {item.periods.map((period) => {
+              {item.periods.map(period => {
                 const amount = item.cells[period] ?? 0
                 const status = item.cellStatuses?.[period]
                 const statusConfig = getMatrixStatusConfig(status)
@@ -469,7 +504,9 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
                   <div
                     key={period}
                     className={`p-2.5 rounded-xl border flex flex-col justify-between ${
-                      amount > 0 ? `${statusConfig.badgeClass} bg-slate-950/70` : "bg-slate-950/60 border-slate-800/70"
+                      amount > 0
+                        ? `${statusConfig.badgeClass} bg-slate-950/70`
+                        : 'bg-slate-950/60 border-slate-800/70'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -487,10 +524,10 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
                     </div>
                     <span
                       className={`font-mono text-xs font-bold mt-1.5 ${
-                        amount > 0 ? statusConfig.textColor : "text-slate-500"
+                        amount > 0 ? statusConfig.textColor : 'text-slate-500'
                       }`}
                     >
-                      {amount > 0 ? formatCLP(toMoney(amount)) : "—"}
+                      {amount > 0 ? formatCLP(toMoney(amount)) : '—'}
                     </span>
                   </div>
                 )
@@ -519,8 +556,8 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/40">
-                    {relatedInstallments.map((inst) => {
-                      const isPaid = inst.status === "PAID"
+                    {relatedInstallments.map(inst => {
+                      const isPaid = inst.status === 'PAID'
                       return (
                         <tr key={inst.id} className="hover:bg-slate-900/50 transition">
                           <td className="px-3 py-2 font-medium text-slate-300">
@@ -536,11 +573,11 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
                             <span
                               className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
                                 isPaid
-                                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                                  : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                               }`}
                             >
-                              {isPaid ? "Pagada" : "Pendiente"}
+                              {isPaid ? 'Pagada' : 'Pendiente'}
                             </span>
                           </td>
                         </tr>
@@ -563,7 +600,7 @@ export const MatrixItemDetailModal: React.FC<MatrixItemDetailModalProps> = ({
                 className="min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center gap-1.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition"
               >
                 <span>💬</span>
-                <span>{copiedWhatsApp ? "¡Copiado a portapapeles!" : "Copiar WhatsApp"}</span>
+                <span>{copiedWhatsApp ? '¡Copiado a portapapeles!' : 'Copiar WhatsApp'}</span>
               </button>
             )}
           </div>

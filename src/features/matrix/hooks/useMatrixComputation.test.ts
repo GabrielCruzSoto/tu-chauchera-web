@@ -1,167 +1,179 @@
-import { describe, it, expect } from "vitest"
-import { computeFinancialMatrix, generatePeriodsRange } from "./useMatrixComputation"
-import { toMoney } from "@/shared/types/money"
-import type { Category, Obligation, Installment } from "@/shared/types/domain"
+import { describe, it, expect } from 'vitest'
+import { computeFinancialMatrix, generatePeriodsRange } from './useMatrixComputation'
+import { toMoney } from '@/shared/types/money'
+import type { Category, Obligation, Installment } from '@/shared/types/domain'
 
-describe("Financial Matrix Computation", () => {
-  it("generates correct range of periods", () => {
-    const baseDate = new Date("2024-01-15T00:00:00Z")
+describe('Financial Matrix Computation', () => {
+  it('generates correct range of periods', () => {
+    const baseDate = new Date('2024-01-15T00:00:00Z')
     const periods = generatePeriodsRange(baseDate, 3)
-    expect(periods).toEqual(["2024-01", "2024-02", "2024-03"])
+    expect(periods).toEqual(['2024-01', '2024-02', '2024-03'])
   })
 
-  it("aggregates categories by period correctly with totals", () => {
+  it('aggregates categories by period correctly with totals', () => {
     const categories: Record<string, Category> = {
-      "cat-banco": { id: "cat-banco", name: "Bancos", color: "emerald", createdAt: "", updatedAt: "" },
-      "cat-servicios": { id: "cat-servicios", name: "Servicios", color: "sky", createdAt: "", updatedAt: "" },
+      'cat-banco': {
+        id: 'cat-banco',
+        name: 'Bancos',
+        color: 'emerald',
+        createdAt: '',
+        updatedAt: '',
+      },
+      'cat-servicios': {
+        id: 'cat-servicios',
+        name: 'Servicios',
+        color: 'sky',
+        createdAt: '',
+        updatedAt: '',
+      },
     }
 
     const obligations: Record<string, Obligation> = {
-      "obl-1": {
-        id: "obl-1",
-        categoryId: "cat-banco",
-        subcategory: "Crédito Hipotecario",
-        detail: "",
+      'obl-1': {
+        id: 'obl-1',
+        categoryId: 'cat-banco',
+        subcategory: 'Crédito Hipotecario',
+        detail: '',
         totalAmountCents: toMoney(1000000),
         totalInstallments: 10,
         currentInstallment: 1,
         installmentAmountCents: toMoney(100000),
-        startDate: "2024-01-10",
+        startDate: '2024-01-10',
         dueDay: 10,
-        status: "PENDING",
-        createdAt: "",
-        updatedAt: "",
+        status: 'PENDING',
+        createdAt: '',
+        updatedAt: '',
       },
-      "obl-2": {
-        id: "obl-2",
-        categoryId: "cat-servicios",
-        subcategory: "Luz",
-        detail: "",
+      'obl-2': {
+        id: 'obl-2',
+        categoryId: 'cat-servicios',
+        subcategory: 'Luz',
+        detail: '',
         totalAmountCents: toMoney(60000),
         totalInstallments: 2,
         currentInstallment: 1,
         installmentAmountCents: toMoney(30000),
-        startDate: "2024-01-20",
+        startDate: '2024-01-20',
         dueDay: 20,
-        status: "PENDING",
-        createdAt: "",
-        updatedAt: "",
+        status: 'PENDING',
+        createdAt: '',
+        updatedAt: '',
       },
     }
 
     const installments: Record<string, Installment> = {
-      "i-1": {
-        id: "i-1",
-        obligationId: "obl-1",
+      'i-1': {
+        id: 'i-1',
+        obligationId: 'obl-1',
         installmentNumber: 1,
-        dueDate: "2024-01-10",
+        dueDate: '2024-01-10',
         amountCents: toMoney(100000),
-        status: "PENDING",
+        status: 'PENDING',
       },
-      "i-2": {
-        id: "i-2",
-        obligationId: "obl-1",
+      'i-2': {
+        id: 'i-2',
+        obligationId: 'obl-1',
         installmentNumber: 2,
-        dueDate: "2024-02-10",
+        dueDate: '2024-02-10',
         amountCents: toMoney(100000),
-        status: "PENDING",
+        status: 'PENDING',
       },
-      "i-3": {
-        id: "i-3",
-        obligationId: "obl-2",
+      'i-3': {
+        id: 'i-3',
+        obligationId: 'obl-2',
         installmentNumber: 1,
-        dueDate: "2024-01-20",
+        dueDate: '2024-01-20',
         amountCents: toMoney(30000),
-        status: "PENDING",
+        status: 'PENDING',
       },
     }
 
-    const periods = ["2024-01", "2024-02"]
+    const periods = ['2024-01', '2024-02']
     const matrix = computeFinancialMatrix(categories, obligations, installments, periods)
 
     // Cell values
-    expect(matrix.cells["cat-banco"]?.["2024-01"]).toBe(100000)
-    expect(matrix.cells["cat-banco"]?.["2024-02"]).toBe(100000)
-    expect(matrix.cells["cat-servicios"]?.["2024-01"]).toBe(30000)
-    expect(matrix.cells["cat-servicios"]?.["2024-02"]).toBe(0)
+    expect(matrix.cells['cat-banco']?.['2024-01']).toBe(100000)
+    expect(matrix.cells['cat-banco']?.['2024-02']).toBe(100000)
+    expect(matrix.cells['cat-servicios']?.['2024-01']).toBe(30000)
+    expect(matrix.cells['cat-servicios']?.['2024-02']).toBe(0)
 
     // Column totals
-    expect(matrix.columnTotals["2024-01"]).toBe(130000)
-    expect(matrix.columnTotals["2024-02"]).toBe(100000)
+    expect(matrix.columnTotals['2024-01']).toBe(130000)
+    expect(matrix.columnTotals['2024-02']).toBe(100000)
 
     // Row totals
-    expect(matrix.rowTotals["cat-banco"]).toBe(200000)
-    expect(matrix.rowTotals["cat-servicios"]).toBe(30000)
+    expect(matrix.rowTotals['cat-banco']).toBe(200000)
+    expect(matrix.rowTotals['cat-servicios']).toBe(30000)
 
     // Subcategories breakdown
-    expect(matrix.subcategoriesByCategory["cat-banco"]).toHaveLength(1)
-    expect(matrix.subcategoriesByCategory["cat-banco"]![0]!.name).toBe("Crédito Hipotecario")
-    expect(matrix.subcategoriesByCategory["cat-banco"]![0]!.cells["2024-01"]).toBe(100000)
-    expect(matrix.subcategoriesByCategory["cat-banco"]![0]!.cells["2024-02"]).toBe(100000)
-    expect(matrix.subcategoriesByCategory["cat-banco"]![0]!.total).toBe(200000)
+    expect(matrix.subcategoriesByCategory['cat-banco']).toHaveLength(1)
+    expect(matrix.subcategoriesByCategory['cat-banco']![0]!.name).toBe('Crédito Hipotecario')
+    expect(matrix.subcategoriesByCategory['cat-banco']![0]!.cells['2024-01']).toBe(100000)
+    expect(matrix.subcategoriesByCategory['cat-banco']![0]!.cells['2024-02']).toBe(100000)
+    expect(matrix.subcategoriesByCategory['cat-banco']![0]!.total).toBe(200000)
 
-    expect(matrix.subcategoriesByCategory["cat-servicios"]).toHaveLength(1)
-    expect(matrix.subcategoriesByCategory["cat-servicios"]![0]!.name).toBe("Luz")
-    expect(matrix.subcategoriesByCategory["cat-servicios"]![0]!.cells["2024-01"]).toBe(30000)
-    expect(matrix.subcategoriesByCategory["cat-servicios"]![0]!.cells["2024-02"]).toBe(0)
-    expect(matrix.subcategoriesByCategory["cat-servicios"]![0]!.total).toBe(30000)
+    expect(matrix.subcategoriesByCategory['cat-servicios']).toHaveLength(1)
+    expect(matrix.subcategoriesByCategory['cat-servicios']![0]!.name).toBe('Luz')
+    expect(matrix.subcategoriesByCategory['cat-servicios']![0]!.cells['2024-01']).toBe(30000)
+    expect(matrix.subcategoriesByCategory['cat-servicios']![0]!.cells['2024-02']).toBe(0)
+    expect(matrix.subcategoriesByCategory['cat-servicios']![0]!.total).toBe(30000)
   })
 
-  it("integrates credit card accounts and purchases into matrix as Tarjetas de Crédito", () => {
+  it('integrates credit card accounts and purchases into matrix as Tarjetas de Crédito', () => {
     const categories: Record<string, Category> = {}
     const obligations: Record<string, Obligation> = {}
     const installments: Record<string, Installment> = {}
-    const periods = ["2026-06", "2026-07", "2026-08"]
+    const periods = ['2026-06', '2026-07', '2026-08']
 
     const creditCards = {
-      "card-1": {
-        id: "card-1",
-        institution: "Banco Falabella",
-        accountName: "CMR Mastercard",
+      'card-1': {
+        id: 'card-1',
+        institution: 'Banco Falabella',
+        accountName: 'CMR Mastercard',
         creditLimitCents: toMoney(500000),
         closingDay: 19,
         dueDay: 5,
         plastics: [],
-        createdAt: "",
-        updatedAt: "",
+        createdAt: '',
+        updatedAt: '',
       },
     }
 
     const purchases = {
-      "pur-1": {
-        id: "pur-1",
-        accountId: "card-1",
-        plasticId: "plas-1",
-        description: "Lider Santa Amalia",
-        purchaseDate: "2026-05-15",
+      'pur-1': {
+        id: 'pur-1',
+        accountId: 'card-1',
+        plasticId: 'plas-1',
+        description: 'Lider Santa Amalia',
+        purchaseDate: '2026-05-15',
         totalAmountCents: toMoney(189300),
         totalInstallments: 6,
-        firstInstallmentPeriod: "2026-07",
-        payerType: "PROPIO" as const,
-        createdAt: "",
-        updatedAt: "",
+        firstInstallmentPeriod: '2026-07',
+        payerType: 'PROPIO' as const,
+        createdAt: '',
+        updatedAt: '',
       },
-      "pur-2": {
-        id: "pur-2",
-        accountId: "card-1",
-        plasticId: "plas-1",
-        description: "Celular para Amigo",
-        purchaseDate: "2026-05-14",
+      'pur-2': {
+        id: 'pur-2',
+        accountId: 'card-1',
+        plasticId: 'plas-1',
+        description: 'Celular para Amigo',
+        purchaseDate: '2026-05-14',
         totalAmountCents: toMoney(60000),
         totalInstallments: 2,
-        firstInstallmentPeriod: "2026-06",
-        payerType: "TERCERO" as const,
+        firstInstallmentPeriod: '2026-06',
+        payerType: 'TERCERO' as const,
         thirdPartyReceivable: {
-          id: "rec-1",
-          thirdPartyName: "Pedro",
-          purchaseId: "pur-2",
+          id: 'rec-1',
+          thirdPartyName: 'Pedro',
+          purchaseId: 'pur-2',
           totalOwedCents: toMoney(60000),
           amountCollectedCents: toMoney(0),
-          status: "PENDIENTE" as const,
+          status: 'PENDIENTE' as const,
           repayments: [],
         },
-        createdAt: "",
-        updatedAt: "",
+        createdAt: '',
+        updatedAt: '',
       },
     }
 
@@ -171,11 +183,11 @@ describe("Financial Matrix Computation", () => {
       installments,
       periods,
       creditCards,
-      purchases
+      purchases,
     )
 
     // Verify system category exists
-    const cardCat = matrix.categories.find((c) => c.name === "Tarjetas de Crédito")
+    const cardCat = matrix.categories.find(c => c.name === 'Tarjetas de Crédito')
     expect(cardCat).toBeDefined()
 
     // Monthly installment for pur-1: 189300 / 6 = 31550 (starts 2026-07)
@@ -183,86 +195,86 @@ describe("Financial Matrix Computation", () => {
     // June: pur-2 (30000)
     // July: pur-1 (31550) + pur-2 (30000) = 61550
     // August: pur-1 (31550)
-    expect(matrix.cells[cardCat!.id]?.["2026-06"]).toBe(30000)
-    expect(matrix.cells[cardCat!.id]?.["2026-07"]).toBe(61550)
-    expect(matrix.cells[cardCat!.id]?.["2026-08"]).toBe(31550)
+    expect(matrix.cells[cardCat!.id]?.['2026-06']).toBe(30000)
+    expect(matrix.cells[cardCat!.id]?.['2026-07']).toBe(61550)
+    expect(matrix.cells[cardCat!.id]?.['2026-08']).toBe(31550)
 
     // Third party / P2P tracking
     expect(matrix.totalThirdPartyReceivables).toBe(60000) // pur-2 total in range
-    expect(matrix.p2pGroups.find((g) => g.personName === "Pedro")).toBeDefined()
+    expect(matrix.p2pGroups.find(g => g.personName === 'Pedro')).toBeDefined()
 
     // Subcategories should be grouped into a single summarized card row rather than 30 separate purchases
     const cardSubcats = matrix.subcategoriesByCategory[cardCat!.id]
     expect(cardSubcats).toBeDefined()
     expect(cardSubcats).toHaveLength(1)
-    expect(cardSubcats![0]!.name).toBe("Banco Falabella - CMR Mastercard")
-    expect(cardSubcats![0]!.cells["2026-06"]).toBe(30000)
-    expect(cardSubcats![0]!.cells["2026-07"]).toBe(61550)
-    expect(cardSubcats![0]!.cells["2026-08"]).toBe(31550)
+    expect(cardSubcats![0]!.name).toBe('Banco Falabella - CMR Mastercard')
+    expect(cardSubcats![0]!.cells['2026-06']).toBe(30000)
+    expect(cardSubcats![0]!.cells['2026-07']).toBe(61550)
+    expect(cardSubcats![0]!.cells['2026-08']).toBe(31550)
     expect(cardSubcats![0]!.total).toBe(123100)
   })
 
-  it("assigns accurate financial statuses to matrix cells (PAID, OVERDUE, DUE_SOON, SCHEDULED)", () => {
+  it('assigns accurate financial statuses to matrix cells (PAID, OVERDUE, DUE_SOON, SCHEDULED)', () => {
     const categories: Record<string, Category> = {
-      "cat-1": { id: "cat-1", name: "Servicios", color: "sky", createdAt: "", updatedAt: "" },
+      'cat-1': { id: 'cat-1', name: 'Servicios', color: 'sky', createdAt: '', updatedAt: '' },
     }
     const obligations: Record<string, Obligation> = {
-      "obl-1": {
-        id: "obl-1",
-        categoryId: "cat-1",
-        subcategory: "Luz",
-        detail: "Enel",
+      'obl-1': {
+        id: 'obl-1',
+        categoryId: 'cat-1',
+        subcategory: 'Luz',
+        detail: 'Enel',
         totalAmountCents: toMoney(120000),
         totalInstallments: 4,
         currentInstallment: 1,
         installmentAmountCents: toMoney(30000),
-        startDate: "2026-08-05",
+        startDate: '2026-08-05',
         dueDay: 5,
-        status: "PENDING",
-        createdAt: "",
-        updatedAt: "",
+        status: 'PENDING',
+        createdAt: '',
+        updatedAt: '',
       },
     }
     const installments: Record<string, Installment> = {
-      "i-aug": {
-        id: "i-aug",
-        obligationId: "obl-1",
+      'i-aug': {
+        id: 'i-aug',
+        obligationId: 'obl-1',
         installmentNumber: 1,
-        dueDate: "2026-08-05",
+        dueDate: '2026-08-05',
         amountCents: toMoney(30000),
-        status: "PAID",
-        paidDate: "2026-08-04",
-        period: "2026-08",
+        status: 'PAID',
+        paidDate: '2026-08-04',
+        period: '2026-08',
       },
-      "i-sep": {
-        id: "i-sep",
-        obligationId: "obl-1",
+      'i-sep': {
+        id: 'i-sep',
+        obligationId: 'obl-1',
         installmentNumber: 2,
-        dueDate: "2026-09-05",
+        dueDate: '2026-09-05',
         amountCents: toMoney(30000),
-        status: "PENDING",
+        status: 'PENDING',
       },
-      "i-oct": {
-        id: "i-oct",
-        obligationId: "obl-1",
+      'i-oct': {
+        id: 'i-oct',
+        obligationId: 'obl-1',
         installmentNumber: 3,
-        dueDate: "2026-10-25",
+        dueDate: '2026-10-25',
         amountCents: toMoney(30000),
-        status: "PENDING",
+        status: 'PENDING',
       },
-      "i-nov": {
-        id: "i-nov",
-        obligationId: "obl-1",
+      'i-nov': {
+        id: 'i-nov',
+        obligationId: 'obl-1',
         installmentNumber: 4,
-        dueDate: "2026-11-25",
+        dueDate: '2026-11-25',
         amountCents: toMoney(30000),
-        status: "PENDING",
+        status: 'PENDING',
       },
     }
 
-    const periods = ["2026-08", "2026-09", "2026-10", "2026-11"]
+    const periods = ['2026-08', '2026-09', '2026-10', '2026-11']
     // Simulate reference date as 2026-10-10 (October 10, 2026)
-    const referenceDate = new Date("2026-10-10T12:00:00Z")
+    const referenceDate = new Date('2026-10-10T12:00:00Z')
 
     const matrix = computeFinancialMatrix(
       categories,
@@ -271,24 +283,75 @@ describe("Financial Matrix Computation", () => {
       periods,
       {},
       {},
-      referenceDate
+      referenceDate,
     )
 
     // In August (past): paid -> PAID
-    expect(matrix.categoryCellStatuses["cat-1"]?.["2026-08"]).toBe("PAID")
+    expect(matrix.categoryCellStatuses['cat-1']?.['2026-08']).toBe('PAID')
     // In September (past): unpaid -> OVERDUE
-    expect(matrix.categoryCellStatuses["cat-1"]?.["2026-09"]).toBe("OVERDUE")
+    expect(matrix.categoryCellStatuses['cat-1']?.['2026-09']).toBe('OVERDUE')
     // In October (current month): due on 25th, reference is 10th -> DUE_SOON
-    expect(matrix.categoryCellStatuses["cat-1"]?.["2026-10"]).toBe("DUE_SOON")
+    expect(matrix.categoryCellStatuses['cat-1']?.['2026-10']).toBe('DUE_SOON')
     // In November (future): -> SCHEDULED
-    expect(matrix.categoryCellStatuses["cat-1"]?.["2026-11"]).toBe("SCHEDULED")
+    expect(matrix.categoryCellStatuses['cat-1']?.['2026-11']).toBe('SCHEDULED')
 
     // Subcategory matches as well
-    const subcat = matrix.subcategoriesByCategory["cat-1"]![0]!
-    expect(subcat.cellStatuses?.["2026-08"]).toBe("PAID")
-    expect(subcat.cellStatuses?.["2026-09"]).toBe("OVERDUE")
-    expect(subcat.cellStatuses?.["2026-10"]).toBe("DUE_SOON")
-    expect(subcat.cellStatuses?.["2026-11"]).toBe("SCHEDULED")
+    const subcat = matrix.subcategoriesByCategory['cat-1']![0]!
+    expect(subcat.cellStatuses?.['2026-08']).toBe('PAID')
+    expect(subcat.cellStatuses?.['2026-09']).toBe('OVERDUE')
+    expect(subcat.cellStatuses?.['2026-10']).toBe('DUE_SOON')
+    expect(subcat.cellStatuses?.['2026-11']).toBe('SCHEDULED')
+  })
+
+  it('projects indefinite recurring obligations beyond materialized installments without dropping to zero', () => {
+    const categories: Record<string, Category> = {
+      'cat-suscrip': {
+        id: 'cat-suscrip',
+        name: 'Suscripciones',
+        color: 'indigo',
+        createdAt: '',
+        updatedAt: '',
+      },
+    }
+    const obligations: Record<string, Obligation> = {
+      'obl-spotify': {
+        id: 'obl-spotify',
+        categoryId: 'cat-suscrip',
+        subcategory: 'Spotify',
+        detail: 'Premium',
+        totalAmountCents: toMoney(120000),
+        totalInstallments: 12,
+        currentInstallment: 1,
+        installmentAmountCents: toMoney(10000),
+        isRecurringIndefinite: true,
+        startDate: '2026-01-01',
+        dueDay: 5,
+        status: 'PENDING',
+        type: 'EXPENSE',
+        createdAt: '',
+        updatedAt: '',
+      },
+    }
+    // Only 1 installment materialized (e.g. 2026-01)
+    const installments: Record<string, Installment> = {
+      'inst-1': {
+        id: 'inst-1',
+        obligationId: 'obl-spotify',
+        installmentNumber: 1,
+        dueDate: '2026-01-05',
+        amountCents: toMoney(10000),
+        status: 'PENDING',
+      },
+    }
+
+    // We check month 14 and 15 (2027-02 and 2027-03)
+    const periods = ['2026-01', '2027-02', '2027-03']
+    const matrix = computeFinancialMatrix(categories, obligations, installments, periods)
+
+    expect(matrix.cells['cat-suscrip']?.['2026-01']).toBe(10000)
+    expect(matrix.cells['cat-suscrip']?.['2027-02']).toBe(10000)
+    expect(matrix.cells['cat-suscrip']?.['2027-03']).toBe(10000)
+    expect(matrix.columnTotals['2027-02']).toBe(10000)
+    expect(matrix.columnTotals['2027-03']).toBe(10000)
   })
 })
-
