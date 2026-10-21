@@ -45,26 +45,36 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
   onClose,
   editingAccount = null,
 }) => {
-  const addAccount = useCreditCardStore((s) => s.addAccount)
-  const updateAccount = useCreditCardStore((s) => s.updateAccount)
-  const addPlastic = useCreditCardStore((s) => s.addPlastic)
-  const removePlastic = useCreditCardStore((s) => s.removePlastic)
+  const addAccount = useCreditCardStore(s => s.addAccount)
+  const updateAccount = useCreditCardStore(s => s.updateAccount)
+  const addPlastic = useCreditCardStore(s => s.addPlastic)
+  const removePlastic = useCreditCardStore(s => s.removePlastic)
 
-  const primaryPlastic = editingAccount?.plastics.find((p) => p.type === 'TITULAR')
-  const existingAdditionals = editingAccount?.plastics.filter((p) => p.type === 'ADICIONAL') ?? []
+  const primaryPlastic = editingAccount?.plastics.find(p => p.type === 'TITULAR')
+  const existingAdditionals = editingAccount?.plastics.filter(p => p.type === 'ADICIONAL') ?? []
 
   const [institution, setInstitution] = useState(editingAccount?.institution ?? '')
   const [accountName, setAccountName] = useState(editingAccount?.accountName ?? '')
-  const [creditLimit, setCreditLimit] = useState(editingAccount ? String(editingAccount.creditLimitCents) : '')
-  const [hasInternationalLimit, setHasInternationalLimit] = useState(editingAccount?.hasInternationalLimit ?? false)
-  const [internationalLimitUSD, setInternationalLimitUSD] = useState(editingAccount?.internationalCreditLimitUSD ? String(editingAccount.internationalCreditLimitUSD) : '')
-  const [maintenanceFeeCurrency, setMaintenanceFeeCurrency] = useState<'CLP' | 'UF'>(editingAccount?.monthlyMaintenanceFeeCurrency ?? 'CLP')
+  const [creditLimit, setCreditLimit] = useState(
+    editingAccount ? String(editingAccount.creditLimitCents) : '',
+  )
+  const [hasInternationalLimit, setHasInternationalLimit] = useState(
+    editingAccount?.hasInternationalLimit ?? false,
+  )
+  const [internationalLimitUSD, setInternationalLimitUSD] = useState(
+    editingAccount?.internationalCreditLimitUSD
+      ? String(editingAccount.internationalCreditLimitUSD)
+      : '',
+  )
+  const [maintenanceFeeCurrency, setMaintenanceFeeCurrency] = useState<'CLP' | 'UF'>(
+    editingAccount?.monthlyMaintenanceFeeCurrency ?? 'CLP',
+  )
   const [maintenanceFeeAmount, setMaintenanceFeeAmount] = useState(
     editingAccount?.monthlyMaintenanceFeeAmount !== undefined
       ? String(editingAccount.monthlyMaintenanceFeeAmount)
       : editingAccount?.monthlyMaintenanceFeeCents
-      ? String(editingAccount.monthlyMaintenanceFeeCents)
-      : ''
+        ? String(editingAccount.monthlyMaintenanceFeeCents)
+        : '',
   )
   const [closingDay, setClosingDay] = useState(editingAccount?.closingDay ?? 20)
   const [dueDay, setDueDay] = useState(editingAccount?.dueDay ?? 5)
@@ -107,19 +117,26 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
   // Sync state when editingAccount changes
   useEffect(() => {
     if (editingAccount) {
-      const primary = editingAccount.plastics.find((p) => p.type === 'TITULAR')
+      const primary = editingAccount.plastics.find(p => p.type === 'TITULAR')
       setInstitution(editingAccount.institution)
       setAccountName(editingAccount.accountName)
       setCreditLimit(String(editingAccount.creditLimitCents))
-      setHasInternationalLimit(editingAccount.hasInternationalLimit ?? (editingAccount.internationalCreditLimitUSD ? true : false))
-      setInternationalLimitUSD(editingAccount.internationalCreditLimitUSD ? String(editingAccount.internationalCreditLimitUSD) : '')
+      setHasInternationalLimit(
+        editingAccount.hasInternationalLimit ??
+          (editingAccount.internationalCreditLimitUSD ? true : false),
+      )
+      setInternationalLimitUSD(
+        editingAccount.internationalCreditLimitUSD
+          ? String(editingAccount.internationalCreditLimitUSD)
+          : '',
+      )
       setMaintenanceFeeCurrency(editingAccount.monthlyMaintenanceFeeCurrency ?? 'CLP')
       setMaintenanceFeeAmount(
         editingAccount.monthlyMaintenanceFeeAmount !== undefined
           ? String(editingAccount.monthlyMaintenanceFeeAmount)
           : editingAccount.monthlyMaintenanceFeeCents
-          ? String(editingAccount.monthlyMaintenanceFeeCents)
-          : ''
+            ? String(editingAccount.monthlyMaintenanceFeeCents)
+            : '',
       )
       setClosingDay(editingAccount.closingDay)
       setDueDay(editingAccount.dueDay)
@@ -152,7 +169,10 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
       // In edit mode, immediately persist the new plastic
       addPlastic(editingAccount.id, newAddHolder.trim(), newAddLastFour.trim())
     } else {
-      setAdditionals([...additionals, { holderName: newAddHolder.trim(), lastFour: newAddLastFour.trim() }])
+      setAdditionals([
+        ...additionals,
+        { holderName: newAddHolder.trim(), lastFour: newAddLastFour.trim() },
+      ])
     }
     setNewAddHolder('')
     setNewAddLastFour('')
@@ -179,7 +199,8 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!institution || !accountName || !creditLimit || !primaryHolderName || !primaryLastFour) return
+    if (!institution || !accountName || !creditLimit || !primaryHolderName || !primaryLastFour)
+      return
 
     const feeCents = calculateMaintenanceFeeCents()
     const feeAmountNum = maintenanceFeeAmount ? parseFloat(maintenanceFeeAmount) : undefined
@@ -190,7 +211,10 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
         accountName,
         creditLimitCents: Number(creditLimit),
         hasInternationalLimit,
-        internationalCreditLimitUSD: hasInternationalLimit && internationalLimitUSD ? Number(internationalLimitUSD) : undefined,
+        internationalCreditLimitUSD:
+          hasInternationalLimit && internationalLimitUSD
+            ? Number(internationalLimitUSD)
+            : undefined,
         monthlyMaintenanceFeeCents: feeCents,
         monthlyMaintenanceFeeCurrency: maintenanceFeeCurrency,
         monthlyMaintenanceFeeAmount: isNaN(Number(feeAmountNum)) ? undefined : feeAmountNum,
@@ -205,7 +229,10 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
         accountName,
         creditLimitCents: Number(creditLimit),
         hasInternationalLimit,
-        internationalCreditLimitUSD: hasInternationalLimit && internationalLimitUSD ? Number(internationalLimitUSD) : undefined,
+        internationalCreditLimitUSD:
+          hasInternationalLimit && internationalLimitUSD
+            ? Number(internationalLimitUSD)
+            : undefined,
         monthlyMaintenanceFeeCents: feeCents,
         monthlyMaintenanceFeeCurrency: maintenanceFeeCurrency,
         monthlyMaintenanceFeeAmount: isNaN(Number(feeAmountNum)) ? undefined : feeAmountNum,
@@ -224,9 +251,10 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
     onClose()
   }
 
-  const estimatedCLPFromUSD = hasInternationalLimit && internationalLimitUSD && dolarObserved
-    ? Math.round(Number(internationalLimitUSD) * dolarObserved)
-    : null
+  const estimatedCLPFromUSD =
+    hasInternationalLimit && internationalLimitUSD && dolarObserved
+      ? Math.round(Number(internationalLimitUSD) * dolarObserved)
+      : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -248,29 +276,41 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Institución / Banco</label>
+              <label
+                htmlFor="cc-account-institution"
+                className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+              >
+                Institución / Banco
+              </label>
               <input
+                id="cc-account-institution"
                 type="text"
                 list="institutions-list"
                 placeholder="ej. Banco Santander Chile"
                 value={institution}
-                onChange={(e) => setInstitution(e.target.value)}
+                onChange={e => setInstitution(e.target.value)}
                 required
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
               />
               <datalist id="institutions-list">
-                {CHILEAN_FINANCIAL_INSTITUTIONS.map((inst) => (
+                {CHILEAN_FINANCIAL_INSTITUTIONS.map(inst => (
                   <option key={inst} value={inst} />
                 ))}
               </datalist>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Nombre Tarjeta</label>
+              <label
+                htmlFor="cc-account-name"
+                className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+              >
+                Nombre Tarjeta
+              </label>
               <input
+                id="cc-account-name"
                 type="text"
                 placeholder="ej. Visa Signature"
                 value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
+                onChange={e => setAccountName(e.target.value)}
                 required
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
               />
@@ -279,20 +319,30 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Límite Total de Crédito (CLP)</label>
+              <label
+                htmlFor="cc-account-credit-limit"
+                className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+              >
+                Límite Total de Crédito (CLP)
+              </label>
               <input
+                id="cc-account-credit-limit"
                 type="number"
                 placeholder="ej. 2000000"
                 value={creditLimit}
-                onChange={(e) => setCreditLimit(e.target.value)}
+                onChange={e => setCreditLimit(e.target.value)}
                 required
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
               />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-400 uppercase">
-                  Mantención Mensual <span className="text-[10px] text-slate-500 lowercase">(opcional)</span>
+                <label
+                  htmlFor="cc-account-maintenance-fee"
+                  className="text-xs font-semibold text-slate-400 uppercase"
+                >
+                  Mantención Mensual{' '}
+                  <span className="text-[10px] text-slate-500 lowercase">(opcional)</span>
                 </label>
                 <div className="flex bg-slate-800 p-0.5 rounded-lg border border-slate-700 text-[11px]">
                   <button
@@ -324,11 +374,12 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
                   {maintenanceFeeCurrency === 'CLP' ? '$' : 'UF'}
                 </span>
                 <input
+                  id="cc-account-maintenance-fee"
                   type="number"
                   step={maintenanceFeeCurrency === 'UF' ? '0.01' : '1'}
                   placeholder={maintenanceFeeCurrency === 'CLP' ? 'ej. 3500' : 'ej. 0.10'}
                   value={maintenanceFeeAmount}
-                  onChange={(e) => setMaintenanceFeeAmount(e.target.value)}
+                  onChange={e => setMaintenanceFeeAmount(e.target.value)}
                   className={`w-full bg-slate-800 border border-slate-700 rounded-lg pr-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500 ${
                     maintenanceFeeCurrency === 'UF' ? 'pl-9' : 'pl-7'
                   }`}
@@ -339,11 +390,17 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
               {maintenanceFeeCurrency === 'UF' && maintenanceFeeAmount && (
                 <div className="mt-1.5 flex items-center justify-between text-[11px] bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-700/60">
                   <span className="text-slate-400">
-                    UF actual: {ufObserved ? `$${ufObserved.toLocaleString('es-CL', { minimumFractionDigits: 1 })}` : 'Cargando...'}
+                    UF actual:{' '}
+                    {ufObserved
+                      ? `$${ufObserved.toLocaleString('es-CL', { minimumFractionDigits: 1 })}`
+                      : 'Cargando...'}
                   </span>
                   {ufObserved && !isNaN(parseFloat(maintenanceFeeAmount)) && (
                     <span className="text-emerald-400 font-medium">
-                      ≈ {formatCLP(toMoney(Math.round(parseFloat(maintenanceFeeAmount) * ufObserved)))}
+                      ≈{' '}
+                      {formatCLP(
+                        toMoney(Math.round(parseFloat(maintenanceFeeAmount) * ufObserved)),
+                      )}
                     </span>
                   )}
                 </div>
@@ -355,17 +412,22 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
           <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/60 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <label htmlFor="intl-toggle" className="text-sm font-semibold text-sky-400 cursor-pointer flex items-center gap-1.5">
+                <label
+                  htmlFor="intl-toggle"
+                  className="text-sm font-semibold text-sky-400 cursor-pointer flex items-center gap-1.5"
+                >
                   🌐 Cupo Internacional (USD)
                 </label>
-                <p className="text-xs text-slate-400">Habilita compras y cupo separado en dólares</p>
+                <p className="text-xs text-slate-400">
+                  Habilita compras y cupo separado en dólares
+                </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   id="intl-toggle"
                   type="checkbox"
                   checked={hasInternationalLimit}
-                  onChange={(e) => setHasInternationalLimit(e.target.checked)}
+                  onChange={e => setHasInternationalLimit(e.target.checked)}
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
@@ -375,14 +437,16 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
             {hasInternationalLimit && (
               <div className="pt-2 border-t border-slate-700/50 space-y-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Límite Internacional (USD)</label>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                    Límite Internacional (USD)
+                  </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2 text-slate-400 text-sm">$</span>
                     <input
                       type="number"
                       placeholder="ej. 1500"
                       value={internationalLimitUSD}
-                      onChange={(e) => setInternationalLimitUSD(e.target.value)}
+                      onChange={e => setInternationalLimitUSD(e.target.value)}
                       className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white text-sm focus:outline-none focus:border-sky-500"
                     />
                   </div>
@@ -396,15 +460,17 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
                     {isLoadingIndicators
                       ? 'Cargando...'
                       : dolarObserved
-                      ? `$${dolarObserved.toLocaleString('es-CL', { minimumFractionDigits: 2 })} CLP`
-                      : 'No disponible'}
+                        ? `$${dolarObserved.toLocaleString('es-CL', { minimumFractionDigits: 2 })} CLP`
+                        : 'No disponible'}
                   </span>
                 </div>
 
                 {estimatedCLPFromUSD !== null && (
                   <div className="text-xs text-slate-400 flex justify-between px-1">
                     <span>Equivalente aproximado en CLP:</span>
-                    <span className="text-white font-semibold">{formatCLP(toMoney(estimatedCLPFromUSD))}</span>
+                    <span className="text-white font-semibold">
+                      {formatCLP(toMoney(estimatedCLPFromUSD))}
+                    </span>
                   </div>
                 )}
               </div>
@@ -413,25 +479,37 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Día de Cierre (Corte)</label>
+              <label
+                htmlFor="cc-account-closing-day"
+                className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+              >
+                Día de Cierre (Corte)
+              </label>
               <input
+                id="cc-account-closing-day"
                 type="number"
                 min="1"
                 max="31"
                 value={closingDay}
-                onChange={(e) => setClosingDay(Number(e.target.value))}
+                onChange={e => setClosingDay(Number(e.target.value))}
                 required
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Día de Vencimiento (Pago)</label>
+              <label
+                htmlFor="cc-account-due-day"
+                className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+              >
+                Día de Vencimiento (Pago)
+              </label>
               <input
+                id="cc-account-due-day"
                 type="number"
                 min="1"
                 max="31"
                 value={dueDay}
-                onChange={(e) => setDueDay(Number(e.target.value))}
+                onChange={e => setDueDay(Number(e.target.value))}
                 required
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
               />
@@ -442,22 +520,30 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
             <h4 className="text-sm font-semibold text-indigo-400">Plástico Titular</h4>
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-2">
+                <label htmlFor="cc-account-holder-name" className="sr-only">
+                  Nombre del Titular
+                </label>
                 <input
+                  id="cc-account-holder-name"
                   type="text"
                   placeholder="Nombre del Titular"
                   value={primaryHolderName}
-                  onChange={(e) => setPrimaryHolderName(e.target.value)}
+                  onChange={e => setPrimaryHolderName(e.target.value)}
                   required
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm"
                 />
               </div>
               <div>
+                <label htmlFor="cc-account-last-four" className="sr-only">
+                  Últimos 4 dígitos del Titular
+                </label>
                 <input
+                  id="cc-account-last-four"
                   type="text"
                   maxLength={4}
                   placeholder="Últimos 4"
                   value={primaryLastFour}
-                  onChange={(e) => setPrimaryLastFour(e.target.value)}
+                  onChange={e => setPrimaryLastFour(e.target.value)}
                   required
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm text-center"
                 />
@@ -475,47 +561,63 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
             </h4>
 
             {/* Existing additionals in edit mode */}
-            {editingAccount && existingAdditionals.map((add) => (
-              <div key={add.id} className="flex justify-between items-center text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-                <span className="text-slate-300">{add.holderName} (•••• {add.lastFourDigits})</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-400 uppercase font-semibold text-[10px]">Adicional</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveExistingPlastic(add.id)}
-                    className="text-rose-400 hover:text-rose-300 font-bold px-1"
-                    title="Eliminar adicional"
-                  >
-                    ✕
-                  </button>
+            {editingAccount &&
+              existingAdditionals.map(add => (
+                <div
+                  key={add.id}
+                  className="flex justify-between items-center text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"
+                >
+                  <span className="text-slate-300">
+                    {add.holderName} (•••• {add.lastFourDigits})
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 uppercase font-semibold text-[10px]">
+                      Adicional
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExistingPlastic(add.id)}
+                      className="text-rose-400 hover:text-rose-300 font-bold px-1"
+                      title="Eliminar adicional"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
             {/* Pending additionals in create mode */}
-            {!editingAccount && additionals.map((add, idx) => (
-              <div key={idx} className="flex justify-between items-center text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-                <span className="text-slate-300">{add.holderName} (•••• {add.lastFour})</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-400 uppercase font-semibold text-[10px]">Adicional</span>
-                  <button
-                    type="button"
-                    onClick={() => setAdditionals(additionals.filter((_, i) => i !== idx))}
-                    className="text-rose-400 hover:text-rose-300 font-bold px-1"
-                    title="Quitar adicional"
-                  >
-                    ✕
-                  </button>
+            {!editingAccount &&
+              additionals.map((add, idx) => (
+                <div
+                  key={idx}
+                  className="flex justify-between items-center text-xs bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"
+                >
+                  <span className="text-slate-300">
+                    {add.holderName} (•••• {add.lastFour})
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 uppercase font-semibold text-[10px]">
+                      Adicional
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAdditionals(additionals.filter((_, i) => i !== idx))}
+                      className="text-rose-400 hover:text-rose-300 font-bold px-1"
+                      title="Quitar adicional"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
             <div className="grid grid-cols-5 gap-2 pt-2 border-t border-slate-700/50">
               <input
                 type="text"
                 placeholder="Nombre adicional"
                 value={newAddHolder}
-                onChange={(e) => setNewAddHolder(e.target.value)}
+                onChange={e => setNewAddHolder(e.target.value)}
                 className="col-span-3 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs"
               />
               <input
@@ -523,7 +625,7 @@ export const CreditCardAccountModal: React.FC<CreditCardAccountModalProps> = ({
                 maxLength={4}
                 placeholder="4 dígitos"
                 value={newAddLastFour}
-                onChange={(e) => setNewAddLastFour(e.target.value)}
+                onChange={e => setNewAddLastFour(e.target.value)}
                 className="col-span-1 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center"
               />
               <button

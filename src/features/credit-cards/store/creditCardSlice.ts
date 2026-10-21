@@ -9,11 +9,9 @@ import type {
   ISODate,
 } from '@/shared/types/domain'
 import { toMoney, addMoney } from '@/shared/types/money'
-import {
-  calculateBillingPeriod,
-  calculateRepaymentStatus,
-} from '../utils/cycleCalculators'
+import { calculateBillingPeriod, calculateRepaymentStatus } from '../utils/cycleCalculators'
 import { useSyncStore } from '@/features/sync/store/syncSlice'
+import { getLocalISODate } from '@/shared/utils/date'
 
 export interface CreateAccountDTO {
   institution: string
@@ -78,7 +76,11 @@ export interface CreditCardState {
   addAccount: (dto: CreateAccountDTO) => CreditCardAccount
   updateAccount: (accountId: UUID, dto: UpdateAccountDTO) => CreditCardAccount | null
   deleteAccount: (accountId: UUID) => void
-  addPlastic: (accountId: UUID, holderName: string, lastFourDigits: string) => CreditCardPlastic | null
+  addPlastic: (
+    accountId: UUID,
+    holderName: string,
+    lastFourDigits: string,
+  ) => CreditCardPlastic | null
   removePlastic: (accountId: UUID, plasticId: UUID) => void
   addPurchase: (dto: CreatePurchaseDTO) => CreditCardPurchase
   updatePurchase: (purchaseId: UUID, dto: UpdatePurchaseDTO) => CreditCardPurchase | null
@@ -101,7 +103,7 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
     })
   },
 
-  setCreditCardsData: (data) => {
+  setCreditCardsData: data => {
     set({
       accounts: data.accounts || {},
       purchases: data.purchases || {},
@@ -109,10 +111,10 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
     })
   },
 
-  addAccount: (dto) => {
+  addAccount: dto => {
     const accountId = crypto.randomUUID()
     const plasticId = crypto.randomUUID()
-    const now = new Date().toISOString().split('T')[0] ?? ''
+    const now = getLocalISODate()
 
     const primaryPlastic: CreditCardPlastic = {
       id: plasticId,
@@ -131,7 +133,10 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
       creditLimitCents: toMoney(dto.creditLimitCents),
       hasInternationalLimit: dto.hasInternationalLimit,
       internationalCreditLimitUSD: dto.internationalCreditLimitUSD,
-      monthlyMaintenanceFeeCents: dto.monthlyMaintenanceFeeCents !== undefined ? toMoney(dto.monthlyMaintenanceFeeCents) : undefined,
+      monthlyMaintenanceFeeCents:
+        dto.monthlyMaintenanceFeeCents !== undefined
+          ? toMoney(dto.monthlyMaintenanceFeeCents)
+          : undefined,
       monthlyMaintenanceFeeCurrency: dto.monthlyMaintenanceFeeCurrency,
       monthlyMaintenanceFeeAmount: dto.monthlyMaintenanceFeeAmount,
       closingDay: dto.closingDay,
@@ -141,7 +146,7 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
       updatedAt: now,
     }
 
-    set((state) => ({
+    set(state => ({
       accounts: { ...state.accounts, [accountId]: newAccount },
     }))
 
@@ -154,11 +159,11 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
     const account = get().accounts[accountId]
     if (!account) return null
 
-    const now = new Date().toISOString().split('T')[0] ?? ''
+    const now = getLocalISODate()
 
     let updatedPlastics = account.plastics
     if (dto.primaryHolderName !== undefined || dto.primaryLastFour !== undefined) {
-      updatedPlastics = account.plastics.map((p) => {
+      updatedPlastics = account.plastics.map(p => {
         if (p.type === 'TITULAR') {
           return {
             ...p,
@@ -175,19 +180,28 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
       ...account,
       institution: dto.institution ?? account.institution,
       accountName: dto.accountName ?? account.accountName,
-      creditLimitCents: dto.creditLimitCents !== undefined ? toMoney(dto.creditLimitCents) : account.creditLimitCents,
+      creditLimitCents:
+        dto.creditLimitCents !== undefined
+          ? toMoney(dto.creditLimitCents)
+          : account.creditLimitCents,
       hasInternationalLimit: dto.hasInternationalLimit ?? account.hasInternationalLimit,
-      internationalCreditLimitUSD: dto.internationalCreditLimitUSD ?? account.internationalCreditLimitUSD,
-      monthlyMaintenanceFeeCents: dto.monthlyMaintenanceFeeCents !== undefined ? toMoney(dto.monthlyMaintenanceFeeCents) : account.monthlyMaintenanceFeeCents,
-      monthlyMaintenanceFeeCurrency: dto.monthlyMaintenanceFeeCurrency ?? account.monthlyMaintenanceFeeCurrency,
-      monthlyMaintenanceFeeAmount: dto.monthlyMaintenanceFeeAmount ?? account.monthlyMaintenanceFeeAmount,
+      internationalCreditLimitUSD:
+        dto.internationalCreditLimitUSD ?? account.internationalCreditLimitUSD,
+      monthlyMaintenanceFeeCents:
+        dto.monthlyMaintenanceFeeCents !== undefined
+          ? toMoney(dto.monthlyMaintenanceFeeCents)
+          : account.monthlyMaintenanceFeeCents,
+      monthlyMaintenanceFeeCurrency:
+        dto.monthlyMaintenanceFeeCurrency ?? account.monthlyMaintenanceFeeCurrency,
+      monthlyMaintenanceFeeAmount:
+        dto.monthlyMaintenanceFeeAmount ?? account.monthlyMaintenanceFeeAmount,
       closingDay: dto.closingDay ?? account.closingDay,
       dueDay: dto.dueDay ?? account.dueDay,
       plastics: updatedPlastics,
       updatedAt: now,
     }
 
-    set((state) => ({
+    set(state => ({
       accounts: { ...state.accounts, [accountId]: updatedAccount },
     }))
 
@@ -196,8 +210,8 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
     return updatedAccount
   },
 
-  deleteAccount: (accountId) => {
-    set((state) => {
+  deleteAccount: accountId => {
+    set(state => {
       const nextAccounts = { ...state.accounts }
       delete nextAccounts[accountId]
 
@@ -222,7 +236,7 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
     const account = get().accounts[accountId]
     if (!account) return null
 
-    const now = new Date().toISOString().split('T')[0] ?? ''
+    const now = getLocalISODate()
     const newPlastic: CreditCardPlastic = {
       id: crypto.randomUUID(),
       accountId,
@@ -239,7 +253,7 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
       updatedAt: now,
     }
 
-    set((state) => ({
+    set(state => ({
       accounts: { ...state.accounts, [accountId]: updatedAccount },
     }))
 
@@ -252,9 +266,9 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
     const account = get().accounts[accountId]
     if (!account) return
 
-    const now = new Date().toISOString().split('T')[0] ?? ''
+    const now = getLocalISODate()
     // Only allow removing additional plastics (not primary TITULAR)
-    const updatedPlastics = account.plastics.filter((p) => p.id !== plasticId || p.type === 'TITULAR')
+    const updatedPlastics = account.plastics.filter(p => p.id !== plasticId || p.type === 'TITULAR')
 
     const updatedAccount: CreditCardAccount = {
       ...account,
@@ -262,16 +276,16 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
       updatedAt: now,
     }
 
-    set((state) => ({
+    set(state => ({
       accounts: { ...state.accounts, [accountId]: updatedAccount },
     }))
 
     useSyncStore.getState().queueSyncDomain('credit_cards')
   },
 
-  addPurchase: (dto) => {
+  addPurchase: dto => {
     const account = get().accounts[dto.accountId]
-    const now = new Date().toISOString().split('T')[0] ?? ''
+    const now = getLocalISODate()
     const purchaseId = crypto.randomUUID()
 
     const firstInstallmentPeriod =
@@ -308,7 +322,7 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
       updatedAt: now,
     }
 
-    set((state) => ({
+    set(state => ({
       purchases: { ...state.purchases, [purchaseId]: newPurchase },
     }))
 
@@ -323,13 +337,11 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
 
     const targetAccountId = dto.accountId ?? purchase.accountId
     const account = get().accounts[targetAccountId]
-    const now = new Date().toISOString().split('T')[0] ?? ''
+    const now = getLocalISODate()
 
     const newPurchaseDate = dto.purchaseDate ?? purchase.purchaseDate
     const newTotalAmountCents =
-      dto.totalAmountCents !== undefined
-        ? toMoney(dto.totalAmountCents)
-        : purchase.totalAmountCents
+      dto.totalAmountCents !== undefined ? toMoney(dto.totalAmountCents) : purchase.totalAmountCents
     const newPayerType = dto.payerType ?? purchase.payerType
 
     // Recalculate firstInstallmentPeriod if firstInstallmentPeriod is given,
@@ -358,7 +370,7 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
       } else {
         thirdPartyReceivable = {
           id: crypto.randomUUID(),
-          thirdPartyName: dto.thirdPartyName || 'Tercero',
+          thirdPartyName: (dto.thirdPartyName ?? '') || 'Tercero',
           purchaseId,
           totalOwedCents: newTotalAmountCents,
           amountCollectedCents: toMoney(0),
@@ -384,7 +396,7 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
       updatedAt: now,
     }
 
-    set((state) => ({
+    set(state => ({
       purchases: { ...state.purchases, [purchaseId]: updatedPurchase },
     }))
 
@@ -393,8 +405,8 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
     return updatedPurchase
   },
 
-  deletePurchase: (purchaseId) => {
-    set((state) => {
+  deletePurchase: purchaseId => {
+    set(state => {
       const nextPurchases = { ...state.purchases }
       delete nextPurchases[purchaseId]
       return {
@@ -418,7 +430,7 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
     const updatedRepayments = [...receivable.repayments, newRepayment]
     const updatedCollected = updatedRepayments.reduce(
       (acc, curr) => addMoney(acc, curr.amountCents),
-      toMoney(0)
+      toMoney(0),
     )
 
     const updatedStatus = calculateRepaymentStatus(receivable.totalOwedCents, updatedCollected)
@@ -431,10 +443,10 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
         status: updatedStatus,
         repayments: updatedRepayments,
       },
-      updatedAt: new Date().toISOString().split('T')[0] ?? '',
+      updatedAt: getLocalISODate(),
     }
 
-    set((state) => ({
+    set(state => ({
       purchases: { ...state.purchases, [purchaseId]: updatedPurchase },
     }))
 
@@ -447,17 +459,15 @@ export const useCreditCardStore = create<CreditCardState>((set, get) => ({
 
     const currentPaid = account.paidPeriods ?? []
     const isPaid = currentPaid.includes(period)
-    const nextPaid = isPaid
-      ? currentPaid.filter((p) => p !== period)
-      : [...currentPaid, period]
+    const nextPaid = isPaid ? currentPaid.filter(p => p !== period) : [...currentPaid, period]
 
     const updatedAccount: CreditCardAccount = {
       ...account,
       paidPeriods: nextPaid,
-      updatedAt: new Date().toISOString().split('T')[0] ?? '',
+      updatedAt: getLocalISODate(),
     }
 
-    set((state) => ({
+    set(state => ({
       accounts: { ...state.accounts, [accountId]: updatedAccount },
     }))
 

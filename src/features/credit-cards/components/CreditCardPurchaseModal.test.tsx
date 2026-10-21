@@ -63,11 +63,7 @@ describe('CreditCardPurchaseModal', () => {
   it('renders modification mode when editingPurchase is provided and updates purchase', () => {
     const onClose = vi.fn()
     render(
-      <CreditCardPurchaseModal
-        isOpen={true}
-        editingPurchase={mockPurchase}
-        onClose={onClose}
-      />
+      <CreditCardPurchaseModal isOpen={true} editingPurchase={mockPurchase} onClose={onClose} />,
     )
 
     expect(screen.getByText('✏️ Modificar Compra con Tarjeta')).toBeInTheDocument()
@@ -79,17 +75,15 @@ describe('CreditCardPurchaseModal', () => {
     fireEvent.change(descInput, { target: { value: 'Suscripción Anual Streaming' } })
     fireEvent.click(screen.getByRole('button', { name: 'Guardar Cambios' }))
 
-    expect(useCreditCardStore.getState().purchases['purch-1']?.description).toBe('Suscripción Anual Streaming')
+    expect(useCreditCardStore.getState().purchases['purch-1']?.description).toBe(
+      'Suscripción Anual Streaming',
+    )
     expect(onClose).toHaveBeenCalled()
   })
 
   it('switches between Gasto Propio and Tercero in edit mode', () => {
     render(
-      <CreditCardPurchaseModal
-        isOpen={true}
-        editingPurchase={mockPurchase}
-        onClose={vi.fn()}
-      />
+      <CreditCardPurchaseModal isOpen={true} editingPurchase={mockPurchase} onClose={vi.fn()} />,
     )
 
     const thirdPartyBtn = screen.getByRole('button', { name: /Presté la Tarjeta/i })

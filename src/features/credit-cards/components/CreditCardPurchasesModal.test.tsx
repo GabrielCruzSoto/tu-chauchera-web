@@ -93,7 +93,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     expect(screen.getByText(/Matriz de Compras y Cuotas — Visa Signature/i)).toBeInTheDocument()
@@ -115,7 +115,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     const periodInput = screen.getByLabelText(/Indicar cantidad de períodos a mostrar/i)
@@ -136,7 +136,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     const startInput = screen.getByLabelText(/Indicar período inicial/i)
@@ -154,7 +154,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     const startInput = screen.getByLabelText(/Indicar período inicial/i)
@@ -187,7 +187,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     const periodInput = screen.getByLabelText(/Indicar cantidad de períodos a mostrar/i)
@@ -212,7 +212,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     const shortcut = screen.getByRole('button', { name: /⏪ Primera compra/i })
@@ -229,7 +229,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     const plasticSelect = screen.getByLabelText(/Plástico:/i)
@@ -246,12 +246,16 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     expect(screen.getByRole('columnheader', { name: 'Acciones' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Modificar compra Supermercado Lider' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Eliminar compra Supermercado Lider' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Modificar compra Supermercado Lider' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Eliminar compra Supermercado Lider' }),
+    ).toBeInTheDocument()
   })
 
   it('deletes a purchase when confirmed by user', () => {
@@ -263,7 +267,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     expect(screen.getByText('Supermercado Lider')).toBeInTheDocument()
@@ -287,7 +291,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     const deleteBtn = screen.getByRole('button', { name: 'Eliminar compra Supermercado Lider' })
@@ -307,7 +311,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     const editBtn = screen.getByRole('button', { name: 'Modificar compra Supermercado Lider' })
@@ -324,7 +328,9 @@ describe('CreditCardPurchasesModal', () => {
     fireEvent.click(saveBtn)
 
     // Store and matrix table should reflect the update
-    expect(useCreditCardStore.getState().purchases['purch-1']?.description).toBe('Supermercado Lider Express')
+    expect(useCreditCardStore.getState().purchases['purch-1']?.description).toBe(
+      'Supermercado Lider Express',
+    )
     expect(screen.getByText('Supermercado Lider Express')).toBeInTheDocument()
   })
 
@@ -335,7 +341,7 @@ describe('CreditCardPurchasesModal', () => {
         account={mockAccount}
         purchases={mockPurchases}
         onClose={vi.fn()}
-      />
+      />,
     )
 
     const addBtn = screen.getByRole('button', { name: '+ Cargar Compra' })

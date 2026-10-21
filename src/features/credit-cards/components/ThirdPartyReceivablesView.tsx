@@ -1,21 +1,22 @@
 import React, { useState } from 'react'
 import { useCreditCardStore } from '../store/creditCardSlice'
 import { formatCLP, toMoney } from '@/shared/types/money'
+import { getLocalISODate } from '@/shared/utils/date'
 import type { UUID } from '@/shared/types/domain'
 
 export const ThirdPartyReceivablesView: React.FC = () => {
-  const purchases = useCreditCardStore((s) => s.purchases)
-  const accounts = useCreditCardStore((s) => s.accounts)
-  const addRepayment = useCreditCardStore((s) => s.addRepayment)
+  const purchases = useCreditCardStore(s => s.purchases)
+  const accounts = useCreditCardStore(s => s.accounts)
+  const addRepayment = useCreditCardStore(s => s.addRepayment)
 
   // Filter only purchases with thirdPartyReceivable
   const thirdPartyPurchases = Object.values(purchases).filter(
-    (p) => p.payerType === 'TERCERO' && p.thirdPartyReceivable
+    p => p.payerType === 'TERCERO' && p.thirdPartyReceivable,
   )
 
   const [selectedPurchaseId, setSelectedPurchaseId] = useState<UUID | null>(null)
   const [repaymentAmount, setRepaymentAmount] = useState('')
-  const [repaymentDate, setRepaymentDate] = useState(new Date().toISOString().split('T')[0] ?? '')
+  const [repaymentDate, setRepaymentDate] = useState(getLocalISODate())
   const [destinationAccount, setDestinationAccount] = useState('Cuenta Corriente')
 
   const handleRepaymentSubmit = (e: React.FormEvent) => {
@@ -35,11 +36,23 @@ export const ThirdPartyReceivablesView: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'COBRADO_TOTAL':
-        return <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full text-xs font-semibold">PAGADO TOTAL</span>
+        return (
+          <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full text-xs font-semibold">
+            PAGADO TOTAL
+          </span>
+        )
       case 'COBRADO_PARCIAL':
-        return <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full text-xs font-semibold">PARCIAL</span>
+        return (
+          <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full text-xs font-semibold">
+            PARCIAL
+          </span>
+        )
       default:
-        return <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded-full text-xs font-semibold">PENDIENTE</span>
+        return (
+          <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded-full text-xs font-semibold">
+            PENDIENTE
+          </span>
+        )
     }
   }
 
@@ -51,19 +64,25 @@ export const ThirdPartyReceivablesView: React.FC = () => {
             👥 Compras de Terceros y Cobranzas Pendientes
           </h2>
           <p className="text-sm text-slate-400">
-            Seguimiento de compras prestadas en tus tarjetas de crédito y registro de pagos recibidos.
+            Seguimiento de compras prestadas en tus tarjetas de crédito y registro de pagos
+            recibidos.
           </p>
         </div>
       </div>
 
       {thirdPartyPurchases.length === 0 ? (
         <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-8 text-center text-slate-400">
-          <p className="text-base font-medium text-slate-300">No hay compras prestadas a terceros registradas.</p>
-          <p className="text-xs mt-1">Al registrar consumos con tarjeta marcados como "Tercero", aparecerán automáticamente en este tablero.</p>
+          <p className="text-base font-medium text-slate-300">
+            No hay compras prestadas a terceros registradas.
+          </p>
+          <p className="text-xs mt-1">
+            Al registrar consumos con tarjeta marcados como "Tercero", aparecerán automáticamente en
+            este tablero.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {thirdPartyPurchases.map((purchase) => {
+          {thirdPartyPurchases.map(purchase => {
             const rec = purchase.thirdPartyReceivable!
             const account = accounts[purchase.accountId]
             const pendingAmount = rec.totalOwedCents - rec.amountCollectedCents
@@ -79,22 +98,38 @@ export const ThirdPartyReceivablesView: React.FC = () => {
                       <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
                         {rec.thirdPartyName}
                       </span>
-                      <h4 className="text-base font-bold text-white mt-0.5">{purchase.description}</h4>
+                      <h4 className="text-base font-bold text-white mt-0.5">
+                        {purchase.description}
+                      </h4>
                     </div>
                     {getStatusBadge(rec.status)}
                   </div>
 
                   <div className="text-xs text-slate-400 space-y-1">
-                    <div>Tarjeta: <span className="text-slate-200">{account ? `${account.institution} (${account.accountName})` : 'Tarjeta'}</span></div>
-                    <div>Período de corte: <span className="text-slate-200">{purchase.firstInstallmentPeriod}</span></div>
-                    <div>Cuotas: <span className="text-slate-200">{purchase.totalInstallments}</span></div>
+                    <div>
+                      Tarjeta:{' '}
+                      <span className="text-slate-200">
+                        {account ? `${account.institution} (${account.accountName})` : 'Tarjeta'}
+                      </span>
+                    </div>
+                    <div>
+                      Período de corte:{' '}
+                      <span className="text-slate-200">{purchase.firstInstallmentPeriod}</span>
+                    </div>
+                    <div>
+                      Cuotas: <span className="text-slate-200">{purchase.totalInstallments}</span>
+                    </div>
                   </div>
 
                   {/* Progress bar */}
                   <div className="space-y-1 pt-2">
                     <div className="flex justify-between text-xs font-medium">
-                      <span className="text-emerald-400">Cobrado: {formatCLP(rec.amountCollectedCents)}</span>
-                      <span className="text-rose-400">Resta: {formatCLP(toMoney(pendingAmount))}</span>
+                      <span className="text-emerald-400">
+                        Cobrado: {formatCLP(rec.amountCollectedCents)}
+                      </span>
+                      <span className="text-rose-400">
+                        Resta: {formatCLP(toMoney(pendingAmount))}
+                      </span>
                     </div>
                     <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
                       <div
@@ -134,34 +169,52 @@ export const ThirdPartyReceivablesView: React.FC = () => {
             <h3 className="text-lg font-bold text-white">💰 Registrar Abono / Pago de Tercero</h3>
             <form onSubmit={handleRepaymentSubmit} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Monto Recibido (CLP)</label>
+                <label
+                  htmlFor="repayment-amount"
+                  className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                >
+                  Monto Recibido (CLP)
+                </label>
                 <input
+                  id="repayment-amount"
                   type="number"
                   placeholder="ej. 25000"
                   value={repaymentAmount}
-                  onChange={(e) => setRepaymentAmount(e.target.value)}
+                  onChange={e => setRepaymentAmount(e.target.value)}
                   required
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Fecha de Recepción</label>
+                <label
+                  htmlFor="repayment-date"
+                  className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                >
+                  Fecha de Recepción
+                </label>
                 <input
+                  id="repayment-date"
                   type="date"
                   value={repaymentDate}
-                  onChange={(e) => setRepaymentDate(e.target.value)}
+                  onChange={e => setRepaymentDate(e.target.value)}
                   required
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Cuenta de Destino</label>
+                <label
+                  htmlFor="repayment-destination"
+                  className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                >
+                  Cuenta de Destino
+                </label>
                 <input
+                  id="repayment-destination"
                   type="text"
                   value={destinationAccount}
-                  onChange={(e) => setDestinationAccount(e.target.value)}
+                  onChange={e => setDestinationAccount(e.target.value)}
                   required
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
                 />

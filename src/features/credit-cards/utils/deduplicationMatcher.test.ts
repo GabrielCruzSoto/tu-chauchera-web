@@ -178,4 +178,3 @@ describe('deduplicationMatcher', () => {
     expect(matched[0]?.selected).toBe(true)
   })
 })
-

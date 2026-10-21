@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import { CreditCardsDashboard } from './CreditCardsDashboard'
 import { useCreditCardStore } from '../store/creditCardSlice'
+import { getLocalISODate, getLocalPeriod } from '@/shared/utils/date'
 
 describe('CreditCardsDashboard', () => {
   beforeEach(() => {
@@ -86,8 +87,8 @@ describe('CreditCardsDashboard', () => {
       primaryLastFour: '4321',
     })
 
-    const today = new Date().toISOString().slice(0, 10)
-    const currentPeriod = today.slice(0, 7)
+    const today = getLocalISODate()
+    const currentPeriod = getLocalPeriod()
     store.addPurchase({
       accountId: account.id,
       plasticId: account.plastics[0]!.id,
@@ -142,7 +143,39 @@ describe('CreditCardsDashboard', () => {
     // Close modal
     const closeButton = screen.getByRole('button', { name: /Cerrar modal de compras/i })
     fireEvent.click(closeButton)
-    expect(screen.queryByText(/Matriz de Compras y Cuotas — CMR Mastercard/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/Matriz de Compras y Cuotas — CMR Mastercard/i),
+    ).not.toBeInTheDocument()
+  })
+
+  it('displays overdrive/exceeded warning badge when registered debt exceeds credit limit', () => {
+    const store = useCreditCardStore.getState()
+    const account = store.addAccount({
+      institution: 'Banco Santander',
+      accountName: 'Visa Gold',
+      creditLimitCents: 500000,
+      closingDay: 20,
+      dueDay: 5,
+      primaryHolderName: 'Gabriel Cruz',
+      primaryLastFour: '7788',
+    })
+
+    store.addPurchase({
+      accountId: account.id,
+      plasticId: account.plastics[0]!.id,
+      description: 'Notebook Gamer',
+      purchaseDate: '2026-08-10',
+      firstInstallmentPeriod: '2026-09',
+      totalAmountCents: 650000,
+      totalInstallments: 1,
+      payerType: 'PROPIO',
+    })
+
+    render(<CreditCardsDashboard />)
+
+    expect(screen.getByText(/⚠️ Cupo Excedido/i)).toBeInTheDocument()
+    expect(screen.getByText(/Límite Excedido por:/i)).toBeInTheDocument()
+    expect(screen.getByText(/\+?\$150\.000/i)).toBeInTheDocument()
+    expect(screen.getByText(/\(130%\)/i)).toBeInTheDocument()
   })
 })
-

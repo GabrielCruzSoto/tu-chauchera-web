@@ -11,10 +11,7 @@ export interface EnhancedParsedTransaction extends ParsedStatementTransaction {
  * Checks if a parsed installment transaction matches an active existing installment plan.
  * An ongoing installment match is only applicable for subsequent installments (currentInstallment > 1).
  */
-function isOngoingInstallmentMatch(
-  tx: ParsedStatementTransaction,
-  p: CreditCardPurchase
-): boolean {
+function isOngoingInstallmentMatch(tx: ParsedStatementTransaction, p: CreditCardPurchase): boolean {
   if (p.description.toLowerCase() !== tx.description.toLowerCase()) {
     return false
   }
@@ -48,15 +45,15 @@ function isOngoingInstallmentMatch(
  */
 export function matchExistingPurchases(
   parsedTransactions: ParsedStatementTransaction[],
-  existingPurchases: CreditCardPurchase[]
+  existingPurchases: CreditCardPurchase[],
 ): EnhancedParsedTransaction[] {
-  return parsedTransactions.map((tx) => {
+  return parsedTransactions.map(tx => {
     // 1. Exact match
     const exactMatch = existingPurchases.find(
-      (p) =>
+      p =>
         p.description.toLowerCase() === tx.description.toLowerCase() &&
         p.purchaseDate === tx.date &&
-        p.totalAmountCents === tx.amountCents
+        p.totalAmountCents === tx.amountCents,
     )
 
     if (exactMatch) {
@@ -72,7 +69,7 @@ export function matchExistingPurchases(
     // Only subsequent installments (currentInstallment > 1) can match an existing plan.
     // The initial installment (currentInstallment === 1) is always a new purchase unless caught by exactMatch.
     if (tx.totalInstallments > 1 && tx.currentInstallment > 1) {
-      const ongoingMatch = existingPurchases.find((p) => isOngoingInstallmentMatch(tx, p))
+      const ongoingMatch = existingPurchases.find(p => isOngoingInstallmentMatch(tx, p))
 
       if (ongoingMatch) {
         return {

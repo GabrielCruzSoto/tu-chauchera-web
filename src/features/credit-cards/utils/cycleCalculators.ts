@@ -10,7 +10,11 @@ import type { Money } from '../../../shared/types/money'
  * - When dueDay >= closingDay (same month payment):
  *   Purchases made on or before closingDay are paid in current month; after closingDay are paid next month.
  */
-export function calculateBillingPeriod(purchaseDate: ISODate, closingDay: number, dueDay?: number): Period {
+export function calculateBillingPeriod(
+  purchaseDate: ISODate,
+  closingDay: number,
+  dueDay?: number,
+): Period {
   const [yearStr = '1970', monthStr = '01', dayStr = '01'] = purchaseDate.split('-')
   let year = parseInt(yearStr, 10)
   let month = parseInt(monthStr, 10)
@@ -42,7 +46,10 @@ export function calculateBillingPeriod(purchaseDate: ISODate, closingDay: number
 /**
  * Computes an array of consecutive Period strings (YYYY-MM) for N installments.
  */
-export function calculateInstallmentPeriods(firstPeriod: Period, totalInstallments: number): Period[] {
+export function calculateInstallmentPeriods(
+  firstPeriod: Period,
+  totalInstallments: number,
+): Period[] {
   const [yearStr = '1970', monthStr = '01'] = firstPeriod.split('-')
   let year = parseInt(yearStr, 10)
   let month = parseInt(monthStr, 10)
@@ -67,7 +74,7 @@ export function calculateInstallmentPeriods(firstPeriod: Period, totalInstallmen
  */
 export function calculateRepaymentStatus(
   totalOwedCents: Money,
-  amountCollectedCents: Money
+  amountCollectedCents: Money,
 ): ThirdPartyReceivableStatus {
   if (amountCollectedCents <= 0) {
     return 'PENDIENTE'

@@ -2,7 +2,10 @@ import React, { useState } from 'react'
 import { useCreditCardStore } from '../store/creditCardSlice'
 import { parseStatementText } from '../parsers/statementParser'
 import { extractTextFromPdf } from '../parsers/pdfReader'
-import { matchExistingPurchases, type EnhancedParsedTransaction } from '../utils/deduplicationMatcher'
+import {
+  matchExistingPurchases,
+  type EnhancedParsedTransaction,
+} from '../utils/deduplicationMatcher'
 import { formatCLP, toMoney } from '@/shared/types/money'
 import type { UUID } from '@/shared/types/domain'
 
@@ -11,19 +14,18 @@ interface StatementImportModalProps {
   onClose: () => void
 }
 
-export const StatementImportModal: React.FC<StatementImportModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
-  const accounts = useCreditCardStore((s) => s.accounts)
-  const purchases = useCreditCardStore((s) => s.purchases)
-  const addPurchase = useCreditCardStore((s) => s.addPurchase)
+export const StatementImportModal: React.FC<StatementImportModalProps> = ({ isOpen, onClose }) => {
+  const accounts = useCreditCardStore(s => s.accounts)
+  const purchases = useCreditCardStore(s => s.purchases)
+  const addPurchase = useCreditCardStore(s => s.addPurchase)
 
   const accountList = Object.values(accounts)
   const [selectedAccountId, setSelectedAccountId] = useState<UUID>(accountList[0]?.id ?? '')
 
   // Keep selectedAccountId synced if accounts load or update after modal opens
-  const effectiveAccountId = accounts[selectedAccountId] ? selectedAccountId : (accountList[0]?.id ?? '')
+  const effectiveAccountId = accounts[selectedAccountId]
+    ? selectedAccountId
+    : (accountList[0]?.id ?? '')
   const currentAccount = accounts[effectiveAccountId]
   const availablePlastics = currentAccount?.plastics ?? []
   const defaultPlasticId = availablePlastics[0]?.id ?? ''
@@ -31,30 +33,40 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
   const [rawText, setRawText] = useState('')
   const [isReadingPdf, setIsReadingPdf] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [parsedRows, setParsedRows] = useState<(EnhancedParsedTransaction & { plasticId?: UUID })[]>([])
+  const [parsedRows, setParsedRows] = useState<
+    (EnhancedParsedTransaction & { plasticId?: UUID })[]
+  >([])
   const [step, setStep] = useState<'INPUT' | 'PREVIEW'>('INPUT')
   const [isDragging, setIsDragging] = useState(false)
 
   if (!isOpen) return null
 
   const existingPurchasesForAccount = Object.values(purchases).filter(
-    (p) => p.accountId === effectiveAccountId
+    p => p.accountId === effectiveAccountId,
   )
 
   const processExtractedText = (text: string) => {
     const institutionHint = currentAccount?.institution
     const result = parseStatementText(text, institutionHint)
-    if (result.transactions.length === 0) {
-      setErrorMessage('No se encontraron líneas de compra reconocibles en el PDF. Puedes intentar copiando el texto manualmente.')
+    if (result.institution === 'UNSUPPORTED' || result.isSupported === false) {
+      setErrorMessage(
+        result.errorMessage ??
+          'La institución o formato del estado de cuenta no está soportado. Actualmente soportamos CMR Banco Falabella y Tenpo.',
+      )
+      setRawText(text)
+    } else if (result.transactions.length === 0) {
+      setErrorMessage(
+        'No se encontraron líneas de compra reconocibles en el PDF. Puedes intentar copiando el texto manualmente.',
+      )
       setRawText(text)
     } else {
       const enhanced = matchExistingPurchases(result.transactions, existingPurchasesForAccount)
       setParsedRows(
-        enhanced.map((row) => {
+        enhanced.map(row => {
           let plasticId = defaultPlasticId
           if (row.suggestedPlasticLastFour) {
             const matchedPlastic = availablePlastics.find(
-              (p) => p.lastFourDigits === row.suggestedPlasticLastFour
+              p => p.lastFourDigits === row.suggestedPlasticLastFour,
             )
             if (matchedPlastic) {
               plasticId = matchedPlastic.id
@@ -64,7 +76,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
             ...row,
             plasticId,
           }
-        })
+        }),
       )
       setStep('PREVIEW')
     }
@@ -85,7 +97,9 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
       processExtractedText(extracted)
     } catch (err) {
       console.error(err)
-      setErrorMessage('Error al leer el archivo PDF. Asegúrate de que no esté protegido por contraseña.')
+      setErrorMessage(
+        'Error al leer el archivo PDF. Asegúrate de que no esté protegido por contraseña.',
+      )
     } finally {
       setIsReadingPdf(false)
     }
@@ -172,7 +186,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
     }
 
     const targetPlasticId = defaultPlasticId || crypto.randomUUID()
-    const selectedTransactions = parsedRows.filter((row) => row.selected)
+    const selectedTransactions = parsedRows.filter(row => row.selected)
 
     if (selectedTransactions.length === 0) return
 
@@ -203,10 +217,12 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
         <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/90">
           <div>
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              📄 Importador de Estado de Cuenta {currentAccount?.institution ? `(${currentAccount.institution})` : ''}
+              📄 Importador de Estado de Cuenta{' '}
+              {currentAccount?.institution ? `(${currentAccount.institution})` : ''}
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Extracción local privada sin enviar datos fuera de tu navegador. Compatible con CMR Falabella y Tenpo.
+              Extracción local privada sin enviar datos fuera de tu navegador. Compatible con CMR
+              Falabella y Tenpo.
             </p>
           </div>
           <button
@@ -228,15 +244,19 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
           ) : step === 'INPUT' ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
+                <label
+                  htmlFor="import-target-account"
+                  className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                >
                   Tarjeta de Crédito Destino
                 </label>
                 <select
+                  id="import-target-account"
                   value={effectiveAccountId}
-                  onChange={(e) => setSelectedAccountId(e.target.value)}
+                  onChange={e => setSelectedAccountId(e.target.value)}
                   className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 cursor-pointer transition"
                 >
-                  {accountList.map((acc) => (
+                  {accountList.map(acc => (
                     <option key={acc.id} value={acc.id}>
                       {acc.institution} - {acc.accountName}
                     </option>
@@ -266,11 +286,16 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                     </div>
                   ) : (
                     <>
-                      <p className={`text-sm font-medium ${isDragging ? 'text-indigo-300' : 'text-slate-200'}`}>
-                        {isDragging ? '¡Suelta tu archivo PDF aquí!' : 'Arrastra tu archivo PDF aquí o búscalo en tu equipo (CMR Falabella o Tenpo)'}
+                      <p
+                        className={`text-sm font-medium ${isDragging ? 'text-indigo-300' : 'text-slate-200'}`}
+                      >
+                        {isDragging
+                          ? '¡Suelta tu archivo PDF aquí!'
+                          : 'Arrastra tu archivo PDF aquí o búscalo en tu equipo (CMR Falabella o Tenpo)'}
                       </p>
                       <p className="text-[11px] text-slate-400">
-                        Lectura 100% segura y privada en tu navegador (sin subir a servidores externos)
+                        Lectura 100% segura y privada en tu navegador (sin subir a servidores
+                        externos)
                       </p>
                       <label className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md shadow-indigo-600/30 transition-all">
                         Seleccionar Archivo PDF
@@ -294,19 +319,25 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
 
               <div className="relative flex py-1 items-center">
                 <div className="flex-grow border-t border-slate-800"></div>
-                <span className="flex-shrink mx-4 text-[10px] text-slate-500 uppercase tracking-widest font-semibold">O pegar texto manualmente</span>
+                <span className="flex-shrink mx-4 text-[10px] text-slate-500 uppercase tracking-widest font-semibold">
+                  O pegar texto manualmente
+                </span>
                 <div className="flex-grow border-t border-slate-800"></div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">
+                <label
+                  htmlFor="import-raw-text"
+                  className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                >
                   Pegar texto de movimientos:
                 </label>
                 <textarea
+                  id="import-raw-text"
                   rows={4}
                   placeholder={`Ejemplo (CMR Falabella o Tenpo):\n15/04/2026 FALABELLA PARQUE ARAUCO 03/12 $ 45.990\n21/07/2026 PAYU UBER TRIP SANTIAGO CH Digital $5.696 $5.696 00/00 $5.696`}
                   value={rawText}
-                  onChange={(e) => setRawText(e.target.value)}
+                  onChange={e => setRawText(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 font-mono text-xs text-slate-200 focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
                 />
               </div>
@@ -315,10 +346,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
             <div className="space-y-4">
               <div className="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl border border-slate-700">
                 <span className="text-xs text-slate-300">
-                  Transacciones detectadas: <strong className="text-white">{parsedRows.length}</strong>
+                  Transacciones detectadas:{' '}
+                  <strong className="text-white">{parsedRows.length}</strong>
                 </span>
                 <span className="text-xs text-indigo-400 font-semibold">
-                  Seleccionadas para importar: {parsedRows.filter((r) => r.selected).length}
+                  Seleccionadas para importar: {parsedRows.filter(r => r.selected).length}
                 </span>
               </div>
 
@@ -338,7 +370,12 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-800 bg-slate-900/50">
                     {parsedRows.map((row, idx) => (
-                      <tr key={row.id} className={row.selected ? 'hover:bg-slate-800/30' : 'opacity-40 bg-slate-950/40'}>
+                      <tr
+                        key={row.id}
+                        className={
+                          row.selected ? 'hover:bg-slate-800/30' : 'opacity-40 bg-slate-950/40'
+                        }
+                      >
                         <td className="p-3 text-center">
                           <input
                             type="checkbox"
@@ -372,7 +409,11 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                           <div className="font-bold text-white">{formatCLP(row.amountCents)}</div>
                           {row.totalInstallments > 1 && (
                             <div className="text-[10px] text-slate-400">
-                              ({formatCLP(toMoney(Math.round(row.amountCents / row.totalInstallments)))}/mes)
+                              (
+                              {formatCLP(
+                                toMoney(Math.round(row.amountCents / row.totalInstallments)),
+                              )}
+                              /mes)
                             </div>
                           )}
                         </td>
@@ -393,10 +434,10 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                           {availablePlastics.length > 1 ? (
                             <select
                               value={row.plasticId ?? defaultPlasticId}
-                              onChange={(e) => handlePlasticChange(idx, e.target.value)}
+                              onChange={e => handlePlasticChange(idx, e.target.value)}
                               className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white text-xs focus:outline-none"
                             >
-                              {availablePlastics.map((plastic) => (
+                              {availablePlastics.map(plastic => (
                                 <option key={plastic.id} value={plastic.id}>
                                   {plastic.holderName} (•••• {plastic.lastFourDigits})
                                 </option>
@@ -414,7 +455,7 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
                               type="text"
                               placeholder="Nombre contacto"
                               value={row.thirdPartyName ?? ''}
-                              onChange={(e) => handleThirdPartyNameChange(idx, e.target.value)}
+                              onChange={e => handleThirdPartyNameChange(idx, e.target.value)}
                               className="bg-slate-800 border border-emerald-600/40 rounded px-2 py-1 text-white text-xs w-full focus:outline-none"
                             />
                           ) : (
@@ -466,10 +507,10 @@ export const StatementImportModal: React.FC<StatementImportModalProps> = ({
               <button
                 type="button"
                 onClick={handleConfirmImport}
-                disabled={parsedRows.filter((r) => r.selected).length === 0}
+                disabled={parsedRows.filter(r => r.selected).length === 0}
                 className="min-h-[44px] px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/30 cursor-pointer transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
-                Confirmar e Importar {parsedRows.filter((r) => r.selected).length} Compras
+                Confirmar e Importar {parsedRows.filter(r => r.selected).length} Compras
               </button>
             )}
           </div>

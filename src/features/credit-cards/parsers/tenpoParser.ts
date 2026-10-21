@@ -5,7 +5,10 @@ import type { ParsedStatementTransaction, ParsedStatementResult } from './falabe
  * Parses raw text extracted from a Tenpo credit card account statement (PDF or text).
  */
 export function parseTenpoStatementText(rawText: string): ParsedStatementResult {
-  const lines = rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+  const lines = rawText
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean)
   const transactions: ParsedStatementTransaction[] = []
 
   let closingDate: string | undefined = undefined
@@ -123,7 +126,7 @@ export function parseTenpoStatementText(rawText: string): ParsedStatementResult 
     // Tenpo standard statement line pattern:
     // [null]? [DD/MM/YYYY] [DESCRIPCIÓN] [Digital|Física]? $[montoOp] $[montoTotal] [cuotaActual/cuotaTotal] $[valorCuota]
     const standardMatch = combined.match(
-      /(?:(Digital|F[ií]sica)\s+)?\$\s*([\d.]+)\s+\$\s*([\d.]+)\s+(\d{1,2}\/\d{1,2})\s+\$\s*([\d.]+)$/i
+      /(?:(Digital|F[ií]sica)\s+)?\$\s*([\d.]+)\s+\$\s*([\d.]+)\s+(\d{1,2}\/\d{1,2})\s+\$\s*([\d.]+)$/i,
     )
 
     let description: string
@@ -241,6 +244,7 @@ export function parseTenpoStatementText(rawText: string): ParsedStatementResult 
 
   return {
     institution: 'TENPO',
+    isSupported: true,
     closingDate,
     dueDate,
     totalBilledCents,
