@@ -7,9 +7,7 @@ dist-ssr/
 *.tsbuildinfo
 
 # Environment — NEVER commit secrets
-.env
-.env.local
-.env.*.local
+.env*
 !.env.example
 
 # Vite cache
@@ -34,7 +32,6 @@ Thumbs.db
 # Test coverage
 coverage/
 .vercel
-.env*
 .playwright-mcp/
 videos/
 # SonarQube
