@@ -1,6 +1,6 @@
-import React, { useEffect } from "react"
-import { useSyncStore } from "../store/syncSlice"
-import { isDriveStorageQuotaError } from "@/shared/services/driveErrors"
+import React, { useEffect } from 'react'
+import { useSyncStore } from '../store/syncSlice'
+import { isDriveStorageQuotaError } from '@/shared/services/driveErrors'
 
 export const SyncStatusIndicator: React.FC = () => {
   const {
@@ -18,20 +18,24 @@ export const SyncStatusIndicator: React.FC = () => {
     const handleOnline = () => setOnlineStatus(true)
     const handleOffline = () => setOnlineStatus(false)
 
-    window.addEventListener("online", handleOnline)
-    window.addEventListener("offline", handleOffline)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
 
     return () => {
-      window.removeEventListener("online", handleOnline)
-      window.removeEventListener("offline", handleOffline)
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
     }
   }, [setOnlineStatus])
 
   return (
     <div className="flex items-center gap-2 text-xs">
-      {status === "SYNCED" && (
+      {status === 'SYNCED' && (
         <div
-          title={lastSyncedAt ? `Última sincronización con Google Drive: ${new Date(lastSyncedAt).toLocaleString()}` : "Sincronizado con Google Drive"}
+          title={
+            lastSyncedAt
+              ? `Última sincronización con Google Drive: ${new Date(lastSyncedAt).toLocaleString()}`
+              : 'Sincronizado con Google Drive'
+          }
           className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20 select-none cursor-default"
         >
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
@@ -39,14 +43,17 @@ export const SyncStatusIndicator: React.FC = () => {
             <span className="font-semibold text-[11px] hidden sm:inline">Drive Sincronizado</span>
             {lastSyncedAt && (
               <span className="text-[9px] text-emerald-400/80 font-mono mt-0.5 hidden sm:inline">
-                {new Date(lastSyncedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(lastSyncedAt).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </span>
             )}
           </div>
         </div>
       )}
 
-      {status === "SYNCING" && (
+      {status === 'SYNCING' && (
         <div className="flex items-center gap-1.5 text-sky-400 bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-500/20">
           <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
             <circle
@@ -67,12 +74,10 @@ export const SyncStatusIndicator: React.FC = () => {
         </div>
       )}
 
-      {status === "PENDING" && (
+      {status === 'PENDING' && (
         <div className="flex items-center gap-2 text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-          <span className="font-medium">
-            {pendingMutations} cambio(s) pendiente(s)
-          </span>
+          <span className="font-medium">{pendingMutations} cambio(s) pendiente(s)</span>
           <button
             onClick={() => void forceResync()}
             className="min-h-[44px] sm:min-h-0 text-amber-300 hover:text-white underline cursor-pointer text-xs sm:text-[10px] flex items-center px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
@@ -82,11 +87,11 @@ export const SyncStatusIndicator: React.FC = () => {
         </div>
       )}
 
-      {status === "ERROR" && (
+      {status === 'ERROR' && (
         <div className="flex items-center gap-2 text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/20">
           <span
             className={`w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0 ${
-              isQuotaExceeded || isDriveStorageQuotaError(errorMessage) ? "animate-pulse" : ""
+              isQuotaExceeded || isDriveStorageQuotaError(errorMessage) ? 'animate-pulse' : ''
             }`}
           />
           {isQuotaExceeded || isDriveStorageQuotaError(errorMessage) ? (
@@ -99,7 +104,7 @@ export const SyncStatusIndicator: React.FC = () => {
               Sin espacio en Drive
             </button>
           ) : (
-            <span className="font-medium" title={errorMessage ?? "Error de sincronización"}>
+            <span className="font-medium" title={errorMessage ?? 'Error de sincronización'}>
               Error al sincronizar
             </span>
           )}
@@ -113,7 +118,7 @@ export const SyncStatusIndicator: React.FC = () => {
         </div>
       )}
 
-      {status === "OFFLINE" && (
+      {status === 'OFFLINE' && (
         <div className="flex items-center gap-1.5 text-slate-400 bg-slate-800 px-2.5 py-1 rounded-full border border-slate-700">
           <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
           <span className="font-medium">Sin conexión</span>

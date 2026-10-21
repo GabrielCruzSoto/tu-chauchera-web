@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect } from 'react'
 
 export interface StorageQuotaModalProps {
   isOpen?: boolean
@@ -15,13 +15,13 @@ export const StorageQuotaModal: React.FC<StorageQuotaModalProps> = ({
     if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         onClose()
       }
     }
 
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
   if (!isOpen) return null
@@ -37,7 +37,7 @@ export const StorageQuotaModal: React.FC<StorageQuotaModalProps> = ({
     >
       <div
         className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-6 text-slate-100 relative"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-800/80 pb-4">
@@ -79,19 +79,27 @@ export const StorageQuotaModal: React.FC<StorageQuotaModalProps> = ({
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer shrink-0"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         {/* Body Content */}
         <div className="space-y-4">
-          <p id="storage-quota-description" className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Tu cuenta de Google ha superado la cuota de almacenamiento disponible, compartida entre{" "}
-            <strong className="text-white">Google Drive</strong>,{" "}
-            <strong className="text-white">Gmail</strong> y{" "}
-            <strong className="text-white">Google Fotos</strong>. Debido a esto, Tu Chauchera no puede
-            sincronizar tus cambios ni subir respaldos a la nube.
+          <p
+            id="storage-quota-description"
+            className="text-xs sm:text-sm text-slate-300 leading-relaxed"
+          >
+            Tu cuenta de Google ha superado la cuota de almacenamiento disponible, compartida entre{' '}
+            <strong className="text-white">Google Drive</strong>,{' '}
+            <strong className="text-white">Gmail</strong> y{' '}
+            <strong className="text-white">Google Fotos</strong>. Debido a esto, Tu Chauchera no
+            puede sincronizar tus cambios ni subir respaldos a la nube.
           </p>
 
           <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2.5">
@@ -100,16 +108,23 @@ export const StorageQuotaModal: React.FC<StorageQuotaModalProps> = ({
             </h3>
             <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside leading-normal">
               <li>
-                <strong>Vaciar papeleras:</strong> Vacía la papelera en Google Drive y Gmail (los archivos eliminados siguen usando espacio por 30 días).
+                <strong>Vaciar papeleras:</strong> Vacía la papelera en Google Drive y Gmail (los
+                archivos eliminados siguen usando espacio por 30 días).
               </li>
               <li>
-                <strong>Archivos pesados en Gmail:</strong> Elimina correos con archivos adjuntos grandes buscando <code className="bg-slate-800 px-1 py-0.5 rounded text-amber-300">has:attachment larger:10M</code>.
+                <strong>Archivos pesados en Gmail:</strong> Elimina correos con archivos adjuntos
+                grandes buscando{' '}
+                <code className="bg-slate-800 px-1 py-0.5 rounded text-amber-300">
+                  has:attachment larger:10M
+                </code>
+                .
               </li>
               <li>
                 <strong>Google Fotos:</strong> Limpia videos extensos o fotos duplicadas.
               </li>
               <li>
-                <strong>Ampliar espacio:</strong> Considera un plan de suscripción en Google One si necesitas más capacidad.
+                <strong>Ampliar espacio:</strong> Considera un plan de suscripción en Google One si
+                necesitas más capacidad.
               </li>
             </ul>
           </div>
@@ -154,7 +169,12 @@ export const StorageQuotaModal: React.FC<StorageQuotaModalProps> = ({
               className="min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
               <span>Reintentar sincronización</span>
             </button>
