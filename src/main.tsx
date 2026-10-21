@@ -8,14 +8,19 @@ import { useAuthStore } from './store/authSlice'
 import { useObligationsStore } from './features/obligations/store/obligationsSlice'
 
 if (import.meta.env.DEV && typeof window !== 'undefined') {
-  (window as unknown as { __dev?: unknown }).__dev = {
+  ;(window as unknown as { __dev?: unknown }).__dev = {
     useAuthStore,
     useObligationsStore,
     unlock: () => {
       useAuthStore.setState({
         isAuthenticated: true,
         isUnlocked: true,
-        user: { name: "Gabriel Demo", email: "gabriel@tuchauchera.cl", sub: "demo-user", picture: "" },
+        user: {
+          name: 'Gabriel Demo',
+          email: 'gabriel@tuchauchera.cl',
+          sub: 'demo-user',
+          picture: '',
+        },
       })
     },
   }
