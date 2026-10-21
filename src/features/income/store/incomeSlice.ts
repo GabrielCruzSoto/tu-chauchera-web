@@ -1,10 +1,17 @@
 /**
  * Zustand Slice for Income management and Cash Flow computations.
  */
-import { create } from "zustand"
-import type { Income, CreateIncomeDTO, IncomesStore, UUID, Period, IncomeStatus } from "@/shared/types/domain"
-import { addMonthsToPeriod } from "@/shared/utils/date"
-import { useSyncStore } from "@/features/sync/store/syncSlice"
+import { create } from 'zustand'
+import type {
+  Income,
+  CreateIncomeDTO,
+  IncomesStore,
+  UUID,
+  Period,
+  IncomeStatus,
+} from '@/shared/types/domain'
+import { addMonthsToPeriod } from '@/shared/utils/date'
+import { useSyncStore } from '@/features/sync/store/syncSlice'
 
 export interface IncomeState {
   incomes: Record<UUID, Income>
@@ -21,7 +28,7 @@ export interface IncomeState {
   resetIncomes: () => void
 }
 
-export const useIncomeStore = create<IncomeState>((set) => ({
+export const useIncomeStore = create<IncomeState>(set => ({
   incomes: {},
   isLoaded: false,
 
@@ -32,14 +39,14 @@ export const useIncomeStore = create<IncomeState>((set) => ({
     })
   },
 
-  setIncomesData: (data) => {
+  setIncomesData: data => {
     set({
       incomes: data.incomes,
       isLoaded: true,
     })
   },
 
-  addIncome: (dto) => {
+  addIncome: dto => {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
     const newIncome: Income = {
@@ -47,30 +54,26 @@ export const useIncomeStore = create<IncomeState>((set) => ({
       description: dto.description,
       amountCents: dto.amountCents,
       type: dto.type,
-      status: dto.status ?? "REAL",
+      status: dto.status ?? 'REAL',
       period: dto.period,
       receivedDate: dto.receivedDate,
       categoryId: dto.categoryId,
       createdAt: now,
     }
 
-    set((state) => ({
+    set(state => ({
       incomes: {
         ...state.incomes,
         [id]: newIncome,
       },
     }))
 
-    useSyncStore.getState().queueSyncDomain("incomes")
+    useSyncStore.getState().queueSyncDomain('incomes')
     return newIncome
   },
 
   addRecurringIncome: (dto, monthsCount = 12) => {
     const maxMonths = Math.min(Math.max(1, monthsCount), 24)
-    const [yearStr, monthStr] = dto.period.split("-")
-    const year = Number(yearStr)
-    const month = Number(monthStr)
-
     const createdIncomes: Income[] = []
     const newIncomesMap: Record<UUID, Income> = {}
     const now = new Date().toISOString()
@@ -84,7 +87,7 @@ export const useIncomeStore = create<IncomeState>((set) => ({
         description: `${dto.description} (${period})`,
         amountCents: dto.amountCents,
         type: dto.type,
-        status: dto.status ?? "REAL",
+        status: dto.status ?? 'REAL',
         period,
         receivedDate: dto.receivedDate,
         categoryId: dto.categoryId,
@@ -95,19 +98,19 @@ export const useIncomeStore = create<IncomeState>((set) => ({
       newIncomesMap[id] = inc
     }
 
-    set((state) => ({
+    set(state => ({
       incomes: {
         ...state.incomes,
         ...newIncomesMap,
       },
     }))
 
-    useSyncStore.getState().queueSyncDomain("incomes")
+    useSyncStore.getState().queueSyncDomain('incomes')
     return createdIncomes
   },
 
   updateIncome: (id, updates) => {
-    set((state) => {
+    set(state => {
       const existing = state.incomes[id]
       if (!existing) return state
 
@@ -122,17 +125,17 @@ export const useIncomeStore = create<IncomeState>((set) => ({
       }
     })
 
-    useSyncStore.getState().queueSyncDomain("incomes")
+    useSyncStore.getState().queueSyncDomain('incomes')
   },
 
-  removeIncome: (id) => {
-    set((state) => {
+  removeIncome: id => {
+    set(state => {
       const copy = { ...state.incomes }
       delete copy[id]
       return { incomes: copy }
     })
 
-    useSyncStore.getState().queueSyncDomain("incomes")
+    useSyncStore.getState().queueSyncDomain('incomes')
   },
 }))
 
@@ -143,13 +146,13 @@ export const useIncomeStore = create<IncomeState>((set) => ({
 export function getTotalIncomeForPeriod(
   incomes: Record<UUID, Income>,
   period: Period,
-  statusFilter?: IncomeStatus
+  statusFilter?: IncomeStatus,
 ): number {
   return Object.values(incomes)
-    .filter((inc) => {
+    .filter(inc => {
       if (inc.period !== period) return false
       if (!statusFilter) return true
-      const itemStatus: IncomeStatus = inc.status ?? "REAL"
+      const itemStatus: IncomeStatus = inc.status ?? 'REAL'
       return itemStatus === statusFilter
     })
     .reduce((sum, inc) => sum + inc.amountCents, 0)
@@ -160,14 +163,14 @@ export function getTotalIncomeForPeriod(
  */
 export function getIncomeBreakdownForPeriod(
   incomes: Record<UUID, Income>,
-  period: Period
+  period: Period,
 ): { real: number; estimated: number; total: number } {
   let real = 0
   let estimated = 0
 
   for (const inc of Object.values(incomes)) {
     if (inc.period === period) {
-      if (inc.status === "ESTIMATED") {
+      if (inc.status === 'ESTIMATED') {
         estimated += inc.amountCents
       } else {
         real += inc.amountCents

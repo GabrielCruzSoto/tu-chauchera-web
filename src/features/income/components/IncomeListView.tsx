@@ -1,36 +1,36 @@
-import React, { useState } from "react"
-import { useIncomeStore, getIncomeBreakdownForPeriod } from "../store/incomeSlice"
-import { formatCLP, toMoney } from "@/shared/types/money"
-import { getLocalPeriod, addMonthsToPeriod } from "@/shared/utils/date"
-import { IncomeModal } from "./IncomeModal"
-import type { Income, IncomeStatus } from "@/shared/types/domain"
+import React, { useState } from 'react'
+import { useIncomeStore, getIncomeBreakdownForPeriod } from '../store/incomeSlice'
+import { formatCLP, toMoney } from '@/shared/types/money'
+import { getLocalPeriod, addMonthsToPeriod } from '@/shared/utils/date'
+import { IncomeModal } from './IncomeModal'
+import type { Income, IncomeStatus } from '@/shared/types/domain'
 
-type FilterMode = "ALL" | "REAL" | "ESTIMATED"
+type FilterMode = 'ALL' | 'REAL' | 'ESTIMATED'
 
 export const IncomeListView: React.FC = () => {
   const { incomes, removeIncome } = useIncomeStore()
   const [currentPeriod, setCurrentPeriod] = useState(getLocalPeriod())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [incomeToEdit, setIncomeToEdit] = useState<Income | null>(null)
-  const [filterMode, setFilterMode] = useState<FilterMode>("ALL")
+  const [filterMode, setFilterMode] = useState<FilterMode>('ALL')
 
   const breakdown = getIncomeBreakdownForPeriod(incomes, currentPeriod)
 
-  const monthIncomes = Object.values(incomes).filter((inc) => inc.period === currentPeriod)
+  const monthIncomes = Object.values(incomes).filter(inc => inc.period === currentPeriod)
 
-  const filteredIncomes = monthIncomes.filter((inc) => {
-    const status: IncomeStatus = inc.status ?? "REAL"
-    if (filterMode === "REAL") return status === "REAL"
-    if (filterMode === "ESTIMATED") return status === "ESTIMATED"
+  const filteredIncomes = monthIncomes.filter(inc => {
+    const status: IncomeStatus = inc.status ?? 'REAL'
+    if (filterMode === 'REAL') return status === 'REAL'
+    if (filterMode === 'ESTIMATED') return status === 'ESTIMATED'
     return true
   })
 
   const handlePrevMonth = () => {
-    setCurrentPeriod((prev) => addMonthsToPeriod(prev, -1))
+    setCurrentPeriod(prev => addMonthsToPeriod(prev, -1))
   }
 
   const handleNextMonth = () => {
-    setCurrentPeriod((prev) => addMonthsToPeriod(prev, 1))
+    setCurrentPeriod(prev => addMonthsToPeriod(prev, 1))
   }
 
   const handleOpenAddModal = () => {
@@ -94,7 +94,8 @@ export const IncomeListView: React.FC = () => {
             {formatCLP(toMoney(breakdown.total))}
           </div>
           <div className="text-[11px] text-slate-400 mt-1">
-            {monthIncomes.length} {monthIncomes.length === 1 ? "registro" : "registros"} en {currentPeriod}
+            {monthIncomes.length} {monthIncomes.length === 1 ? 'registro' : 'registros'} en{' '}
+            {currentPeriod}
           </div>
         </div>
 
@@ -111,9 +112,7 @@ export const IncomeListView: React.FC = () => {
           <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-emerald-300 mt-2">
             {formatCLP(toMoney(breakdown.real))}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
-            Efectivamente recibido
-          </div>
+          <div className="text-[11px] text-slate-400 mt-1">Efectivamente recibido</div>
         </div>
 
         {/* Card 3: Ingreso Estimado */}
@@ -129,9 +128,7 @@ export const IncomeListView: React.FC = () => {
           <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-amber-300 mt-2">
             {formatCLP(toMoney(breakdown.estimated))}
           </div>
-          <div className="text-[11px] text-slate-400 mt-1">
-            Monto esperado o no fijo
-          </div>
+          <div className="text-[11px] text-slate-400 mt-1">Monto esperado o no fijo</div>
         </div>
       </div>
 
@@ -144,36 +141,36 @@ export const IncomeListView: React.FC = () => {
         >
           <button
             role="tab"
-            aria-selected={filterMode === "ALL"}
-            onClick={() => setFilterMode("ALL")}
+            aria-selected={filterMode === 'ALL'}
+            onClick={() => setFilterMode('ALL')}
             className={`min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition ${
-              filterMode === "ALL"
-                ? "bg-slate-800 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+              filterMode === 'ALL'
+                ? 'bg-slate-800 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Todos ({monthIncomes.length})
           </button>
           <button
             role="tab"
-            aria-selected={filterMode === "REAL"}
-            onClick={() => setFilterMode("REAL")}
+            aria-selected={filterMode === 'REAL'}
+            onClick={() => setFilterMode('REAL')}
             className={`min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition ${
-              filterMode === "REAL"
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+              filterMode === 'REAL'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Solo Reales
           </button>
           <button
             role="tab"
-            aria-selected={filterMode === "ESTIMATED"}
-            onClick={() => setFilterMode("ESTIMATED")}
+            aria-selected={filterMode === 'ESTIMATED'}
+            onClick={() => setFilterMode('ESTIMATED')}
             className={`min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition ${
-              filterMode === "ESTIMATED"
-                ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
+              filterMode === 'ESTIMATED'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             Solo Estimados
@@ -192,10 +189,11 @@ export const IncomeListView: React.FC = () => {
           <h3 className="text-base font-medium text-slate-300">
             {monthIncomes.length === 0
               ? `No hay ingresos registrados para ${currentPeriod}`
-              : `No hay ingresos en la vista ${filterMode === "REAL" ? "Reales" : "Estimados"}`}
+              : `No hay ingresos en la vista ${filterMode === 'REAL' ? 'Reales' : 'Estimados'}`}
           </h3>
           <p className="text-xs text-slate-500 mt-1 mb-5 max-w-sm mx-auto">
-            Registra tanto sueldos confirmados como ingresos variables o estimados para proyectar tu flujo.
+            Registra tanto sueldos confirmados como ingresos variables o estimados para proyectar tu
+            flujo.
           </p>
           <button
             onClick={handleOpenAddModal}
@@ -218,42 +216,42 @@ export const IncomeListView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {filteredIncomes.map((inc) => {
-                const isReal = (inc.status ?? "REAL") === "REAL"
+              {filteredIncomes.map(inc => {
+                const isReal = (inc.status ?? 'REAL') === 'REAL'
                 return (
                   <tr key={inc.id} className="hover:bg-slate-800/30 transition">
                     <td className="px-4 py-3.5">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[10px] border ${
                           isReal
-                            ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
-                            : "bg-amber-500/10 text-amber-300 border-amber-500/30"
+                            ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                            : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
                         }`}
                       >
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${
-                            isReal ? "bg-emerald-400" : "bg-amber-400 animate-pulse"
+                            isReal ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'
                           }`}
                         />
-                        {isReal ? "REAL" : "ESTIMADO"}
+                        {isReal ? 'REAL' : 'ESTIMADO'}
                       </span>
                     </td>
                     <td className="px-4 py-3.5">
                       <span
                         className={`px-2.5 py-1 rounded-full font-bold text-[10px] ${
-                          inc.type === "FIXED"
-                            ? "bg-sky-500/20 text-sky-300 border border-sky-500/30"
-                            : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                          inc.type === 'FIXED'
+                            ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                            : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                         }`}
                       >
-                        {inc.type === "FIXED" ? "FIJO" : "VARIABLE"}
+                        {inc.type === 'FIXED' ? 'FIJO' : 'VARIABLE'}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 font-semibold text-white">{inc.description}</td>
                     <td className="px-4 py-3.5 font-mono text-slate-300">{inc.period}</td>
                     <td
                       className={`px-4 py-3.5 font-bold font-mono text-sm ${
-                        isReal ? "text-emerald-400" : "text-amber-300"
+                        isReal ? 'text-emerald-400' : 'text-amber-300'
                       }`}
                     >
                       {formatCLP(inc.amountCents)}
