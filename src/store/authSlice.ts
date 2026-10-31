@@ -3,8 +3,8 @@
  * 1. Google OAuth 2.0 (Identity & Drive token)
  * 2. Master Password unlock (Local WebCrypto key derivation)
  */
-import { create } from "zustand"
-import type { GoogleUser } from "@/features/auth/services/googleOAuth"
+import { create } from 'zustand'
+import type { GoogleUser } from '@/features/auth/services/googleOAuth'
 import {
   deriveKeyFromPassword,
   createPasswordSentinel,
@@ -13,9 +13,10 @@ import {
   bufferToBase64,
   encryptData,
   decryptData,
-} from "@/shared/utils/crypto"
-import { DriveClient } from "@/shared/services/driveClient"
-import type { SettingsStore } from "@/shared/types/domain"
+} from '@/shared/utils/crypto'
+import { DriveClient } from '@/shared/services/driveClient'
+import { CURRENT_SCHEMA_VERSION } from '@/shared/constants/version'
+import type { SettingsStore } from '@/shared/types/domain'
 
 export interface AuthState {
   user: GoogleUser | null
@@ -72,7 +73,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isCheckingDrive: true, authError: null })
     try {
       const driveClient = new DriveClient(() => accessToken)
-      const settingsBuffer = await driveClient.readDomain("settings")
+      const settingsBuffer = await driveClient.readDomain('settings')
 
       if (!settingsBuffer) {
         set({ isFirstUse: true, isCheckingDrive: false })
@@ -80,14 +81,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isFirstUse: false, isCheckingDrive: false })
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error checking Drive storage"
+      const msg = err instanceof Error ? err.message : 'Error checking Drive storage'
       set({ authError: msg, isCheckingDrive: false })
     }
   },
 
   setupMasterPassword: async (password: string) => {
     const { accessToken } = get()
-    if (!accessToken) throw new Error("OAuth session required")
+    if (!accessToken) throw new Error('OAuth session required')
 
     set({ authError: null })
     try {
@@ -97,7 +98,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const settingsData: SettingsStore = {
         passwordSentinel: sentinelBase64,
-        schemaVersion: "1.0.0",
+        schemaVersion: CURRENT_SCHEMA_VERSION,
         createdAt: new Date().toISOString(),
       }
 
@@ -105,7 +106,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const encryptedSettings = await encryptData(key, settingsData)
 
       const driveClient = new DriveClient(() => accessToken)
-      await driveClient.writeDomain("settings", encryptedSettings)
+      await driveClient.writeDomain('settings', encryptedSettings)
 
       set({
         cryptoKey: key,
@@ -113,7 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isFirstUse: false,
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to set up master password"
+      const msg = err instanceof Error ? err.message : 'Failed to set up master password'
       set({ authError: msg })
       throw err
     }
@@ -121,16 +122,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   unlockWithMasterPassword: async (password: string) => {
     const { accessToken } = get()
-    if (!accessToken) throw new Error("OAuth session required")
+    if (!accessToken) throw new Error('OAuth session required')
 
     set({ authError: null })
     try {
       const key = await deriveKeyFromPassword(password)
       const driveClient = new DriveClient(() => accessToken)
-      const encryptedSettings = await driveClient.readDomain("settings")
+      const encryptedSettings = await driveClient.readDomain('settings')
 
       if (!encryptedSettings) {
-        throw new Error("No settings found on Drive. Please setup password first.")
+        throw new Error('No settings found on Drive. Please setup password first.')
       }
 
       // Try decrypting settings
@@ -139,7 +140,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const isValid = await verifyPasswordSentinel(key, sentinelBuffer)
 
       if (!isValid) {
-        set({ authError: "Contraseña maestra incorrecta" })
+        set({ authError: 'Contraseña maestra incorrecta' })
         return false
       }
 
@@ -149,17 +150,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       })
       return true
     } catch {
-      set({ authError: "Contraseña maestra incorrecta o datos corruptos" })
+      set({ authError: 'Contraseña maestra incorrecta o datos corruptos' })
       return false
     }
   },
 
   logout: () => {
-    logoutListeners.forEach((listener) => {
+    logoutListeners.forEach(listener => {
       try {
         listener()
       } catch (err) {
-        console.error("Error executing logout listener:", err)
+        console.error('Error executing logout listener:', err)
       }
     })
     set({

@@ -9,15 +9,16 @@ import { formatCLP, toMoney } from '@/shared/types/money'
 import type { CreditCardAccount } from '@/shared/types/domain'
 
 export const CreditCardsDashboard: React.FC = () => {
-  const accounts = useCreditCardStore((s) => s.accounts)
-  const purchases = useCreditCardStore((s) => s.purchases)
-  const deleteAccount = useCreditCardStore((s) => s.deleteAccount)
+  const accounts = useCreditCardStore(s => s.accounts)
+  const purchases = useCreditCardStore(s => s.purchases)
+  const deleteAccount = useCreditCardStore(s => s.deleteAccount)
 
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<CreditCardAccount | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-  const [selectedPurchasesAccount, setSelectedPurchasesAccount] = useState<CreditCardAccount | null>(null)
+  const [selectedPurchasesAccount, setSelectedPurchasesAccount] =
+    useState<CreditCardAccount | null>(null)
   const [isPurchasesModalOpen, setIsPurchasesModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'CARDS' | 'THIRD_PARTY'>('CARDS')
 
@@ -89,23 +90,47 @@ export const CreditCardsDashboard: React.FC = () => {
         <>
           {accountList.length === 0 ? (
             <div className="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-8 text-center text-slate-400">
-              <p className="text-base font-medium text-slate-300">No tienes tarjetas de crédito configuradas.</p>
-              <p className="text-xs mt-1">Haz clic en "+ Nueva Tarjeta" para registrar tu primer plástico titular y adicionales.</p>
+              <p className="text-base font-medium text-slate-300">
+                No tienes tarjetas de crédito configuradas.
+              </p>
+              <p className="text-xs mt-1">
+                Haz clic en "+ Nueva Tarjeta" para registrar tu primer plástico titular y
+                adicionales.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {accountList.map((acc) => {
-                const accPurchases = purchaseList.filter((p) => p.accountId === acc.id)
+              {accountList.map(acc => {
+                const accPurchases = purchaseList.filter(p => p.accountId === acc.id)
                 const totalDebt = accPurchases.reduce((sum, p) => sum + p.totalAmountCents, 0)
+                const isLimitExceeded = acc.creditLimitCents > 0 && totalDebt > acc.creditLimitCents
+                const excessDebt = isLimitExceeded ? totalDebt - acc.creditLimitCents : 0
+                const utilizationPct =
+                  acc.creditLimitCents > 0
+                    ? Math.round((totalDebt / acc.creditLimitCents) * 100)
+                    : 0
 
                 return (
                   <div
                     key={acc.id}
-                    className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 shadow-xl space-y-4"
+                    className={`bg-slate-900 border rounded-2xl p-5 shadow-xl space-y-4 transition-all ${
+                      isLimitExceeded
+                        ? 'border-rose-500/80 ring-1 ring-rose-500/50 shadow-rose-950/20'
+                        : 'border-slate-800 hover:border-slate-700'
+                    }`}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="text-xs text-indigo-400 font-bold uppercase">{acc.institution}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-indigo-400 font-bold uppercase">
+                            {acc.institution}
+                          </span>
+                          {isLimitExceeded && (
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                              ⚠️ Cupo Excedido
+                            </span>
+                          )}
+                        </div>
                         <h3 className="text-lg font-bold text-white">{acc.accountName}</h3>
                       </div>
                       <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">
@@ -116,12 +141,31 @@ export const CreditCardsDashboard: React.FC = () => {
                     <div className="bg-slate-800/60 p-3 rounded-xl space-y-1">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Límite Total:</span>
-                        <span className="text-white font-medium">{formatCLP(acc.creditLimitCents)}</span>
+                        <span className="text-white font-medium">
+                          {formatCLP(acc.creditLimitCents)}
+                        </span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Deuda Registrada:</span>
-                        <span className="text-amber-300 font-medium">{formatCLP(toMoney(totalDebt))}</span>
+                        <span
+                          className={`font-medium ${
+                            isLimitExceeded ? 'text-rose-400 font-bold' : 'text-amber-300'
+                          }`}
+                        >
+                          {formatCLP(toMoney(totalDebt))}
+                          {acc.creditLimitCents > 0 && (
+                            <span className="text-[10px] ml-1.5 opacity-80">
+                              ({utilizationPct}%)
+                            </span>
+                          )}
+                        </span>
                       </div>
+                      {isLimitExceeded && (
+                        <div className="flex justify-between text-xs text-rose-400 font-semibold pt-1 border-t border-rose-900/40">
+                          <span>Límite Excedido por:</span>
+                          <span>+{formatCLP(toMoney(excessDebt))}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Vence:</span>
                         <span className="text-white font-medium">Día {acc.dueDay} de cada mes</span>
@@ -134,7 +178,7 @@ export const CreditCardsDashboard: React.FC = () => {
                         Plásticos Habilitados ({acc.plastics.length}):
                       </div>
                       <div className="space-y-1.5">
-                        {acc.plastics.map((plastic) => (
+                        {acc.plastics.map(plastic => (
                           <div
                             key={plastic.id}
                             className="flex justify-between items-center bg-slate-800/40 px-3 py-1.5 rounded-lg border border-slate-700/40 text-xs"
@@ -181,7 +225,11 @@ export const CreditCardsDashboard: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          if (window.confirm(`¿Estás seguro de eliminar la tarjeta "${acc.accountName}"? Se eliminarán también sus compras asociadas.`)) {
+                          if (
+                            window.confirm(
+                              `¿Estás seguro de eliminar la tarjeta "${acc.accountName}"? Se eliminarán también sus compras asociadas.`,
+                            )
+                          ) {
                             deleteAccount(acc.id)
                           }
                         }}

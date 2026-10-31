@@ -1,61 +1,128 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useCreditCardStore } from '../store/creditCardSlice'
-import type { UUID } from '@/shared/types/domain'
+import { getLocalISODate } from '@/shared/utils/date'
+import type { CreditCardPurchase, UUID } from '@/shared/types/domain'
 
 interface CreditCardPurchaseModalProps {
   isOpen: boolean
   onClose: () => void
+  editingPurchase?: CreditCardPurchase | null
+  defaultAccountId?: UUID
 }
 
 export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = ({
   isOpen,
   onClose,
+  editingPurchase = null,
+  defaultAccountId,
 }) => {
-  const accounts = useCreditCardStore((s) => s.accounts)
-  const addPurchase = useCreditCardStore((s) => s.addPurchase)
+  const accounts = useCreditCardStore(s => s.accounts)
+  const addPurchase = useCreditCardStore(s => s.addPurchase)
+  const updatePurchase = useCreditCardStore(s => s.updatePurchase)
 
   const accountList = Object.values(accounts)
-  const [selectedAccountId, setSelectedAccountId] = useState<UUID>(accountList[0]?.id ?? '')
-  const [selectedPlasticId, setSelectedPlasticId] = useState<UUID>('')
-  const [description, setDescription] = useState('')
-  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0] ?? '')
-  const [totalAmount, setTotalAmount] = useState('')
-  const [totalInstallments, setTotalInstallments] = useState(1)
-  const [payerType, setPayerType] = useState<'PROPIO' | 'TERCERO'>('PROPIO')
-  const [thirdPartyName, setThirdPartyName] = useState('')
+  const [selectedAccountId, setSelectedAccountId] = useState<UUID>(
+    editingPurchase?.accountId ?? defaultAccountId ?? accountList[0]?.id ?? '',
+  )
+  const [selectedPlasticId, setSelectedPlasticId] = useState<UUID>(editingPurchase?.plasticId ?? '')
+  const [description, setDescription] = useState(editingPurchase?.description ?? '')
+  const [purchaseDate, setPurchaseDate] = useState(
+    editingPurchase?.purchaseDate ?? getLocalISODate(),
+  )
+  const [totalAmount, setTotalAmount] = useState(
+    editingPurchase ? String(editingPurchase.totalAmountCents) : '',
+  )
+  const [totalInstallments, setTotalInstallments] = useState(
+    editingPurchase?.totalInstallments ?? 1,
+  )
+  const [firstInstallmentPeriod, setFirstInstallmentPeriod] = useState(
+    editingPurchase?.firstInstallmentPeriod ?? '',
+  )
+  const [payerType, setPayerType] = useState<'PROPIO' | 'TERCERO'>(
+    editingPurchase?.payerType ?? 'PROPIO',
+  )
+  const [thirdPartyName, setThirdPartyName] = useState(
+    editingPurchase?.thirdPartyReceivable?.thirdPartyName ?? '',
+  )
+
+  const isEditing = Boolean(editingPurchase)
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    if (editingPurchase) {
+      setSelectedAccountId(editingPurchase.accountId)
+      setSelectedPlasticId(editingPurchase.plasticId)
+      setDescription(editingPurchase.description)
+      setPurchaseDate(editingPurchase.purchaseDate)
+      setTotalAmount(String(editingPurchase.totalAmountCents))
+      setTotalInstallments(editingPurchase.totalInstallments)
+      setFirstInstallmentPeriod(editingPurchase.firstInstallmentPeriod ?? '')
+      setPayerType(editingPurchase.payerType)
+      setThirdPartyName(editingPurchase.thirdPartyReceivable?.thirdPartyName ?? '')
+    } else {
+      setSelectedAccountId(defaultAccountId ?? accountList[0]?.id ?? '')
+      setSelectedPlasticId('')
+      setDescription('')
+      setPurchaseDate(getLocalISODate())
+      setTotalAmount('')
+      setTotalInstallments(1)
+      setFirstInstallmentPeriod('')
+      setPayerType('PROPIO')
+      setThirdPartyName('')
+    }
+  }, [isOpen, editingPurchase, defaultAccountId])
 
   if (!isOpen) return null
 
-  const activeAccountId = (selectedAccountId && accounts[selectedAccountId])
-    ? selectedAccountId
-    : (accountList[0]?.id ?? '')
+  const activeAccountId =
+    selectedAccountId && accounts[selectedAccountId]
+      ? selectedAccountId
+      : (accountList[0]?.id ?? '')
 
   const currentAccount = accounts[activeAccountId]
   const availablePlastics = currentAccount?.plastics ?? []
 
   // Ensure selected plastic matches current account
-  const activePlasticId = (selectedPlasticId && availablePlastics.some((p) => p.id === selectedPlasticId))
-    ? selectedPlasticId
-    : (availablePlastics[0]?.id ?? '')
+  const activePlasticId =
+    selectedPlasticId && availablePlastics.some(p => p.id === selectedPlasticId)
+      ? selectedPlasticId
+      : (availablePlastics[0]?.id ?? '')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!activeAccountId || !activePlasticId || !description || !totalAmount) return
 
-    addPurchase({
-      accountId: activeAccountId,
-      plasticId: activePlasticId,
-      description,
-      purchaseDate,
-      totalAmountCents: Number(totalAmount),
-      totalInstallments: Number(totalInstallments),
-      payerType,
-      thirdPartyName: payerType === 'TERCERO' ? thirdPartyName : undefined,
-    })
+    if (editingPurchase) {
+      updatePurchase(editingPurchase.id, {
+        accountId: activeAccountId,
+        plasticId: activePlasticId,
+        description,
+        purchaseDate,
+        totalAmountCents: Number(totalAmount),
+        totalInstallments: Number(totalInstallments),
+        firstInstallmentPeriod: firstInstallmentPeriod.trim() || undefined,
+        payerType,
+        thirdPartyName: payerType === 'TERCERO' ? thirdPartyName : undefined,
+      })
+    } else {
+      addPurchase({
+        accountId: activeAccountId,
+        plasticId: activePlasticId,
+        description,
+        purchaseDate,
+        totalAmountCents: Number(totalAmount),
+        totalInstallments: Number(totalInstallments),
+        firstInstallmentPeriod: firstInstallmentPeriod.trim() || undefined,
+        payerType,
+        thirdPartyName: payerType === 'TERCERO' ? thirdPartyName : undefined,
+      })
+    }
 
     setDescription('')
     setTotalAmount('')
     setTotalInstallments(1)
+    setFirstInstallmentPeriod('')
     setPayerType('PROPIO')
     setThirdPartyName('')
     onClose()
@@ -66,12 +133,16 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
       <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
         <div className="p-6 border-b border-slate-800 flex justify-between items-center">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            🛍️ Cargar Compra con Tarjeta
+            {isEditing ? '✏️ Modificar Compra con Tarjeta' : '🛍️ Cargar Compra con Tarjeta'}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar modal de carga de compra"
+            aria-label={
+              isEditing
+                ? 'Cerrar modal de modificación de compra'
+                : 'Cerrar modal de carga de compra'
+            }
             className="min-h-[44px] min-w-[44px] p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer flex items-center justify-center text-lg font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
           >
             <span aria-hidden="true">✕</span>
@@ -87,16 +158,22 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Tarjeta / Cuenta</label>
+                  <label
+                    htmlFor="purchase-account-select"
+                    className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                  >
+                    Tarjeta / Cuenta
+                  </label>
                   <select
+                    id="purchase-account-select"
                     value={activeAccountId}
-                    onChange={(e) => {
+                    onChange={e => {
                       setSelectedAccountId(e.target.value)
                       setSelectedPlasticId('')
                     }}
                     className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
                   >
-                    {accountList.map((acc) => (
+                    {accountList.map(acc => (
                       <option key={acc.id} value={acc.id}>
                         {acc.institution} - {acc.accountName}
                       </option>
@@ -104,13 +181,19 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Plástico Emisor</label>
+                  <label
+                    htmlFor="purchase-plastic-select"
+                    className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                  >
+                    Plástico Emisor
+                  </label>
                   <select
+                    id="purchase-plastic-select"
                     value={activePlasticId}
-                    onChange={(e) => setSelectedPlasticId(e.target.value)}
+                    onChange={e => setSelectedPlasticId(e.target.value)}
                     className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
                   >
-                    {availablePlastics.map((plastic) => (
+                    {availablePlastics.map(plastic => (
                       <option key={plastic.id} value={plastic.id}>
                         {plastic.holderName} (•••• {plastic.lastFourDigits}) - {plastic.type}
                       </option>
@@ -120,12 +203,18 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Comercio / Detalle</label>
+                <label
+                  htmlFor="purchase-description"
+                  className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                >
+                  Comercio / Detalle
+                </label>
                 <input
+                  id="purchase-description"
                   type="text"
                   placeholder="ej. Falabella, Supermercado Lider"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={e => setDescription(e.target.value)}
                   required
                   className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition"
                 />
@@ -133,43 +222,86 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-1">
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Fecha Compra</label>
+                  <label
+                    htmlFor="purchase-date"
+                    className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                  >
+                    Fecha Compra
+                  </label>
                   <input
+                    id="purchase-date"
                     type="date"
                     value={purchaseDate}
-                    onChange={(e) => setPurchaseDate(e.target.value)}
+                    onChange={e => setPurchaseDate(e.target.value)}
                     required
                     className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-2 text-white text-xs focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                   />
                 </div>
                 <div className="col-span-1">
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Monto Total (CLP)</label>
+                  <label
+                    htmlFor="purchase-amount"
+                    className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                  >
+                    Monto Total (CLP)
+                  </label>
                   <input
+                    id="purchase-amount"
                     type="number"
                     placeholder="50000"
                     value={totalAmount}
-                    onChange={(e) => setTotalAmount(e.target.value)}
+                    onChange={e => setTotalAmount(e.target.value)}
                     required
                     className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                   />
                 </div>
                 <div className="col-span-1">
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Cuotas</label>
+                  <label
+                    htmlFor="purchase-installments"
+                    className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                  >
+                    Cuotas
+                  </label>
                   <input
+                    id="purchase-installments"
                     type="number"
                     min="1"
                     max="60"
                     value={totalInstallments}
-                    onChange={(e) => setTotalInstallments(Number(e.target.value))}
+                    onChange={e => setTotalInstallments(Number(e.target.value))}
                     required
                     className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
                   />
                 </div>
               </div>
 
+              {/* Primer Período Facturado (Opcional) */}
+              <div>
+                <label
+                  htmlFor="purchase-first-period"
+                  className="block text-xs font-semibold text-slate-400 uppercase mb-1"
+                >
+                  Primer Período Facturado / Pago (YYYY-MM){' '}
+                  <span className="text-slate-500 font-normal lowercase">(opcional)</span>
+                </label>
+                <input
+                  id="purchase-first-period"
+                  type="month"
+                  value={firstInstallmentPeriod}
+                  onChange={e => setFirstInstallmentPeriod(e.target.value)}
+                  placeholder="2026-08"
+                  className="w-full min-h-[44px] bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition font-mono"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Si se deja vacío, se calculará según la fecha de compra y el día de cierre (
+                  {currentAccount?.closingDay ?? 20}) de la tarjeta.
+                </p>
+              </div>
+
               {/* Payer Selection Segmented Control */}
               <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700 space-y-3">
-                <label className="block text-xs font-semibold text-slate-300 uppercase">¿De quién es el gasto?</label>
+                <label className="block text-xs font-semibold text-slate-300 uppercase">
+                  ¿De quién es el gasto?
+                </label>
                 <div className="grid grid-cols-2 gap-2 p-1 bg-slate-900 rounded-lg border border-slate-800">
                   <button
                     type="button"
@@ -204,12 +336,13 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
                       type="text"
                       placeholder="ej. Juan Pérez, Hermano"
                       value={thirdPartyName}
-                      onChange={(e) => setThirdPartyName(e.target.value)}
+                      onChange={e => setThirdPartyName(e.target.value)}
                       required={payerType === 'TERCERO'}
                       className="w-full bg-slate-850 border border-emerald-600/50 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-400"
                     />
                     <p className="text-[11px] text-slate-400 mt-1">
-                      ✨ Esta compra se registrará como cuenta por cobrar y no ensuciará tus gráficos de gastos personales.
+                      ✨ Esta compra se registrará como cuenta por cobrar y no ensuciará tus
+                      gráficos de gastos personales.
                     </p>
                   </div>
                 )}
@@ -228,9 +361,9 @@ export const CreditCardPurchaseModal: React.FC<CreditCardPurchaseModalProps> = (
             <button
               type="submit"
               disabled={accountList.length === 0}
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/30"
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/30 transition cursor-pointer"
             >
-              Cargar Compra
+              {isEditing ? 'Guardar Cambios' : 'Cargar Compra'}
             </button>
           </div>
         </form>

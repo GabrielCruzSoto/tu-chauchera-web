@@ -3,14 +3,11 @@
  * Uses Google OAuth 2.0 implicit/token model via official GIS SDK.
  */
 
-const GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo"
+const GOOGLE_USERINFO_ENDPOINT = 'https://www.googleapis.com/oauth2/v3/userinfo'
 
-const SCOPES = [
-  "openid",
-  "email",
-  "profile",
-  "https://www.googleapis.com/auth/drive.appdata",
-].join(" ")
+const SCOPES = ['openid', 'email', 'profile', 'https://www.googleapis.com/auth/drive.appdata'].join(
+  ' ',
+)
 
 export interface GoogleUser {
   sub: string
@@ -57,20 +54,20 @@ export function loadGoogleIdentityScript(): Promise<void> {
       return
     }
 
-    const existingScript = document.getElementById("google-gis-script")
+    const existingScript = document.getElementById('google-gis-script')
     if (existingScript) {
-      existingScript.addEventListener("load", () => resolve())
-      existingScript.addEventListener("error", (e) => reject(e))
+      existingScript.addEventListener('load', () => resolve())
+      existingScript.addEventListener('error', e => reject(e))
       return
     }
 
-    const script = document.createElement("script")
-    script.id = "google-gis-script"
-    script.src = "https://accounts.google.com/gsi/client"
+    const script = document.createElement('script')
+    script.id = 'google-gis-script'
+    script.src = 'https://accounts.google.com/gsi/client'
     script.async = true
     script.defer = true
     script.onload = () => resolve()
-    script.onerror = (err) => reject(err)
+    script.onerror = err => reject(err)
     document.head.appendChild(script)
   })
 }
@@ -82,7 +79,7 @@ export async function requestGoogleAccessToken(clientId: string): Promise<string
   await loadGoogleIdentityScript()
 
   if (!window.google?.accounts?.oauth2) {
-    throw new Error("Google Identity Services script failed to initialize")
+    throw new Error('Google Identity Services script failed to initialize')
   }
 
   return new Promise((resolve, reject) => {
@@ -101,7 +98,7 @@ export async function requestGoogleAccessToken(clientId: string): Promise<string
       },
     })
 
-    client.requestAccessToken({ prompt: "select_account" })
+    client.requestAccessToken({ prompt: 'select_account' })
   })
 }
 

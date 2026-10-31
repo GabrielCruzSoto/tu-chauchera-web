@@ -82,6 +82,7 @@ describe('tenpoParser', () => {
     expect(tx3?.totalInstallments).toBe(1)
     expect(tx3?.amountCents).toBe(10000)
     expect(tx3?.suggestedPlasticLastFour).toBeUndefined()
+    expect(tx3?.firstInstallmentPeriod).toBe('2026-09')
   })
 
   it('correctly parses charges, taxes and administrative fees', () => {
@@ -98,11 +99,14 @@ describe('tenpoParser', () => {
 
     expect(result.transactions[0]?.description).toBe('IMPUESTO DECRETO LEY 3475 TASA 0,066%')
     expect(result.transactions[0]?.amountCents).toBe(101)
+    expect(result.transactions[0]?.firstInstallmentPeriod).toBe('2026-09')
 
     expect(result.transactions[1]?.description).toBe('COSTO DE ADMINISTRACIÓN MENSUAL')
     expect(result.transactions[1]?.amountCents).toBe(1990)
+    expect(result.transactions[1]?.firstInstallmentPeriod).toBe('2026-09')
 
     expect(result.transactions[2]?.description).toBe('INTERÉS POR CARGO INMEDIATO')
     expect(result.transactions[2]?.amountCents).toBe(391)
+    expect(result.transactions[2]?.firstInstallmentPeriod).toBe('2026-09')
   })
 })

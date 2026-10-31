@@ -179,4 +179,74 @@ describe('creditCardSlice', () => {
     expect(useCreditCardStore.getState().accounts[account.id]).toBeUndefined()
     expect(useCreditCardStore.getState().purchases[purchase.id]).toBeUndefined()
   })
+
+  it('updates an existing purchase and recalculates third-party and installments', () => {
+    const store = useCreditCardStore.getState()
+    const account = store.addAccount({
+      institution: 'Banco Santander',
+      accountName: 'Visa Signature',
+      creditLimitCents: 2000000,
+      closingDay: 20,
+      dueDay: 5,
+      primaryHolderName: 'Gabriel Cruz',
+      primaryLastFour: '1234',
+    })
+
+    const purchase = store.addPurchase({
+      accountId: account.id,
+      plasticId: account.plastics[0]!.id,
+      description: 'Zapatos',
+      purchaseDate: '2026-05-10',
+      totalAmountCents: 45000,
+      totalInstallments: 1,
+      payerType: 'PROPIO',
+    })
+
+    const updated = store.updatePurchase(purchase.id, {
+      description: 'Zapatos de cuero',
+      totalAmountCents: 50000,
+      totalInstallments: 3,
+      payerType: 'TERCERO',
+      thirdPartyName: 'Martín',
+    })
+
+    expect(updated).not.toBeNull()
+    expect(updated?.description).toBe('Zapatos de cuero')
+    expect(updated?.totalAmountCents).toBe(50000)
+    expect(updated?.totalInstallments).toBe(3)
+    expect(updated?.payerType).toBe('TERCERO')
+    expect(updated?.thirdPartyReceivable?.thirdPartyName).toBe('Martín')
+    expect(updated?.thirdPartyReceivable?.totalOwedCents).toBe(50000)
+
+    const storedPurchase = useCreditCardStore.getState().purchases[purchase.id]
+    expect(storedPurchase?.description).toBe('Zapatos de cuero')
+  })
+
+  it('deletes an individual purchase', () => {
+    const store = useCreditCardStore.getState()
+    const account = store.addAccount({
+      institution: 'Banco Santander',
+      accountName: 'Visa Signature',
+      creditLimitCents: 2000000,
+      closingDay: 20,
+      dueDay: 5,
+      primaryHolderName: 'Gabriel Cruz',
+      primaryLastFour: '1234',
+    })
+
+    const purchase = store.addPurchase({
+      accountId: account.id,
+      plasticId: account.plastics[0]!.id,
+      description: 'Cena familiar',
+      purchaseDate: '2026-05-12',
+      totalAmountCents: 80000,
+      totalInstallments: 1,
+      payerType: 'PROPIO',
+    })
+
+    expect(useCreditCardStore.getState().purchases[purchase.id]).toBeDefined()
+
+    store.deletePurchase(purchase.id)
+    expect(useCreditCardStore.getState().purchases[purchase.id]).toBeUndefined()
+  })
 })

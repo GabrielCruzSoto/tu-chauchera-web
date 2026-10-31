@@ -5,9 +5,9 @@
 
 export const PRIVACY_POLICY_MD = `# POLÍTICA DE PRIVACIDAD DE "TU CHAUCHERA"
 
-**Última actualización:** 25 de septiembre de 2026  
+**Última actualización:** 25 de septiembre de 2026
 **Versión del documento:** 1.0.0  
-**Dominio principal:** https://tu-chauchera.cl  
+**Dominio principal:** https://tu-chauchera.cl
 **Canales de acceso:** Aplicación Web, Aplicación Web Progresiva (PWA) y aplicaciones cliente asociadas.
 
 ---
@@ -18,9 +18,9 @@ Bienvenido a **Tu Chauchera** (en adelante, la "Plataforma" o el "Servicio"). La
 
 ### 1.1 Identidad del Responsable del Tratamiento
 La Plataforma es un proyecto independiente de libre acceso orientado a la gestión de finanzas personales, desarrollado y administrado por un desarrollador independiente en calidad de persona natural. El responsable del tratamiento de los datos personales recabados es:
-- **Titular / Desarrollador Responsable:** Desarrollador Independiente (Persona Natural)
+- **Titular / Desarrollador Responsable:** Gabriel Cruz Soto.
 - **Naturaleza del Servicio:** Plataforma web independiente de libre acceso (sin fines comerciales corporativos).
-- **País y Jurisdicción:** Chile
+- **País y Jurisdicción:** Chile.
 - **Correo Electrónico de Contacto y Privacidad:** tuchaucheracl@gmail.com
 - **Sitio Web Oficial:** https://tu-chauchera.cl
 
@@ -32,6 +32,13 @@ Esta Política de Privacidad rige para todos los accesos e interacciones que el 
 
 ### 1.4 Principio Rector: Inexistencia de Servidores Propios de Almacenamiento
 Tu Chauchera opera como una aplicación web del lado cliente (*Client-Side Application*). **La Plataforma NO cuenta con servidores propios ni bases de datos centralizadas donde se almacenen las finanzas, transacciones o historiales patrimoniales de los usuarios.** La persistencia, posesión y custodia de dichos datos recae única y exclusivamente en el entorno local del Usuario y en su propia cuenta personal de Google Drive.
+
+### 1.5 Compromiso de Mantenimiento Técnico y Exención de Responsabilidad Legal
+- **Deber de Mantenimiento y Mitigación de Vulnerabilidades:** El Desarrollador Responsable (Gabriel Cruz Soto) asume el compromiso continuo de aplicar debida diligencia técnica para mantener la Plataforma operativa, realizar las tareas de mantenimiento necesarias en el sistema, corregir fallos o errores de programación (*bugs*) y mitigar oportunamente vulnerabilidades de seguridad conocidas en el código de la aplicación.
+- **Exención y Limitación de Responsabilidad Legal:** Atendiendo al carácter independiente y de libre acceso del Servicio, así como a su arquitectura *Client-Side* de conocimiento cero (*Zero-Knowledge*) donde los datos son cifrados y custodiados exclusivamente por el Usuario en su dispositivo y en su cuenta personal de Google Drive:
+  - El Responsable **no asume responsabilidad legal, patrimonial ni indemnizatoria ante demandas, litigios o reclamaciones por pérdida, daño, corrupción o inaccesibilidad de datos** (incluyendo, entre otros, supuestos de olvido de la Contraseña Maestra por parte del Usuario, fallos de hardware local o problemas técnicos atribuibles a servicios de terceros).
+  - Asimismo, el Responsable **no es responsable legalmente ante eventuales filtraciones o accesos no autorizados a datos** derivados de vulneraciones en el entorno o dispositivo local del Usuario (malware, keyloggers, etc.), sustracción de credenciales de Google, incidentes en la infraestructura externa de proveedores (Google LLC, Vercel Inc.) o negligencia del Titular en la custodia de su clave de cifrado.
+  - La Plataforma se pone a disposición "tal cual" (*as is*) y "según disponibilidad" (*as available*), sin garantías de infalibilidad absoluta.
 
 ---
 
@@ -163,7 +170,7 @@ Tu Chauchera utiliza cookies y tecnologías de almacenamiento local en el navega
 - **Bóveda Local Cifrada (IndexedDB):** Espacio de almacenamiento local en el disco de su propio dispositivo donde reside la base de datos cifrada de sus cuentas y gastos personales.
 
 ### 7.2 Gestión y Bloqueo de Cookies
-El Usuario puede en cualquier momento bloquear, restringir o eliminar las cookies instaladas modificando las preferencias de seguridad y privacidad de su navegador de internet (Chrome, Firefox, Safari, Edge, Brave, etc.).
+El Usuario puede en cualquier momento bloquear, restringir o eliminar las cookies instaladas modificando las preferencias de seguridad y privacidad de su navegador de internet (Chrome, Firefox, Safari, Edge, Brave, etc.). No obstante, se hace presente que la inhabilitación de las cookies estrictamente necesarias impedirá el inicio de sesión y la operatividad técnica de la Plataforma.
 
 ---
 
@@ -215,8 +222,8 @@ La fecha de la última actualización estará permanentemente consignada en el e
 Si tiene consultas, comentarios, dudas técnicas sobre los mecanismos de cifrado o inquietudes relativas a la interpretación o aplicación de esta Política de Privacidad, puede comunicarse de manera directa con nuestro equipo a través de los siguientes canales:
 
 - **Canal Principal de Privacidad y Soporte:** tuchaucheracl@gmail.com
-- **Desarrollador Responsable:** Desarrollador Independiente (Persona Natural)
-- **Ubicación de Referencia:** Chile
+- **Desarrollador Responsable:** Gabriel Alejandro Cruz Soto
+- **Ubicación de Referencia:** Chile / Santiago de Chile
 - **Sitio Web Oficial:** https://tu-chauchera.cl
 
 ---

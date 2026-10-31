@@ -1,6 +1,6 @@
-import React from "react"
-import type { DriveStorageMetrics } from "@/shared/types/settings"
-import { CURRENT_SCHEMA_VERSION } from "@/shared/constants/version"
+import React from 'react'
+import type { DriveStorageMetrics } from '@/shared/types/settings'
+import { CURRENT_SCHEMA_VERSION } from '@/shared/constants/version'
 
 interface StorageStatsCardProps {
   metrics: DriveStorageMetrics | null
@@ -14,14 +14,14 @@ export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
   onRefresh,
 }) => {
   const formatBytes = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
+    if (bytes === 0) return '0 Bytes'
     if (bytes < 1024) return `${bytes} Bytes`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   }
 
   const formatDate = (isoString?: string) => {
-    if (!isoString) return "N/A"
+    if (!isoString) return 'N/A'
     try {
       return new Date(isoString).toLocaleString()
     } catch {
@@ -37,7 +37,8 @@ export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
             <span>📊</span> Estado del Almacenamiento en Google Drive
           </h4>
           <p className="text-xs text-slate-400">
-            Archivos cifrados almacenados de forma privada en tu <span className="font-mono text-emerald-300">appDataFolder</span>.
+            Archivos cifrados almacenados de forma privada en tu{' '}
+            <span className="font-mono text-emerald-300">appDataFolder</span>.
           </p>
         </div>
 
@@ -47,8 +48,8 @@ export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
           disabled={isLoading}
           className="self-start sm:self-auto min-h-[38px] px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs font-medium text-slate-200 border border-slate-700 transition flex items-center gap-2 cursor-pointer"
         >
-          <span className={isLoading ? "animate-spin" : ""}>🔄</span>
-          {isLoading ? "Consultando..." : "Actualizar Métricas"}
+          <span className={isLoading ? 'animate-spin' : ''}>🔄</span>
+          {isLoading ? 'Consultando...' : 'Actualizar Métricas'}
         </button>
       </div>
 
@@ -57,14 +58,14 @@ export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
         <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
           <span className="text-[11px] text-slate-400 block mb-1">Tamaño Total Ocupado</span>
           <span className="text-base font-bold text-emerald-400">
-            {metrics ? formatBytes(metrics.totalSizeBytes) : "Calculando..."}
+            {metrics ? formatBytes(metrics.totalSizeBytes) : 'Calculando...'}
           </span>
         </div>
 
         <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
           <span className="text-[11px] text-slate-400 block mb-1">Total de Archivos</span>
           <span className="text-base font-bold text-slate-200">
-            {metrics ? `${metrics.files.length} archivos` : "—"}
+            {metrics ? `${metrics.files.length} archivos` : '—'}
           </span>
         </div>
 
@@ -89,13 +90,13 @@ export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
           </thead>
           <tbody className="divide-y divide-slate-800/60 text-slate-300">
             {metrics && metrics.files.length > 0 ? (
-              metrics.files.map((file) => (
+              metrics.files.map(file => (
                 <tr key={file.id} className="hover:bg-slate-800/20 transition">
                   <td className="py-2.5 px-3 font-mono font-medium text-emerald-300">
                     {file.name}
                   </td>
                   <td className="py-2.5 px-3 text-slate-400">
-                    {file.name.endsWith(".enc") ? "Bóveda Cifrada (AES)" : "Metadatos (JSON)"}
+                    {file.name.endsWith('.enc') ? 'Bóveda Cifrada (AES)' : 'Metadatos (JSON)'}
                   </td>
                   <td className="py-2.5 px-3 text-right font-mono">
                     {formatBytes(file.sizeBytes)}
@@ -109,8 +110,8 @@ export const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
               <tr>
                 <td colSpan={4} className="py-4 text-center text-slate-500">
                   {isLoading
-                    ? "Consultando archivos en Google Drive..."
-                    : "No se encontraron archivos en Google Drive aún (o no se ha sincronizado)."}
+                    ? 'Consultando archivos en Google Drive...'
+                    : 'No se encontraron archivos en Google Drive aún (o no se ha sincronizado).'}
                 </td>
               </tr>
             )}

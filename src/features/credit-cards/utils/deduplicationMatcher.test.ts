@@ -103,4 +103,78 @@ describe('deduplicationMatcher', () => {
     expect(matched[0]?.isDuplicateOrOngoing).toBe(false)
     expect(matched[0]?.selected).toBe(true)
   })
+
+  it('does NOT mark installment 01/03 as ONGOING_INSTALLMENT even if an earlier 3-installment purchase at the same merchant exists', () => {
+    const historicalPurchases: CreditCardPurchase[] = [
+      {
+        id: 'p-old',
+        accountId: 'acc1',
+        plasticId: 'pl1',
+        description: 'Tuu*area 51 La Florida',
+        purchaseDate: '2026-05-14',
+        totalAmountCents: toMoney(30000),
+        totalInstallments: 3,
+        firstInstallmentPeriod: '2026-06',
+        payerType: 'PROPIO',
+        createdAt: '2026-05-14',
+        updatedAt: '2026-05-14',
+      },
+    ]
+
+    const newTx: ParsedStatementTransaction[] = [
+      {
+        id: 't-new',
+        date: '2026-09-01',
+        description: 'Tuu*area 51 La Florida',
+        currentInstallment: 1,
+        totalInstallments: 3,
+        amountCents: toMoney(29000),
+        firstInstallmentPeriod: '2026-10',
+        isThirdParty: false,
+        selected: true,
+      },
+    ]
+
+    const matched = matchExistingPurchases(newTx, historicalPurchases)
+    expect(matched[0]?.isDuplicateOrOngoing).toBe(false)
+    expect(matched[0]?.duplicateReason).toBeUndefined()
+    expect(matched[0]?.selected).toBe(true)
+  })
+
+  it('does NOT mark installment 02/03 as ONGOING_INSTALLMENT if the previous plan has already expired', () => {
+    const expiredPurchase: CreditCardPurchase[] = [
+      {
+        id: 'p-expired',
+        accountId: 'acc1',
+        plasticId: 'pl1',
+        description: 'ZARA COSTANERA',
+        purchaseDate: '2025-01-10',
+        totalAmountCents: toMoney(45000),
+        totalInstallments: 3,
+        firstInstallmentPeriod: '2025-02', // Ended in 2025-04
+        payerType: 'PROPIO',
+        createdAt: '2025-01-10',
+        updatedAt: '2025-01-10',
+      },
+    ]
+
+    const nextYearTx: ParsedStatementTransaction[] = [
+      {
+        id: 't-zara-2',
+        date: '2026-05-15',
+        description: 'ZARA COSTANERA',
+        currentInstallment: 2,
+        totalInstallments: 3,
+        amountCents: toMoney(15000),
+        firstInstallmentPeriod: '2026-04',
+        isThirdParty: false,
+        selected: true,
+      },
+    ]
+
+    const matched = matchExistingPurchases(nextYearTx, expiredPurchase)
+    // The previous plan ended in 2025, so it should not match as an ongoing installment of the 2025 purchase
+    expect(matched[0]?.isDuplicateOrOngoing).toBe(false)
+    expect(matched[0]?.selected).toBe(true)
+  })
 })

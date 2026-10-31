@@ -1,26 +1,31 @@
-import React from "react"
-import { render, screen, fireEvent } from "@testing-library/react"
-import { describe, it, expect, beforeEach, vi } from "vitest"
-import { App } from "../App"
-import { useAuthStore } from "@/store/authSlice"
-import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
-import { useIncomeStore } from "@/features/income/store/incomeSlice"
+import React from 'react'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { App } from '../App'
+import { useAuthStore } from '@/store/authSlice'
+import { useObligationsStore } from '@/features/obligations/store/obligationsSlice'
+import { useIncomeStore } from '@/features/income/store/incomeSlice'
 
-vi.mock("@/features/sync/store/syncSlice", () => ({
-  useSyncStore: () => ({
-    hydrateFromDrive: vi.fn(),
-    status: "IDLE",
-    lastSyncedAt: null,
-    isOnline: true,
-  }),
+let mockSyncState = {
+  hydrateFromDrive: vi.fn(),
+  status: 'IDLE',
+  lastSyncedAt: null,
+  isOnline: true,
+  isQuotaExceeded: false,
+  dismissQuotaModal: vi.fn(),
+  forceResync: vi.fn(),
+}
+
+vi.mock('@/features/sync/store/syncSlice', () => ({
+  useSyncStore: () => mockSyncState,
 }))
 
-describe("App Responsive Navigation", () => {
+describe('App Responsive Navigation', () => {
   beforeEach(() => {
     useAuthStore.setState({
       isAuthenticated: true,
       isUnlocked: true,
-      user: { sub: "user-1", email: "test@example.com", name: "Test User" },
+      user: { sub: 'user-1', email: 'test@example.com', name: 'Test User' },
       authError: null,
       isFirstUse: false,
     })
@@ -36,90 +41,100 @@ describe("App Responsive Navigation", () => {
       incomes: {},
       isLoaded: true,
     })
+
+    mockSyncState = {
+      hydrateFromDrive: vi.fn(),
+      status: 'IDLE',
+      lastSyncedAt: null,
+      isOnline: true,
+      isQuotaExceeded: false,
+      dismissQuotaModal: vi.fn(),
+      forceResync: vi.fn(),
+    }
   })
 
-  it("renders desktop navigation and mobile hamburger toggle button", async () => {
+  it('renders desktop navigation and mobile hamburger toggle button', async () => {
     render(<App />)
 
-    const hamburgerBtn = screen.getByRole("button", { name: /Abrir menú/i })
+    const hamburgerBtn = screen.getByRole('button', { name: /Abrir menú/i })
     expect(hamburgerBtn).toBeInTheDocument()
-    expect(await screen.findByText("Matriz de Consolidación Financiera")).toBeInTheDocument()
+    expect(await screen.findByText('Matriz de Consolidación Financiera')).toBeInTheDocument()
   })
 
-  it("opens mobile drawer when clicking hamburger button and closes it on close button", async () => {
+  it('opens mobile drawer when clicking hamburger button and closes it on close button', async () => {
     render(<App />)
 
-    const hamburgerBtn = screen.getByRole("button", { name: /Abrir menú/i })
-    expect(screen.queryByTestId("mobile-nav-drawer")).not.toBeInTheDocument()
+    const hamburgerBtn = screen.getByRole('button', { name: /Abrir menú/i })
+    expect(screen.queryByTestId('mobile-nav-drawer')).not.toBeInTheDocument()
 
     fireEvent.click(hamburgerBtn)
-    expect(screen.getByTestId("mobile-nav-drawer")).toBeInTheDocument()
-    expect(screen.getByText("Menú Principal")).toBeInTheDocument()
+    expect(screen.getByTestId('mobile-nav-drawer')).toBeInTheDocument()
+    expect(screen.getByText('Menú Principal')).toBeInTheDocument()
 
     // Close button inside drawer
-    const closeBtn = screen.getAllByRole("button", { name: /Cerrar menú/i })[0]!
+    const closeBtn = screen.getAllByRole('button', { name: /Cerrar menú/i })[0]!
     fireEvent.click(closeBtn)
-    expect(screen.queryByTestId("mobile-nav-drawer")).not.toBeInTheDocument()
+    expect(screen.queryByTestId('mobile-nav-drawer')).not.toBeInTheDocument()
   })
 
-  it("closes drawer when clicking backdrop overlay", () => {
+  it('closes drawer when clicking backdrop overlay', () => {
     render(<App />)
 
-    const hamburgerBtn = screen.getByRole("button", { name: /Abrir menú/i })
+    const hamburgerBtn = screen.getByRole('button', { name: /Abrir menú/i })
     fireEvent.click(hamburgerBtn)
 
-    const backdrop = screen.getByTestId("mobile-drawer-backdrop")
+    const backdrop = screen.getByTestId('mobile-drawer-backdrop')
     expect(backdrop).toBeInTheDocument()
 
     fireEvent.click(backdrop)
-    expect(screen.queryByTestId("mobile-nav-drawer")).not.toBeInTheDocument()
+    expect(screen.queryByTestId('mobile-nav-drawer')).not.toBeInTheDocument()
   })
 
-  it("switches tab and closes drawer when clicking a navigation link inside mobile drawer", async () => {
+  it('switches tab and closes drawer when clicking a navigation link inside mobile drawer', async () => {
     render(<App />)
 
-    const hamburgerBtn = screen.getByRole("button", { name: /Abrir menú/i })
+    const hamburgerBtn = screen.getByRole('button', { name: /Abrir menú/i })
     fireEvent.click(hamburgerBtn)
 
-    const mobileLinksContainer = screen.getByTestId("mobile-nav-links")
-    const obligationsLink = mobileLinksContainer.querySelector("button:nth-child(4)")
+    const mobileLinksContainer = screen.getByTestId('mobile-nav-links')
+    const obligationsLink = mobileLinksContainer.querySelector('button:nth-child(4)')
     expect(obligationsLink).toBeInTheDocument()
 
     fireEvent.click(obligationsLink!)
-    expect(screen.queryByTestId("mobile-nav-drawer")).not.toBeInTheDocument()
-    expect(await screen.findByText("Obligaciones Financieras")).toBeInTheDocument()
+    expect(screen.queryByTestId('mobile-nav-drawer')).not.toBeInTheDocument()
+    expect(await screen.findByText('Obligaciones Financieras')).toBeInTheDocument()
   })
 
-  it("switches to settings view when clicking settings button inside mobile drawer", async () => {
+  it('switches to settings view when clicking settings button inside mobile drawer', async () => {
     render(<App />)
 
-    const hamburgerBtn = screen.getByRole("button", { name: /Abrir menú/i })
+    const hamburgerBtn = screen.getByRole('button', { name: /Abrir menú/i })
     fireEvent.click(hamburgerBtn)
 
-    const settingsDrawerBtn = screen.getAllByRole("button", { name: /Configuración/i })[0]!
+    const settingsDrawerBtn = screen.getAllByRole('button', { name: /Configuración/i })[0]!
     fireEvent.click(settingsDrawerBtn)
 
-    expect(await screen.findByText("Configuración & Bóveda")).toBeInTheDocument()
+    expect(await screen.findByText('Configuración & Bóveda')).toBeInTheDocument()
   })
 
-  it("opens settings view when selecting Configuración from user dropdown menu", async () => {
+  it('opens settings view when selecting Configuración from user dropdown menu', async () => {
     render(<App />)
 
-    const userDropdownBtn = screen.getByRole("button", { name: /Menú de usuario/i })
+    const userDropdownBtn = screen.getByRole('button', { name: /Menú de usuario/i })
     fireEvent.click(userDropdownBtn)
 
-    const settingsMenuItem = screen.getByRole("menuitem", { name: /Configuración/i })
+    const settingsMenuItem = screen.getByRole('menuitem', { name: /Configuración/i })
     fireEvent.click(settingsMenuItem)
 
-    expect(await screen.findByText("Configuración & Bóveda")).toBeInTheDocument()
+    expect(await screen.findByText('Configuración & Bóveda')).toBeInTheDocument()
   })
 
-  it("renders Suspense fallback spinner when lazy component is loading", () => {
+  it('renders Suspense fallback spinner when lazy component is loading', () => {
     const { container } = render(<App />)
     expect(container).toBeInTheDocument()
   })
 
-  it("handles authentication transition from logged out to unlocked without hook errors", async () => {
+  it('handles authentication transition from logged out to unlocked without hook errors', async () => {
     useAuthStore.setState({
       isAuthenticated: false,
       isUnlocked: false,
@@ -133,43 +148,72 @@ describe("App Responsive Navigation", () => {
     useAuthStore.setState({
       isAuthenticated: true,
       isUnlocked: true,
-      user: { sub: "user-1", email: "test@example.com", name: "Test User" },
+      user: { sub: 'user-1', email: 'test@example.com', name: 'Test User' },
     })
 
     rerender(<App />)
-    expect(await screen.findByText("Matriz de Consolidación Financiera")).toBeInTheDocument()
+    expect(await screen.findByText('Matriz de Consolidación Financiera')).toBeInTheDocument()
   })
 
-  it("switches tab using number keyboard shortcuts (1 - 6)", async () => {
+  it('switches tab using number keyboard shortcuts (1 - 6)', async () => {
     render(<App />)
 
     // Press '2' for Flujos & Cuotas
-    fireEvent.keyDown(window, { key: "2" })
-    expect(await screen.findByRole("button", { name: /Mes anterior/i })).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: '2' })
+    expect(await screen.findByRole('button', { name: /Mes anterior/i })).toBeInTheDocument()
   })
 
-  it("opens support modal when selecting Ayuda & Soporte from user dropdown menu", async () => {
+  it('opens support modal when selecting Ayuda & Soporte from user dropdown menu', async () => {
     render(<App />)
 
-    const userDropdownBtn = screen.getByRole("button", { name: /Menú de usuario/i })
+    const userDropdownBtn = screen.getByRole('button', { name: /Menú de usuario/i })
     fireEvent.click(userDropdownBtn)
 
-    const supportMenuItem = screen.getByRole("menuitem", { name: /Ayuda & Soporte/i })
+    const supportMenuItem = screen.getByRole('menuitem', { name: /Ayuda & Soporte/i })
     fireEvent.click(supportMenuItem)
 
-    expect(await screen.findByRole("heading", { name: /centro de ayuda & soporte/i })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: /centro de ayuda & soporte/i }),
+    ).toBeInTheDocument()
   })
 
-  it("opens support modal when clicking Ayuda & Soporte in mobile drawer", async () => {
+  it('opens support modal when clicking Ayuda & Soporte in mobile drawer', async () => {
     render(<App />)
 
-    const hamburgerBtn = screen.getByLabelText("Abrir menú")
+    const hamburgerBtn = screen.getByLabelText('Abrir menú')
     fireEvent.click(hamburgerBtn)
 
-    const supportDrawerBtn = screen.getByRole("button", { name: /Ayuda & Soporte/i })
+    const supportDrawerBtn = screen.getByRole('button', { name: /Ayuda & Soporte/i })
     fireEvent.click(supportDrawerBtn)
 
-    expect(await screen.findByRole("heading", { name: /centro de ayuda & soporte/i })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: /centro de ayuda & soporte/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('renders StorageQuotaModal when isQuotaExceeded is true', async () => {
+    mockSyncState.isQuotaExceeded = true
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: /espacio insuficiente en google drive/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('opens QuickExpenseModal when clicking Gasto Rápido button in header', async () => {
+    render(<App />)
+
+    const quickExpenseBtn = screen.getByRole('button', { name: /Registrar Gasto Rápido/i })
+    fireEvent.click(quickExpenseBtn)
+
+    expect(await screen.findByRole('heading', { name: /Gasto Rápido/i })).toBeInTheDocument()
+  })
+
+  it("opens QuickExpenseModal when pressing 'g' keyboard shortcut", async () => {
+    render(<App />)
+
+    fireEvent.keyDown(window, { key: 'g' })
+
+    expect(await screen.findByRole('heading', { name: /Gasto Rápido/i })).toBeInTheDocument()
   })
 })
-

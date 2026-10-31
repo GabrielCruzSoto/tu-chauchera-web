@@ -6,7 +6,6 @@
     "pdfjs-dist": "^6.3.289",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.3",
     "zod": "^4.5.4",
     "zustand": "^5.0.15"
   },
@@ -22,6 +21,7 @@
     "@typescript-eslint/eslint-plugin": "^8.68.0",
     "@typescript-eslint/parser": "^8.68.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "4.1.11",
     "@vitest/ui": "^4.1.11",
     "eslint": "^10.9.1",
     "globals": "^17.11.0",
@@ -37,6 +37,7 @@
   "description": "Local-first personal finance management — zero backend, Google Drive storage, AES-256-GCM encrypted",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@12.14.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

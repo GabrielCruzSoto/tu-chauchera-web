@@ -8,38 +8,38 @@
  */
 
 const PBKDF2_ITERATIONS = 100_000
-const PBKDF2_HASH = "SHA-256"
-const KEY_SALT = "tu-chauchera-v1"
-const SENTINEL_MAGIC = "TU_CHAUCHERA_SENTINEL_VALID_V1"
+const PBKDF2_HASH = 'SHA-256'
+const KEY_SALT = 'tu-chauchera-v1'
+const SENTINEL_MAGIC = 'TU_CHAUCHERA_SENTINEL_VALID_V1'
 
 /**
  * Derives a non-extractable AES-256-GCM CryptoKey from a user-provided master password.
  */
 export async function deriveKeyFromPassword(masterPassword: string): Promise<CryptoKey> {
   if (!masterPassword || masterPassword.trim().length === 0) {
-    throw new Error("Master password cannot be empty")
+    throw new Error('Master password cannot be empty')
   }
 
   const encoder = new TextEncoder()
   const keyMaterial = await crypto.subtle.importKey(
-    "raw",
+    'raw',
     encoder.encode(masterPassword),
-    "PBKDF2",
+    'PBKDF2',
     false,
-    ["deriveKey"]
+    ['deriveKey'],
   )
 
   return crypto.subtle.deriveKey(
     {
-      name: "PBKDF2",
+      name: 'PBKDF2',
       salt: encoder.encode(KEY_SALT),
       iterations: PBKDF2_ITERATIONS,
       hash: PBKDF2_HASH,
     },
     keyMaterial,
-    { name: "AES-GCM", length: 256 },
+    { name: 'AES-GCM', length: 256 },
     false, // Non-extractable for memory safety
-    ["encrypt", "decrypt"]
+    ['encrypt', 'decrypt'],
   )
 }
 
@@ -50,7 +50,7 @@ export async function deriveKeyFromPassword(masterPassword: string): Promise<Cry
 export async function encryptData(key: CryptoKey, data: unknown): Promise<ArrayBuffer> {
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const encoded = new TextEncoder().encode(JSON.stringify(data))
-  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded)
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded)
 
   const result = new Uint8Array(iv.length + ciphertext.byteLength)
   result.set(iv, 0)
@@ -65,14 +65,14 @@ export async function encryptData(key: CryptoKey, data: unknown): Promise<ArrayB
  */
 export async function decryptData<T>(key: CryptoKey, buffer: ArrayBuffer): Promise<T> {
   if (buffer.byteLength < 13) {
-    throw new Error("Invalid encrypted buffer length")
+    throw new Error('Invalid encrypted buffer length')
   }
 
   const bytes = new Uint8Array(buffer)
   const iv = bytes.slice(0, 12)
   const ciphertext = bytes.slice(12)
 
-  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext)
+  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext)
   return JSON.parse(new TextDecoder().decode(plaintext)) as T
 }
 
@@ -89,7 +89,7 @@ export async function createPasswordSentinel(key: CryptoKey): Promise<ArrayBuffe
  */
 export async function verifyPasswordSentinel(
   key: CryptoKey,
-  sentinelBuffer: ArrayBuffer
+  sentinelBuffer: ArrayBuffer,
 ): Promise<boolean> {
   try {
     const payload = await decryptData<{ magic: string }>(key, sentinelBuffer)
@@ -104,7 +104,7 @@ export async function verifyPasswordSentinel(
  */
 export function bufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
-  let binary = ""
+  let binary = ''
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i] ?? 0)
   }

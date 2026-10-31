@@ -34,4 +34,40 @@ describe('statementParser dispatcher', () => {
     expect(result.institution).toBe('TENPO')
     expect(result.transactions).toHaveLength(1)
   })
+
+  it('rejects unsupported banks like Banco Santander with clear error message', () => {
+    const rawText = `
+      BANCO SANTANDER CHILE - ESTADO DE CUENTA TARJETA DE CREDITO
+      01/05/2026 FARMACIAS AHUMADA $ 15.000
+    `
+    const result = parseStatementText(rawText)
+    expect(result.institution).toBe('UNSUPPORTED')
+    expect(result.isSupported).toBe(false)
+    expect(result.detectedInstitution).toBe('Banco Santander')
+    expect(result.errorMessage).toContain('Banco Santander')
+    expect(result.transactions).toHaveLength(0)
+  })
+
+  it('rejects unsupported banks like Banco de Chile with clear error message', () => {
+    const rawText = `
+      BANCO DE CHILE - DETALLE DE MOVIMIENTOS VISA INFINITE
+      10/05/2026 JUMBO LA REINA $ 80.000
+    `
+    const result = parseStatementText(rawText)
+    expect(result.institution).toBe('UNSUPPORTED')
+    expect(result.isSupported).toBe(false)
+    expect(result.detectedInstitution).toBe('Banco de Chile')
+    expect(result.errorMessage).toContain('Banco de Chile')
+    expect(result.transactions).toHaveLength(0)
+  })
+
+  it('returns unsupported error when raw text does not match any known institution or format', () => {
+    const rawText = `
+      Texto aleatorio sin compras ni formato bancario reconocido.
+    `
+    const result = parseStatementText(rawText)
+    expect(result.institution).toBe('UNSUPPORTED')
+    expect(result.isSupported).toBe(false)
+    expect(result.transactions).toHaveLength(0)
+  })
 })

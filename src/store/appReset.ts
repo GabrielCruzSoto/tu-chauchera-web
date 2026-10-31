@@ -1,9 +1,9 @@
-import { useAuthStore, registerLogoutListener } from "./authSlice"
-import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
-import { useIncomeStore } from "@/features/income/store/incomeSlice"
-import { useCreditCardStore } from "@/features/credit-cards/store/creditCardSlice"
-import { useSettingsStore } from "@/features/settings/store/settingsSlice"
-import { useSyncStore } from "@/features/sync/store/syncSlice"
+import { useAuthStore, registerLogoutListener } from './authSlice'
+import { useObligationsStore } from '@/features/obligations/store/obligationsSlice'
+import { useIncomeStore } from '@/features/income/store/incomeSlice'
+import { useCreditCardStore } from '@/features/credit-cards/store/creditCardSlice'
+import { useSettingsStore } from '@/features/settings/store/settingsSlice'
+import { useSyncStore } from '@/features/sync/store/syncSlice'
 
 /**
  * Purges all in-memory domain stores and cancels any pending sync timers.

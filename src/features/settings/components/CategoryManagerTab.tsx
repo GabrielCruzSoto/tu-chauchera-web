@@ -1,38 +1,38 @@
-import React, { useState } from "react"
-import { useObligationsStore } from "@/features/obligations/store/obligationsSlice"
-import { CATEGORY_PALETTE } from "@/features/obligations/constants/categories"
-import type { Category } from "@/shared/types/domain"
+import React, { useState } from 'react'
+import { useObligationsStore } from '@/features/obligations/store/obligationsSlice'
+import { CATEGORY_PALETTE } from '@/features/obligations/constants/categories'
+import type { Category } from '@/shared/types/domain'
 
 export const CategoryManagerTab: React.FC = () => {
   const { categories, obligations, addCategory, updateCategory, deleteCategory } =
     useObligationsStore()
 
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [nameInput, setNameInput] = useState("")
-  const [colorInput, setColorInput] = useState("emerald")
+  const [nameInput, setNameInput] = useState('')
+  const [colorInput, setColorInput] = useState('emerald')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const categoryList = Object.values(categories)
 
   // Count active obligations per category (status !== 'DELETED')
-  const activeObligations = Object.values(obligations).filter((o) => o.status !== "DELETED")
+  const activeObligations = Object.values(obligations).filter(o => o.status !== 'DELETED')
   const getUsageCount = (categoryId: string) => {
-    return activeObligations.filter((o) => o.categoryId === categoryId).length
+    return activeObligations.filter(o => o.categoryId === categoryId).length
   }
 
   const handleStartEdit = (cat: Category) => {
     setEditingId(cat.id)
     setNameInput(cat.name)
-    setColorInput(cat.color || "emerald")
+    setColorInput(cat.color || 'emerald')
     setErrorMessage(null)
     setSuccessMessage(null)
   }
 
   const handleCancelEdit = () => {
     setEditingId(null)
-    setNameInput("")
-    setColorInput("emerald")
+    setNameInput('')
+    setColorInput('emerald')
     setErrorMessage(null)
     setSuccessMessage(null)
   }
@@ -42,16 +42,16 @@ export const CategoryManagerTab: React.FC = () => {
     const trimmedName = nameInput.trim()
 
     if (!trimmedName) {
-      setErrorMessage("El nombre de la categoría no puede estar vacío.")
+      setErrorMessage('El nombre de la categoría no puede estar vacío.')
       return
     }
 
     // Check for duplicate name (case-insensitive) except if editing same
     const duplicate = categoryList.find(
-      (c) => c.name.toLowerCase() === trimmedName.toLowerCase() && c.id !== editingId
+      c => c.name.toLowerCase() === trimmedName.toLowerCase() && c.id !== editingId,
     )
     if (duplicate) {
-      setErrorMessage("Ya existe una categoría con este nombre.")
+      setErrorMessage('Ya existe una categoría con este nombre.')
       return
     }
 
@@ -68,8 +68,8 @@ export const CategoryManagerTab: React.FC = () => {
         color: colorInput,
       })
       setSuccessMessage(`Categoría "${trimmedName}" creada exitosamente.`)
-      setNameInput("")
-      setColorInput("emerald")
+      setNameInput('')
+      setColorInput('emerald')
       setErrorMessage(null)
     }
   }
@@ -79,7 +79,7 @@ export const CategoryManagerTab: React.FC = () => {
     const count = getUsageCount(categoryId)
     if (count > 0) {
       setErrorMessage(
-        `No se puede eliminar la categoría "${cat?.name || categoryId}" porque está en uso por ${count} obligación(es) activa(s).`
+        `No se puede eliminar la categoría "${cat?.name ?? categoryId}" porque está en uso por ${count} obligación(es) activa(s).`,
       )
       setSuccessMessage(null)
       return
@@ -139,10 +139,13 @@ export const CategoryManagerTab: React.FC = () => {
       )}
 
       {/* Category Create/Edit Card Form */}
-      <form onSubmit={handleSave} className="p-4 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
+      <form
+        onSubmit={handleSave}
+        className="p-4 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4"
+      >
         <div className="flex justify-between items-center">
           <span className="text-sm font-semibold text-slate-200">
-            {editingId ? "✏️ Editar Categoría" : "➕ Nueva Categoría"}
+            {editingId ? '✏️ Editar Categoría' : '➕ Nueva Categoría'}
           </span>
           {editingId && (
             <button
@@ -164,7 +167,7 @@ export const CategoryManagerTab: React.FC = () => {
               type="text"
               placeholder="Ej. Gimnasio, Mascotas, Streaming"
               value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
+              onChange={e => setNameInput(e.target.value)}
               className="w-full min-h-[44px] px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 transition"
             />
           </div>
@@ -183,8 +186,8 @@ export const CategoryManagerTab: React.FC = () => {
                   onClick={() => setColorInput(key)}
                   className={`min-h-[32px] min-w-[32px] w-8 h-8 rounded-full ${opt.dotClass} cursor-pointer transition ${
                     colorInput === key
-                      ? "ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110"
-                      : "opacity-60 hover:opacity-100"
+                      ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110'
+                      : 'opacity-60 hover:opacity-100'
                   }`}
                 />
               ))}
@@ -196,7 +199,7 @@ export const CategoryManagerTab: React.FC = () => {
               type="submit"
               className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-semibold text-white cursor-pointer shadow transition"
             >
-              {editingId ? "Guardar" : "Agregar"}
+              {editingId ? 'Guardar' : 'Agregar'}
             </button>
           </div>
         </div>
@@ -211,9 +214,9 @@ export const CategoryManagerTab: React.FC = () => {
         </div>
 
         <div className="divide-y divide-slate-800/60">
-          {categoryList.map((cat) => {
+          {categoryList.map(cat => {
             const usageCount = getUsageCount(cat.id)
-            const colorOption = CATEGORY_PALETTE[cat.color] || CATEGORY_PALETTE.emerald
+            const colorOption = CATEGORY_PALETTE[cat.color] ?? CATEGORY_PALETTE.emerald
 
             return (
               <div
@@ -222,11 +225,14 @@ export const CategoryManagerTab: React.FC = () => {
                 className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 hover:bg-slate-800/20 transition"
               >
                 <div className="flex items-center gap-3">
-                  <span className={`w-3.5 h-3.5 rounded-full ${colorOption?.dotClass} flex-shrink-0`} />
+                  <span
+                    className={`w-3.5 h-3.5 rounded-full ${colorOption?.dotClass} flex-shrink-0`}
+                  />
                   <div>
                     <span className="text-sm font-semibold text-white">{cat.name}</span>
                     <div className="text-[11px] text-slate-400">
-                      {usageCount} {usageCount === 1 ? "obligación asociada" : "obligaciones asociadas"}
+                      {usageCount}{' '}
+                      {usageCount === 1 ? 'obligación asociada' : 'obligaciones asociadas'}
                     </div>
                   </div>
                 </div>
@@ -245,12 +251,12 @@ export const CategoryManagerTab: React.FC = () => {
                     title={
                       usageCount > 0
                         ? `No se puede eliminar porque está en uso (${usageCount} obligaciones)`
-                        : "Eliminar categoría"
+                        : 'Eliminar categoría'
                     }
                     className={`min-h-[36px] px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer transition ${
                       usageCount > 0
-                        ? "bg-slate-800/40 text-slate-600 border border-slate-800 cursor-not-allowed"
-                        : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20"
+                        ? 'bg-slate-800/40 text-slate-600 border border-slate-800 cursor-not-allowed'
+                        : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20'
                     }`}
                   >
                     Eliminar

@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useId } from "react"
-import { useAuthStore } from "@/store/authSlice"
+import React, { useState, useRef, useEffect, useId } from 'react'
+import { useAuthStore } from '@/store/authSlice'
 
 export interface UserMenuDropdownProps {
   onOpenSettings?: () => void
@@ -10,7 +10,7 @@ export interface UserMenuDropdownProps {
 export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
   onOpenSettings,
   onOpenSupport,
-  className = "",
+  className = '',
 }) => {
   const { user, isUnlocked, logout } = useAuthStore()
   const [isOpen, setIsOpen] = useState(false)
@@ -23,14 +23,14 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
     if (name) {
       const parts = name.trim().split(/\s+/)
       if (parts.length >= 2 && parts[0] && parts[1]) {
-        const first = parts[0][0] || ""
-        const second = parts[1][0] || ""
+        const first = parts[0][0] ?? ''
+        const second = parts[1][0] ?? ''
         return `${first}${second}`.toUpperCase()
       }
       return name.slice(0, 2).toUpperCase()
     }
     if (email) return email.slice(0, 2).toUpperCase()
-    return "TC"
+    return 'TC'
   }
 
   // Close dropdown on outside click
@@ -44,25 +44,25 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         setIsOpen(false)
         buttonRef.current?.focus()
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
-    document.addEventListener("touchstart", handleClickOutside)
-    document.addEventListener("keydown", handleKeyDown)
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-      document.removeEventListener("touchstart", handleClickOutside)
-      document.removeEventListener("keydown", handleKeyDown)
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
 
   const handleToggle = () => {
-    setIsOpen((prev) => !prev)
+    setIsOpen(prev => !prev)
   }
 
   const handleSelectSettings = () => {
@@ -94,12 +94,12 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-controls={isOpen ? `${menuId}-menu` : undefined}
-        aria-label={`Menú de usuario: ${user?.name || user?.email || "Mi cuenta"}`}
+        aria-label={`Menú de usuario: ${user?.name ?? user?.email ?? 'Mi cuenta'}`}
         onClick={handleToggle}
         className={`h-10 px-2.5 sm:px-3 rounded-xl flex items-center gap-2.5 border transition-all duration-200 cursor-pointer select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 shrink-0 ${
           isOpen
-            ? "bg-slate-800 border-slate-700 shadow-md ring-1 ring-emerald-500/30"
-            : "bg-slate-900/90 hover:bg-slate-800/90 border-slate-800 hover:border-slate-700/90 shadow-sm"
+            ? 'bg-slate-800 border-slate-700 shadow-md ring-1 ring-emerald-500/30'
+            : 'bg-slate-900/90 hover:bg-slate-800/90 border-slate-800 hover:border-slate-700/90 shadow-sm'
         }`}
       >
         {/* User Avatar with subtle emerald status ring */}
@@ -122,7 +122,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
         {/* User Info (Hidden on very compact viewports, expanded on desktop) */}
         <div className="hidden sm:flex flex-col text-left max-w-[140px] md:max-w-[170px] xl:max-w-[220px]">
           <span className="text-xs font-semibold text-slate-200 group-hover:text-white truncate leading-tight">
-            {user?.name || "Usuario"}
+            {user?.name ?? 'Usuario'}
           </span>
           {user?.email && (
             <span className="text-[10px] text-slate-400 group-hover:text-slate-300 font-mono truncate leading-tight mt-0.5">
@@ -135,7 +135,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
         <div className="w-5 h-5 rounded-md flex items-center justify-center bg-slate-800/60 group-hover:bg-slate-700/60 transition-colors shrink-0">
           <svg
             className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${
-              isOpen ? "rotate-180 text-emerald-400" : ""
+              isOpen ? 'rotate-180 text-emerald-400' : ''
             }`}
             viewBox="0 0 24 24"
             fill="none"
@@ -162,15 +162,15 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
           {/* Header Section: Full identity & Vault security badge */}
           <div className="px-4 py-2.5 border-b border-slate-800/80">
             <p className="text-xs font-bold text-white truncate">
-              {user?.name || "Usuario de Tu Chauchera"}
+              {user?.name ?? 'Usuario de Tu Chauchera'}
             </p>
             <p className="text-[11px] text-slate-400 font-mono truncate mt-0.5">
-              {user?.email || "Sin correo"}
+              {user?.email ?? 'Sin correo'}
             </p>
             <div className="mt-2 flex items-center justify-between text-[10px]">
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {isUnlocked ? "Bóveda Cifrada Activa" : "Bóveda Bloqueada"}
+                {isUnlocked ? 'Bóveda Cifrada Activa' : 'Bóveda Bloqueada'}
               </span>
               <span className="text-slate-400 font-mono">AES-256</span>
             </div>

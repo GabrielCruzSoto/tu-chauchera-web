@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import { CreditCardsDashboard } from './CreditCardsDashboard'
 import { useCreditCardStore } from '../store/creditCardSlice'
+import { getLocalISODate, getLocalPeriod } from '@/shared/utils/date'
 
 describe('CreditCardsDashboard', () => {
   beforeEach(() => {
@@ -86,11 +87,14 @@ describe('CreditCardsDashboard', () => {
       primaryLastFour: '4321',
     })
 
+    const today = getLocalISODate()
+    const currentPeriod = getLocalPeriod()
     store.addPurchase({
       accountId: account.id,
       plasticId: account.plastics[0]!.id,
       description: 'Supermercado Lider',
-      purchaseDate: '2026-03-10',
+      purchaseDate: today,
+      firstInstallmentPeriod: currentPeriod,
       totalAmountCents: 90000,
       totalInstallments: 3,
       payerType: 'PROPIO',
@@ -107,11 +111,18 @@ describe('CreditCardsDashboard', () => {
     expect(screen.getByText(/Total Compras Registradas/i)).toBeInTheDocument()
     expect(screen.getByText(/Cupo Disponible Estimado/i)).toBeInTheDocument()
 
-    // Period selector buttons
+    // Default 3-month headers: Mes anterior, Mes actual y Próximo mes
+    expect(screen.getByText('Mes Anterior')).toBeInTheDocument()
+    expect(screen.getByText('Mes Actual')).toBeInTheDocument()
+    expect(screen.getByText('Próximo Mes')).toBeInTheDocument()
+
+    // Period selector buttons and filter controls
     expect(screen.getByRole('button', { name: '3M' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '6M' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '12M' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '24M' })).toBeInTheDocument()
+    expect(screen.getByLabelText(/Indicar cantidad de períodos a mostrar/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Indicar período inicial/i)).toBeInTheDocument()
 
     // Table columns and purchase data
     expect(screen.getByText('Movimiento')).toBeInTheDocument()
@@ -132,7 +143,39 @@ describe('CreditCardsDashboard', () => {
     // Close modal
     const closeButton = screen.getByRole('button', { name: /Cerrar modal de compras/i })
     fireEvent.click(closeButton)
-    expect(screen.queryByText(/Matriz de Compras y Cuotas — CMR Mastercard/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/Matriz de Compras y Cuotas — CMR Mastercard/i),
+    ).not.toBeInTheDocument()
+  })
+
+  it('displays overdrive/exceeded warning badge when registered debt exceeds credit limit', () => {
+    const store = useCreditCardStore.getState()
+    const account = store.addAccount({
+      institution: 'Banco Santander',
+      accountName: 'Visa Gold',
+      creditLimitCents: 500000,
+      closingDay: 20,
+      dueDay: 5,
+      primaryHolderName: 'Gabriel Cruz',
+      primaryLastFour: '7788',
+    })
+
+    store.addPurchase({
+      accountId: account.id,
+      plasticId: account.plastics[0]!.id,
+      description: 'Notebook Gamer',
+      purchaseDate: '2026-08-10',
+      firstInstallmentPeriod: '2026-09',
+      totalAmountCents: 650000,
+      totalInstallments: 1,
+      payerType: 'PROPIO',
+    })
+
+    render(<CreditCardsDashboard />)
+
+    expect(screen.getByText(/⚠️ Cupo Excedido/i)).toBeInTheDocument()
+    expect(screen.getByText(/Límite Excedido por:/i)).toBeInTheDocument()
+    expect(screen.getByText(/\+?\$150\.000/i)).toBeInTheDocument()
+    expect(screen.getByText(/\(130%\)/i)).toBeInTheDocument()
   })
 })
-

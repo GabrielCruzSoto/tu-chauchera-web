@@ -1,11 +1,11 @@
-import { create } from "zustand"
-import type { UserPreferences } from "@/shared/types/settings"
+import { create } from 'zustand'
+import type { UserPreferences } from '@/shared/types/settings'
+import { useSyncStore } from '@/features/sync/store/syncSlice'
 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
-  currency: "CLP",
-  dateFormat: "DD/MM/YYYY",
-  theme: "dark",
-  showCents: false,
+  currency: 'CLP',
+  dateFormat: 'DD/MM/YYYY',
+  theme: 'dark',
   updatedAt: new Date().toISOString(),
 }
 
@@ -19,25 +19,31 @@ export interface SettingsState {
   resetPreferences: () => void
 }
 
-export const useSettingsStore = create<SettingsState>((set) => ({
+export const useSettingsStore = create<SettingsState>(set => ({
   preferences: DEFAULT_USER_PREFERENCES,
   isLoaded: false,
 
-  setPreferences: (preferences) => {
+  setPreferences: preferences => {
     set({
-      preferences,
+      preferences: {
+        ...preferences,
+        currency: 'CLP',
+      },
       isLoaded: true,
     })
   },
 
-  updatePreferences: (updates) => {
-    set((state) => ({
+  updatePreferences: updates => {
+    set(state => ({
       preferences: {
         ...state.preferences,
         ...updates,
+        currency: 'CLP',
         updatedAt: new Date().toISOString(),
       },
+      isLoaded: true,
     }))
+    useSyncStore.getState().queueSyncDomain('preferences')
   },
 
   resetPreferences: () => {

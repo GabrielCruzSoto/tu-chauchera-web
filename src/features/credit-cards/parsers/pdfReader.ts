@@ -1,8 +1,11 @@
 import * as pdfjsLib from 'pdfjs-dist'
 
-// Configure worker locally or via CDN to avoid bundler packaging issues
+// Configure worker locally via Vite bundling to avoid CDN reliance and CSP restrictions
 if (typeof window !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url,
+  ).toString()
 }
 
 /**

@@ -5,7 +5,10 @@ import type { ParsedStatementTransaction, ParsedStatementResult } from './falabe
  * Parses raw text extracted from a Tenpo credit card account statement (PDF or text).
  */
 export function parseTenpoStatementText(rawText: string): ParsedStatementResult {
-  const lines = rawText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+  const lines = rawText
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean)
   const transactions: ParsedStatementTransaction[] = []
 
   let closingDate: string | undefined = undefined
@@ -123,7 +126,7 @@ export function parseTenpoStatementText(rawText: string): ParsedStatementResult 
     // Tenpo standard statement line pattern:
     // [null]? [DD/MM/YYYY] [DESCRIPCIÓN] [Digital|Física]? $[montoOp] $[montoTotal] [cuotaActual/cuotaTotal] $[valorCuota]
     const standardMatch = combined.match(
-      /(?:(Digital|F[ií]sica)\s+)?\$\s*([\d.]+)\s+\$\s*([\d.]+)\s+(\d{1,2}\/\d{1,2})\s+\$\s*([\d.]+)$/i
+      /(?:(Digital|F[ií]sica)\s+)?\$\s*([\d.]+)\s+\$\s*([\d.]+)\s+(\d{1,2}\/\d{1,2})\s+\$\s*([\d.]+)$/i,
     )
 
     let description: string
@@ -205,20 +208,24 @@ export function parseTenpoStatementText(rawText: string): ParsedStatementResult 
       }
     }
 
-    // Calculate firstInstallmentPeriod if installments and dueDate are available
+    // Calculate firstInstallmentPeriod if dueDate is available
     let firstInstallmentPeriod: string | undefined = undefined
-    if (dueDate && totalInstallments > 1) {
+    if (dueDate) {
       const [dueYStr = '2026', dueMStr = '01'] = dueDate.split('-')
       const dueY = parseInt(dueYStr, 10)
       const dueM = parseInt(dueMStr, 10)
 
-      let startYear = dueY
-      let startMonth = dueM - (currentInstallment - 1)
-      while (startMonth < 1) {
-        startMonth += 12
-        startYear -= 1
+      if (totalInstallments > 1) {
+        let startYear = dueY
+        let startMonth = dueM - (currentInstallment - 1)
+        while (startMonth < 1) {
+          startMonth += 12
+          startYear -= 1
+        }
+        firstInstallmentPeriod = `${startYear}-${String(startMonth).padStart(2, '0')}`
+      } else {
+        firstInstallmentPeriod = `${dueY}-${String(dueM).padStart(2, '0')}`
       }
-      firstInstallmentPeriod = `${startYear}-${String(startMonth).padStart(2, '0')}`
     }
 
     transactions.push({
@@ -237,6 +244,7 @@ export function parseTenpoStatementText(rawText: string): ParsedStatementResult 
 
   return {
     institution: 'TENPO',
+    isSupported: true,
     closingDate,
     dueDate,
     totalBilledCents,

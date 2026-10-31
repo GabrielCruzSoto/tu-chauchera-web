@@ -1,16 +1,17 @@
 /**
  * Migration engine executing envelope extraction, sequential schema transformations, and Zod validations.
  */
-import type { DataDomain, ISODate } from "@/shared/types/domain"
-import type { DomainEnvelope, MigrationResult, SchemaVersion } from "./types"
-import { CURRENT_SCHEMA_VERSIONS, DEFAULT_LEGACY_VERSION, DOMAIN_MIGRATIONS } from "./registry"
+import type { DataDomain, ISODate } from '@/shared/types/domain'
+import type { DomainEnvelope, MigrationResult, SchemaVersion } from './types'
+import { CURRENT_SCHEMA_VERSIONS, DEFAULT_LEGACY_VERSION, DOMAIN_MIGRATIONS } from './registry'
 import {
   obligationsStoreSchema,
   categoriesStoreSchema,
   incomesStoreSchema,
   settingsStoreSchema,
+  preferencesStoreSchema,
   creditCardsStoreSchema,
-} from "./schemas"
+} from './schemas'
 
 /**
  * Creates a standard versioned envelope for saving to storage.
@@ -19,7 +20,7 @@ export function wrapDomainEnvelope<T>(
   domain: DataDomain,
   payload: T,
   schemaVersion: SchemaVersion = CURRENT_SCHEMA_VERSIONS[domain],
-  updatedAt: ISODate = new Date().toISOString()
+  updatedAt: ISODate = new Date().toISOString(),
 ): DomainEnvelope<T> {
   return {
     schemaVersion,
@@ -35,18 +36,20 @@ export function wrapDomainEnvelope<T>(
  */
 export function unwrapDomainEnvelope(
   domain: DataDomain,
-  rawContent: unknown
+  rawContent: unknown,
 ): { schemaVersion: SchemaVersion; payload: unknown } {
-  if (typeof rawContent !== "object" || rawContent === null) {
-    throw new Error(`Invalid payload for domain "${domain}": expected object, got ${typeof rawContent}`)
+  if (typeof rawContent !== 'object' || rawContent === null) {
+    throw new Error(
+      `Invalid payload for domain "${domain}": expected object, got ${typeof rawContent}`,
+    )
   }
 
   const obj = rawContent as Record<string, unknown>
 
   // Check if it's already a standard envelope
-  if ("schemaVersion" in obj && "payload" in obj && "domain" in obj) {
+  if ('schemaVersion' in obj && 'payload' in obj && 'domain' in obj) {
     const v = obj.schemaVersion
-    const versionNum = typeof v === "number" ? v : parseInt(String(v), 10)
+    const versionNum = typeof v === 'number' ? v : parseInt(String(v), 10)
     return {
       schemaVersion: Number.isNaN(versionNum) ? DEFAULT_LEGACY_VERSION : versionNum,
       payload: obj.payload,
@@ -55,9 +58,9 @@ export function unwrapDomainEnvelope(
 
   // Legacy data: the object itself is the payload
   let legacyVersion = DEFAULT_LEGACY_VERSION
-  if ("schemaVersion" in obj) {
+  if ('schemaVersion' in obj) {
     const v = obj.schemaVersion
-    const versionNum = typeof v === "number" ? v : parseInt(String(v), 10)
+    const versionNum = typeof v === 'number' ? v : parseInt(String(v), 10)
     if (!Number.isNaN(versionNum)) {
       legacyVersion = versionNum
     }
@@ -74,15 +77,17 @@ export function unwrapDomainEnvelope(
  */
 export function validateDomainPayload<T>(domain: DataDomain, payload: unknown): T {
   switch (domain) {
-    case "obligations":
+    case 'obligations':
       return obligationsStoreSchema.parse(payload) as T
-    case "categories":
+    case 'categories':
       return categoriesStoreSchema.parse(payload) as T
-    case "incomes":
+    case 'incomes':
       return incomesStoreSchema.parse(payload) as T
-    case "settings":
+    case 'settings':
       return settingsStoreSchema.parse(payload) as T
-    case "credit_cards":
+    case 'preferences':
+      return preferencesStoreSchema.parse(payload) as T
+    case 'credit_cards':
       return creditCardsStoreSchema.parse(payload) as T
     default:
       return payload as T
@@ -95,12 +100,13 @@ export function validateDomainPayload<T>(domain: DataDomain, payload: unknown): 
 export function migrateDomainPayload<T>(
   domain: DataDomain,
   rawContent: unknown,
-  targetVersion: SchemaVersion = CURRENT_SCHEMA_VERSIONS[domain]
+  targetVersion: SchemaVersion = CURRENT_SCHEMA_VERSIONS[domain],
 ): MigrationResult<T> {
   const { schemaVersion: initialVersion, payload } = unwrapDomainEnvelope(domain, rawContent)
 
   let currentVersion = initialVersion
-  let currentPayload: unknown = typeof payload === "object" && payload !== null ? { ...(payload as object) } : payload
+  let currentPayload: unknown =
+    typeof payload === 'object' && payload !== null ? { ...(payload as object) } : payload
 
   if (currentVersion === targetVersion) {
     const validated = validateDomainPayload<T>(domain, currentPayload)
@@ -114,7 +120,7 @@ export function migrateDomainPayload<T>(
 
   if (currentVersion > targetVersion) {
     throw new Error(
-      `Payload for domain "${domain}" has schema version ${currentVersion}, which is newer than the app's supported version ${targetVersion}. Please update the application.`
+      `Payload for domain "${domain}" has schema version ${currentVersion}, which is newer than the app's supported version ${targetVersion}. Please update the application.`,
     )
   }
 
@@ -124,7 +130,7 @@ export function migrateDomainPayload<T>(
   let stepApplied = true
   while (currentVersion < targetVersion && stepApplied) {
     stepApplied = false
-    const step = migrations.find((m) => m.fromVersion === currentVersion)
+    const step = migrations.find(m => m.fromVersion === currentVersion)
 
     if (step) {
       currentPayload = step.migrate(currentPayload)
@@ -135,7 +141,7 @@ export function migrateDomainPayload<T>(
 
   if (currentVersion !== targetVersion) {
     throw new Error(
-      `Cannot migrate domain "${domain}" from schema version ${initialVersion} to ${targetVersion}: missing migration step at version ${currentVersion}.`
+      `Cannot migrate domain "${domain}" from schema version ${initialVersion} to ${targetVersion}: missing migration step at version ${currentVersion}.`,
     )
   }
 

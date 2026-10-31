@@ -1,8 +1,8 @@
-import React, { useState } from "react"
-import { SUPPORT_EMAIL } from "@/shared/constants/support"
-import { APP_SYSTEM_VERSION, CURRENT_SCHEMA_VERSION } from "@/shared/constants/version"
-import { useAuthStore } from "@/store/authSlice"
-import { useSyncStore } from "@/features/sync/store/syncSlice"
+import React, { useState } from 'react'
+import { SUPPORT_EMAIL } from '@/shared/constants/support'
+import { APP_SYSTEM_VERSION, CURRENT_SCHEMA_VERSION } from '@/shared/constants/version'
+import { useAuthStore } from '@/store/authSlice'
+import { useSyncStore } from '@/features/sync/store/syncSlice'
 
 export interface SupportTabProps {
   onOpenPrivacy?: (() => void) | undefined
@@ -21,13 +21,13 @@ export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTer
       `Fecha/Hora: ${new Date().toISOString()}`,
       `Versión App: ${APP_SYSTEM_VERSION}`,
       `Versión Schema: ${CURRENT_SCHEMA_VERSION}`,
-      `Bóveda Desbloqueada: ${isUnlocked ? "Sí" : "No"}`,
+      `Bóveda Desbloqueada: ${isUnlocked ? 'Sí' : 'No'}`,
       `Estado Sincronización: ${syncStatus}`,
-      `Última Sincronización: ${lastSyncedAt ? new Date(lastSyncedAt).toISOString() : "Nunca"}`,
-      `Navegador: ${typeof navigator !== "undefined" ? navigator.userAgent : "N/A"}`,
-      `Resolución Pantalla: ${typeof window !== "undefined" ? `${window.innerWidth}x${window.innerHeight}` : "N/A"}`,
-      `Usuario: ${user?.email ?? "N/A"}`,
-    ].join("\n")
+      `Última Sincronización: ${lastSyncedAt ? new Date(lastSyncedAt).toISOString() : 'Nunca'}`,
+      `Navegador: ${typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'}`,
+      `Resolución Pantalla: ${typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'N/A'}`,
+      `Usuario: ${user?.email ?? 'N/A'}`,
+    ].join('\n')
   }
 
   const handleCopyEmail = async () => {
@@ -70,13 +70,16 @@ export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTer
           <div className="p-4 sm:p-5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-white">Soporte por Correo Electrónico</span>
+                <span className="text-sm font-semibold text-white">
+                  Soporte por Correo Electrónico
+                </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium">
                   Atención Directa
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Escríbenos directamente para dudas funcionales, asistencia con tus datos o problemas con la aplicación.
+                Escríbenos directamente para dudas funcionales, asistencia con tus datos o problemas
+                con la aplicación.
               </p>
               <p className="text-xs font-mono text-emerald-400 pt-1 break-all">{SUPPORT_EMAIL}</p>
             </div>
@@ -86,7 +89,7 @@ export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTer
                 onClick={() => void handleCopyEmail()}
                 className="py-2 px-3.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition cursor-pointer border border-slate-700"
               >
-                {copiedEmail ? "✓ Copiado" : "Copiar Correo"}
+                {copiedEmail ? '✓ Copiado' : 'Copiar Correo'}
               </button>
               <a
                 href={`mailto:${SUPPORT_EMAIL}?subject=Consulta%20Soporte%20Tu%20Chauchera`}
@@ -94,7 +97,12 @@ export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTer
               >
                 <span>Redactar</span>
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
                 </svg>
               </a>
             </div>
@@ -110,26 +118,32 @@ export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTer
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Consulta los términos oficiales de privacidad por diseño, cifrado AES-256 y persistencia en tu Google Drive personal.
+                Consulta los términos oficiales de privacidad por diseño, cifrado AES-256 y
+                persistencia en tu Google Drive personal.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <a
                 href="/privacidad"
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault()
                   if (onOpenPrivacy) {
                     onOpenPrivacy()
                   } else {
-                    window.history.pushState({}, "", "/privacidad")
-                    window.dispatchEvent(new PopStateEvent("popstate"))
+                    window.history.pushState({}, '', '/privacidad')
+                    window.dispatchEvent(new PopStateEvent('popstate'))
                   }
                 }}
                 className="py-2 px-3.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition cursor-pointer border border-slate-700 inline-flex items-center gap-1.5"
               >
                 <span>Ver Política</span>
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </a>
             </div>
@@ -145,26 +159,32 @@ export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTer
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Revisa los términos de uso, licencias, descargo de asesoría financiera y responsabilidades de la plataforma.
+                Revisa los términos de uso, licencias, descargo de asesoría financiera y
+                responsabilidades de la plataforma.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <a
                 href="/terminos"
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault()
                   if (onOpenTerms) {
                     onOpenTerms()
                   } else {
-                    window.history.pushState({}, "", "/terminos")
-                    window.dispatchEvent(new PopStateEvent("popstate"))
+                    window.history.pushState({}, '', '/terminos')
+                    window.dispatchEvent(new PopStateEvent('popstate'))
                   }
                 }}
                 className="py-2 px-3.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition cursor-pointer border border-slate-700 inline-flex items-center gap-1.5"
               >
                 <span>Ver Términos</span>
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </a>
             </div>
@@ -182,7 +202,7 @@ export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTer
               onClick={() => void handleCopyDiagnostics()}
               className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold cursor-pointer underline underline-offset-2 transition"
             >
-              {copiedDiagnostics ? "✓ ¡Diagnóstico copiado!" : "Copiar diagnóstico"}
+              {copiedDiagnostics ? '✓ ¡Diagnóstico copiado!' : 'Copiar diagnóstico'}
             </button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono bg-slate-900/90 p-3 rounded-lg border border-slate-800">
@@ -196,8 +216,8 @@ export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTer
             </div>
             <div>
               <span className="text-slate-500 block">Bóveda:</span>
-              <span className={isUnlocked ? "text-emerald-400" : "text-amber-400"}>
-                {isUnlocked ? "Desbloqueada" : "Bloqueada"}
+              <span className={isUnlocked ? 'text-emerald-400' : 'text-amber-400'}>
+                {isUnlocked ? 'Desbloqueada' : 'Bloqueada'}
               </span>
             </div>
             <div>
@@ -206,7 +226,8 @@ export const SupportTab: React.FC<SupportTabProps> = ({ onOpenPrivacy, onOpenTer
             </div>
           </div>
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            Este reporte permite identificar rápidamente inconsistencias de versión o sincronización sin exponer tus movimientos, montos ni contraseñas.
+            Este reporte permite identificar rápidamente inconsistencias de versión o sincronización
+            sin exponer tus movimientos, montos ni contraseñas.
           </p>
         </div>
       </div>

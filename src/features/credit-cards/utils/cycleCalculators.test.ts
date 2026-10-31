@@ -3,6 +3,7 @@ import {
   calculateBillingPeriod,
   calculateInstallmentPeriods,
   calculateRepaymentStatus,
+  offsetPeriod,
 } from './cycleCalculators'
 import { toMoney } from '../../../shared/types/money'
 
@@ -61,6 +62,29 @@ describe('cycleCalculators', () => {
 
       const overpaid = calculateRepaymentStatus(toMoney(10000), toMoney(12000))
       expect(overpaid).toBe('COBRADO_TOTAL')
+    })
+  })
+
+  describe('offsetPeriod', () => {
+    it('shifts to previous month with -1', () => {
+      expect(offsetPeriod('2026-09', -1)).toBe('2026-08')
+    })
+
+    it('shifts to next month with +1', () => {
+      expect(offsetPeriod('2026-09', 1)).toBe('2026-10')
+    })
+
+    it('wraps year backwards from January to previous year December', () => {
+      expect(offsetPeriod('2026-01', -1)).toBe('2025-12')
+    })
+
+    it('wraps year forwards from December to next year January', () => {
+      expect(offsetPeriod('2026-12', 1)).toBe('2027-01')
+    })
+
+    it('handles multi-month and multi-year offsets', () => {
+      expect(offsetPeriod('2026-06', -12)).toBe('2025-06')
+      expect(offsetPeriod('2026-06', 24)).toBe('2028-06')
     })
   })
 })

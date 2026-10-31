@@ -1,6 +1,6 @@
-import React, { useState } from "react"
-import { useObligationsStore } from "../store/obligationsSlice"
-import { toMoney, formatCLP } from "@/shared/types/money"
+import React, { useState } from 'react'
+import { useObligationsStore } from '../store/obligationsSlice'
+import { toMoney, formatCLP } from '@/shared/types/money'
 import type {
   Obligation,
   ObligationType,
@@ -8,10 +8,13 @@ import type {
   MaintenanceSplitMode,
   CommissionMode,
   CardFeeSurcharge,
-} from "@/shared/types/domain"
-import { computeDueDate } from "../utils/installmentGenerator"
-import { computeP2PInstallmentCharge } from "../utils/surchargeCalculator"
-import { CategorySettingsModal } from "./CategorySettingsModal"
+} from '@/shared/types/domain'
+import { computeDueDate } from '../utils/installmentGenerator'
+import { computeP2PInstallmentCharge } from '../utils/surchargeCalculator'
+import { getLocalISODate } from '@/shared/utils/date'
+import { CategorySettingsModal } from './CategorySettingsModal'
+
+export type ExpenseCadence = 'INDEFINITE' | 'MOMENTARY' | 'FIXED_MONTHS'
 
 interface ObligationFormProps {
   obligationToEdit?: Obligation | null
@@ -27,7 +30,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
   const { categories, addObligation, updateObligation, addCategory } = useObligationsStore()
 
   const categoryList = Object.values(categories).sort((a, b) =>
-    a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+    a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
   )
 
   const sourceObl = obligationToEdit ?? obligationToClone
@@ -35,22 +38,27 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
   const isCloning = Boolean(obligationToClone)
 
   // Primary Tab
-  const [activeType, setActiveType] = useState<ObligationType>(sourceObl?.type ?? "DEBT")
+  const [activeType, setActiveType] = useState<ObligationType>(() => {
+    if (sourceObl?.type) return sourceObl.type
+    if (sourceObl?.p2pMetadata) return 'P2P_DEBT'
+    if (sourceObl?.isRecurringIndefinite) return 'EXPENSE'
+    return 'DEBT'
+  })
 
   const ensureThirdPartyCategoryId = (): string => {
     const currentCats = useObligationsStore.getState().categories
     const existing = Object.values(currentCats).find(
-      (c) =>
-        c.name.toLowerCase().includes("deudas con terceros") ||
-        c.name.toLowerCase() === "terceros" ||
-        c.name.toLowerCase() === "deudas terceros"
+      c =>
+        c.name.toLowerCase().includes('deudas con terceros') ||
+        c.name.toLowerCase() === 'terceros' ||
+        c.name.toLowerCase() === 'deudas terceros',
     )
     if (existing) {
       return existing.id
     }
     const newCat = addCategory({
-      name: "Deudas con terceros",
-      color: "amber",
+      name: 'Deudas con terceros',
+      color: 'amber',
     })
     return newCat.id
   }
@@ -58,62 +66,85 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
   // Common Fields
   const [categoryId, setCategoryId] = useState(() => {
     if (sourceObl?.categoryId) return sourceObl.categoryId
-    if (sourceObl?.type === "P2P_DEBT") {
+    if (sourceObl?.type === 'P2P_DEBT') {
       const existing = Object.values(categories).find(
-        (c) =>
-          c.name.toLowerCase().includes("deudas con terceros") ||
-          c.name.toLowerCase() === "terceros" ||
-          c.name.toLowerCase() === "deudas terceros"
+        c =>
+          c.name.toLowerCase().includes('deudas con terceros') ||
+          c.name.toLowerCase() === 'terceros' ||
+          c.name.toLowerCase() === 'deudas terceros',
       )
       if (existing) return existing.id
     }
-    return categoryList[0]?.id ?? ""
+    return ''
   })
 
   const handleSelectTab = (type: ObligationType) => {
     setActiveType(type)
-    if (type === "P2P_DEBT") {
+    if (type === 'P2P_DEBT') {
       const p2pCatId = ensureThirdPartyCategoryId()
       setCategoryId(p2pCatId)
     }
   }
   const [subcategory, setSubcategory] = useState(() => {
     if (obligationToClone) return `${obligationToClone.subcategory} (Copia)`
-    return obligationToEdit?.subcategory ?? ""
+    return obligationToEdit?.subcategory ?? ''
   })
-  const [detail, setDetail] = useState(sourceObl?.detail ?? "")
+  const [detail, setDetail] = useState(sourceObl?.detail ?? '')
   const [startDate, setStartDate] = useState(
-    sourceObl?.startDate
-      ? sourceObl.startDate.slice(0, 10)
-      : new Date().toISOString().slice(0, 10)
+    sourceObl?.startDate ? sourceObl.startDate.slice(0, 10) : getLocalISODate(),
   )
   const [dueDay, setDueDay] = useState<number>(sourceObl?.dueDay ?? new Date().getDate())
+  const [dueRuleKind, setDueRuleKind] = useState<'FIXED_DAY' | 'LAST_BUSINESS_DAY'>(() => {
+    return sourceObl?.dueRule?.kind ?? 'FIXED_DAY'
+  })
+  const [dueRuleShift, setDueRuleShift] = useState<'NONE' | 'NEXT_BUSINESS' | 'PREV_BUSINESS'>(
+    () => {
+      if (sourceObl?.dueRule?.kind === 'FIXED_DAY') {
+        return sourceObl.dueRule.shift ?? 'NONE'
+      }
+      return 'NONE'
+    },
+  )
+  const [annualRate, setAnnualRate] = useState<number | ''>(() => {
+    return sourceObl?.annualRatePercentage ?? ''
+  })
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
 
   // Debt & Expense specific
   const [totalAmount, setTotalAmount] = useState<number>(sourceObl?.totalAmountCents ?? 0)
   const [totalInstallments, setTotalInstallments] = useState<number>(
-    sourceObl?.totalInstallments ?? 12
+    sourceObl?.totalInstallments ?? 12,
   )
   const [currentInstallment, setCurrentInstallment] = useState<number>(
-    isCloning ? 1 : (obligationToEdit?.currentInstallment ?? 1)
+    isCloning ? 1 : (obligationToEdit?.currentInstallment ?? 1),
   )
   const [installmentAmount, setInstallmentAmount] = useState<number>(
-    sourceObl?.installmentAmountCents ?? 0
+    sourceObl?.installmentAmountCents ?? 0,
   )
-  const [isRecurringIndefinite, setIsRecurringIndefinite] = useState<boolean>(
-    sourceObl?.isRecurringIndefinite ?? true
-  )
+  const [expenseCadence, setExpenseCadence] = useState<ExpenseCadence>(() => {
+    if (sourceObl) {
+      if (sourceObl.isRecurringIndefinite) return 'INDEFINITE'
+      if (sourceObl.totalInstallments === 1) return 'MOMENTARY'
+      return 'FIXED_MONTHS'
+    }
+    return 'INDEFINITE'
+  })
+  const [fixedMonthsCount, setFixedMonthsCount] = useState<number>(() => {
+    if (sourceObl && !sourceObl.isRecurringIndefinite && sourceObl.totalInstallments > 1) {
+      return sourceObl.totalInstallments
+    }
+    return 12
+  })
 
   // P2P Specific
   const p2pMeta = sourceObl?.p2pMetadata
-  const [p2pRole, setP2pRole] = useState<P2PRole>(p2pMeta?.role ?? "LENT_MY_CARD")
+  const [p2pRole, setP2pRole] = useState<P2PRole>(p2pMeta?.role ?? 'LENT_MY_CARD')
   const [thirdPartyName, setThirdPartyName] = useState(() => {
     if (obligationToClone && p2pMeta?.thirdPartyName) return `${p2pMeta.thirdPartyName} (Copia)`
-    return p2pMeta?.thirdPartyName ?? ""
+    return p2pMeta?.thirdPartyName ?? ''
   })
-  const [cardIssuer, setCardIssuer] = useState(p2pMeta?.cardIssuer ?? "")
-  const [productDescription, setProductDescription] = useState(p2pMeta?.productDescription ?? "")
+  const [cardIssuer, setCardIssuer] = useState(p2pMeta?.cardIssuer ?? '')
+  const [productDescription, setProductDescription] = useState(p2pMeta?.productDescription ?? '')
   const [baseInstallmentAmount, setBaseInstallmentAmount] = useState<number>(() => {
     if (p2pMeta?.baseInstallmentAmountCents) return p2pMeta.baseInstallmentAmountCents
     if (sourceObl?.installmentAmountCents) return sourceObl.installmentAmountCents
@@ -123,26 +154,26 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
   // Surcharges
   const surcharges = p2pMeta?.surcharges
   const [includeMaintenance, setIncludeMaintenance] = useState(
-    surcharges?.includeMaintenanceFee ?? false
+    surcharges?.includeMaintenanceFee ?? false,
   )
   const [maintenanceFee, setMaintenanceFee] = useState<number>(
-    surcharges?.maintenanceFeeAmountCents ?? 3500
+    surcharges?.maintenanceFeeAmountCents ?? 3500,
   )
   const [maintenanceSplitMode, setMaintenanceSplitMode] = useState<MaintenanceSplitMode>(
-    surcharges?.maintenanceSplitMode ?? "FULL"
+    surcharges?.maintenanceSplitMode ?? 'FULL',
   )
   const [customMaintenance, setCustomMaintenance] = useState<number>(
-    surcharges?.customMaintenanceCents ?? 0
+    surcharges?.customMaintenanceCents ?? 0,
   )
 
   const [includeCommission, setIncludeCommission] = useState(
-    surcharges?.includeOneTimeCommission ?? false
+    surcharges?.includeOneTimeCommission ?? false,
   )
   const [commissionAmount, setCommissionAmount] = useState<number>(
-    surcharges?.totalCommissionCents ?? 0
+    surcharges?.totalCommissionCents ?? 0,
   )
   const [commissionMode, setCommissionMode] = useState<CommissionMode>(
-    surcharges?.commissionCollectionMode ?? "SPREAD_ACROSS_INSTALLMENTS"
+    surcharges?.commissionCollectionMode ?? 'SPREAD_ACROSS_INSTALLMENTS',
   )
 
   // Two-way sync for Cuotas Pagadas vs Cuota Actual
@@ -182,7 +213,23 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
   // Auto-calculate for EXPENSE mode
   const handleExpenseAmountChange = (val: number) => {
     setInstallmentAmount(val)
-    setTotalAmount(val * (isRecurringIndefinite ? 12 : totalInstallments))
+    const months =
+      expenseCadence === 'INDEFINITE' ? 60 : expenseCadence === 'MOMENTARY' ? 1 : fixedMonthsCount
+    setTotalAmount(val * months)
+  }
+
+  const handleExpenseCadenceChange = (cadence: ExpenseCadence) => {
+    setExpenseCadence(cadence)
+    const months = cadence === 'INDEFINITE' ? 60 : cadence === 'MOMENTARY' ? 1 : fixedMonthsCount
+    setTotalAmount(installmentAmount * months)
+  }
+
+  const handleFixedMonthsCountChange = (val: number) => {
+    const clean = Math.max(2, Math.min(val, 60))
+    setFixedMonthsCount(clean)
+    if (expenseCadence === 'FIXED_MONTHS') {
+      setTotalAmount(installmentAmount * clean)
+    }
   }
 
   // Auto-calculate for P2P mode
@@ -202,7 +249,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
 
   const handleCategorySelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value
-    if (val === "__NEW_CATEGORY__") {
+    if (val === '__NEW_CATEGORY__') {
       setIsCategoryModalOpen(true)
     } else {
       setCategoryId(val)
@@ -211,7 +258,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
 
   // Live P2P Surcharge calculation
   const currentSurcharges: CardFeeSurcharge | undefined =
-    p2pRole === "LENT_MY_CARD"
+    p2pRole === 'LENT_MY_CARD'
       ? {
           includeMaintenanceFee: includeMaintenance,
           maintenanceFeeAmountCents: toMoney(maintenanceFee),
@@ -226,21 +273,34 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
   const p2pBreakdown = computeP2PInstallmentCharge(
     toMoney(baseInstallmentAmount),
     totalInstallments,
-    currentSurcharges
+    currentSurcharges,
   )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!categoryId) return
 
-    const cleanStartDate = startDate.trim() || new Date().toISOString().slice(0, 10)
-    const cleanDueDay = Number.isFinite(dueDay) && dueDay >= 1 ? Math.min(Math.floor(dueDay), 31) : new Date().getDate()
+    const cleanStartDate = startDate.trim() || getLocalISODate()
+    const cleanDueDay =
+      Number.isFinite(dueDay) && dueDay >= 1
+        ? Math.min(Math.floor(dueDay), 31)
+        : new Date().getDate()
+    const resolvedDueRule =
+      dueRuleKind === 'LAST_BUSINESS_DAY'
+        ? { kind: 'LAST_BUSINESS_DAY' as const }
+        : { kind: 'FIXED_DAY' as const, day: cleanDueDay, shift: dueRuleShift }
 
-    if (activeType === "EXPENSE") {
+    if (activeType === 'EXPENSE') {
       if (!subcategory.trim()) return
-      const finalMonths = isRecurringIndefinite ? 12 : totalInstallments
+      const finalMonths =
+        expenseCadence === 'INDEFINITE'
+          ? 60
+          : expenseCadence === 'MOMENTARY'
+            ? 1
+            : Math.max(1, fixedMonthsCount)
+      const isIndefinite = expenseCadence === 'INDEFINITE'
       const payload = {
-        type: "EXPENSE" as ObligationType,
+        type: 'EXPENSE' as ObligationType,
         categoryId,
         subcategory: subcategory.trim(),
         detail: detail.trim(),
@@ -248,9 +308,10 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
         totalInstallments: finalMonths,
         currentInstallment: 1,
         installmentAmountCents: toMoney(installmentAmount),
-        isRecurringIndefinite,
+        isRecurringIndefinite: isIndefinite,
         startDate: cleanStartDate,
         dueDay: cleanDueDay,
+        dueRule: resolvedDueRule,
         p2pMetadata: undefined,
       }
 
@@ -259,10 +320,10 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
       } else {
         addObligation(payload)
       }
-    } else if (activeType === "DEBT") {
+    } else if (activeType === 'DEBT') {
       if (!subcategory.trim()) return
       const payload = {
-        type: "DEBT" as ObligationType,
+        type: 'DEBT' as ObligationType,
         categoryId,
         subcategory: subcategory.trim(),
         detail: detail.trim(),
@@ -273,6 +334,9 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
         isRecurringIndefinite: false,
         startDate: cleanStartDate,
         dueDay: cleanDueDay,
+        dueRule: resolvedDueRule,
+        annualRatePercentage:
+          typeof annualRate === 'number' && !isNaN(annualRate) ? annualRate : undefined,
         p2pMetadata: undefined,
       }
 
@@ -281,7 +345,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
       } else {
         addObligation(payload)
       }
-    } else if (activeType === "P2P_DEBT") {
+    } else if (activeType === 'P2P_DEBT') {
       const finalThirdParty = thirdPartyName.trim() || subcategory.trim()
       if (!finalThirdParty) return
 
@@ -289,7 +353,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
       const totalCharge = p2pBreakdown.totalMonthlyChargeCents
 
       const payload = {
-        type: "P2P_DEBT" as ObligationType,
+        type: 'P2P_DEBT' as ObligationType,
         categoryId,
         subcategory: finalThirdParty,
         detail: finalDetail,
@@ -324,9 +388,9 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
 
   // Consistent input styling classes across the entire modal
   const inputClass =
-    "w-full h-11 px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-text"
+    'w-full h-11 px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-text'
   const selectClass =
-    "w-full h-11 px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer"
+    'w-full h-11 px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition cursor-pointer'
 
   return (
     <>
@@ -337,10 +401,10 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-white">
                 {isEditing
-                  ? "Editar Obligación Financiera"
+                  ? 'Editar Obligación Financiera'
                   : isCloning
-                  ? "Clonar Obligación Financiera"
-                  : "Nueva Obligación Financiera"}
+                    ? 'Clonar Obligación Financiera'
+                    : 'Nueva Obligación Financiera'}
               </h2>
               {isCloning && (
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -366,33 +430,33 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => handleSelectTab("EXPENSE")}
+                onClick={() => handleSelectTab('EXPENSE')}
                 className={`min-h-[42px] px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 border ${
-                  activeType === "EXPENSE"
-                    ? "bg-sky-500/20 text-sky-300 border-sky-500/50 shadow-sm"
-                    : "bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800/60"
+                  activeType === 'EXPENSE'
+                    ? 'bg-sky-500/20 text-sky-300 border-sky-500/50 shadow-sm'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800/60'
                 }`}
               >
-                <span>💡</span> Gasto Recurrente
+                <span>💡</span> Gasto Recurrente & Puntual
               </button>
               <button
                 type="button"
-                onClick={() => handleSelectTab("DEBT")}
+                onClick={() => handleSelectTab('DEBT')}
                 className={`min-h-[42px] px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 border ${
-                  activeType === "DEBT"
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-sm"
-                    : "bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800/60"
+                  activeType === 'DEBT'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-sm'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800/60'
                 }`}
               >
                 <span>🏦</span> Deuda Financiera
               </button>
               <button
                 type="button"
-                onClick={() => handleSelectTab("P2P_DEBT")}
+                onClick={() => handleSelectTab('P2P_DEBT')}
                 className={`min-h-[42px] px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 border ${
-                  activeType === "P2P_DEBT"
-                    ? "bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm"
-                    : "bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800/60"
+                  activeType === 'P2P_DEBT'
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800/60'
                 }`}
               >
                 <span>👥</span> Entre Personas
@@ -406,7 +470,12 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <div>
                   <div className="flex justify-between items-center h-6 mb-1.5">
-                    <label className="block text-xs font-medium text-slate-300">Categoría</label>
+                    <label
+                      htmlFor="obligation-form-category"
+                      className="block text-xs font-medium text-slate-300"
+                    >
+                      Categoría
+                    </label>
                     <button
                       type="button"
                       onClick={() => setIsCategoryModalOpen(true)}
@@ -416,12 +485,17 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                     </button>
                   </div>
                   <select
+                    id="obligation-form-category"
+                    aria-label="Categoría"
                     value={categoryId}
                     onChange={handleCategorySelectChange}
                     required
                     className={selectClass}
                   >
-                    {categoryList.map((cat) => (
+                    <option value="" disabled>
+                      Selecciona una categoría...
+                    </option>
+                    {categoryList.map(cat => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}
                       </option>
@@ -432,22 +506,28 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                   </select>
                 </div>
 
-                {activeType !== "P2P_DEBT" && (
+                {activeType !== 'P2P_DEBT' && (
                   <div>
                     <div className="flex items-center h-6 mb-1.5">
-                      <label className="block text-xs font-medium text-slate-300">
-                        {activeType === "EXPENSE" ? "Servicio / Proveedor" : "Institución / Subcategoría"}
+                      <label
+                        htmlFor="obligation-form-subcategory"
+                        className="block text-xs font-medium text-slate-300"
+                      >
+                        {activeType === 'EXPENSE'
+                          ? 'Servicio / Proveedor'
+                          : 'Institución / Subcategoría'}
                       </label>
                     </div>
                     <input
+                      id="obligation-form-subcategory"
                       type="text"
                       value={subcategory}
-                      onChange={(e) => setSubcategory(e.target.value)}
+                      onChange={e => setSubcategory(e.target.value)}
                       required
                       placeholder={
-                        activeType === "EXPENSE"
-                          ? "Ej. Enel, VTR, Netflix, Arriendo"
-                          : "Ej. Banco Estado - Crédito Hipotecario"
+                        activeType === 'EXPENSE'
+                          ? 'Ej. Enel, VTR, Netflix, Arriendo'
+                          : 'Ej. Banco Estado - Crédito Hipotecario'
                       }
                       className={inputClass}
                     />
@@ -455,9 +535,68 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                 )}
               </div>
 
-              {/* ─── TAB 1: GASTO RECURRENTE ─── */}
-              {activeType === "EXPENSE" && (
+              {/* ─── TAB 1: GASTO RECURRENTE & PUNTUAL ─── */}
+              {activeType === 'EXPENSE' && (
                 <div className="space-y-4">
+                  {/* Expense Cadence Selector */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                      Modalidad del Gasto
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleExpenseCadenceChange('INDEFINITE')}
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col gap-1 ${
+                          expenseCadence === 'INDEFINITE'
+                            ? 'bg-sky-500/15 border-sky-500/50 text-white shadow-sm ring-1 ring-sky-500/30'
+                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:bg-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 font-semibold text-xs text-sky-300">
+                          <span>🔄</span> Recurrente Continuo
+                        </div>
+                        <span className="text-[11px] text-slate-400 leading-tight">
+                          Luz, agua, internet, arriendo, streaming (mes a mes)
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleExpenseCadenceChange('MOMENTARY')}
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col gap-1 ${
+                          expenseCadence === 'MOMENTARY'
+                            ? 'bg-violet-500/15 border-violet-500/50 text-white shadow-sm ring-1 ring-violet-500/30'
+                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:bg-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 font-semibold text-xs text-violet-300">
+                          <span>⚡</span> Momentáneo / Puntual
+                        </div>
+                        <span className="text-[11px] text-slate-400 leading-tight">
+                          Cuenta atrasada, deuda puntual, gasto de 1 solo mes
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleExpenseCadenceChange('FIXED_MONTHS')}
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col gap-1 ${
+                          expenseCadence === 'FIXED_MONTHS'
+                            ? 'bg-teal-500/15 border-teal-500/50 text-white shadow-sm ring-1 ring-teal-500/30'
+                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:bg-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 font-semibold text-xs text-teal-300">
+                          <span>🗓️</span> Plazo Acotado
+                        </div>
+                        <span className="text-[11px] text-slate-400 leading-tight">
+                          Duración definida por N meses (ej. 3, 6, 12 meses)
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
                   <div>
                     <div className="flex items-center h-6 mb-1.5">
                       <label className="block text-xs font-medium text-slate-300">
@@ -467,71 +606,123 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                     <input
                       type="text"
                       value={detail}
-                      onChange={(e) => setDetail(e.target.value)}
-                      placeholder="Ej. Plan hogar fibra óptica 500MB"
+                      onChange={e => setDetail(e.target.value)}
+                      placeholder={
+                        expenseCadence === 'MOMENTARY'
+                          ? 'Ej. Luz periodo agosto pendiente de pago'
+                          : 'Ej. Plan hogar fibra óptica 500MB'
+                      }
                       className={inputClass}
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                  <div
+                    className={`grid grid-cols-1 ${expenseCadence === 'FIXED_MONTHS' ? 'sm:grid-cols-2' : 'sm:grid-cols-1'} gap-4 items-start`}
+                  >
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
                         <label className="block text-xs font-medium text-slate-300">
-                          Monto Mensual Estimado (CLP)
+                          {expenseCadence === 'MOMENTARY'
+                            ? 'Monto a Pagar (CLP)'
+                            : 'Monto Mensual Estimado (CLP)'}
                         </label>
                       </div>
                       <input
                         type="number"
                         min={0}
-                        value={installmentAmount || ""}
-                        onChange={(e) => handleExpenseAmountChange(Number(e.target.value))}
+                        value={installmentAmount || ''}
+                        onChange={e => handleExpenseAmountChange(Number(e.target.value))}
                         required
                         placeholder="Ej. 29990"
                         className={inputClass}
                       />
                     </div>
 
-                    <div>
-                      <div className="flex items-center h-6 mb-1.5">
-                        <label className="block text-xs font-medium text-slate-300">Tipo de Vigencia</label>
+                    {expenseCadence === 'FIXED_MONTHS' && (
+                      <div>
+                        <div className="flex items-center h-6 mb-1.5">
+                          <label className="block text-xs font-medium text-teal-300">
+                            Cantidad de Meses
+                          </label>
+                        </div>
+                        <input
+                          type="number"
+                          min={2}
+                          max={60}
+                          value={fixedMonthsCount}
+                          onChange={e => handleFixedMonthsCountChange(Number(e.target.value) || 2)}
+                          required
+                          className={inputClass}
+                        />
                       </div>
-                      <div className="h-11 px-3.5 py-2 bg-slate-950/60 border border-slate-700/80 rounded-xl flex items-center">
-                        <label className="relative flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={isRecurringIndefinite}
-                            onChange={(e) => setIsRecurringIndefinite(e.target.checked)}
-                            className="w-4 h-4 rounded text-sky-500 bg-slate-900 border-slate-700 focus:ring-sky-500 cursor-pointer"
-                          />
-                          <span>Gasto continuo / permanente (sin fin)</span>
-                        </label>
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                     <div>
-                      <div className="flex items-center h-6 mb-1.5">
-                        <label className="block text-xs font-medium text-slate-300">Día de Pago</label>
+                      <div className="flex items-center justify-between h-6 mb-1.5">
+                        <label className="block text-xs font-medium text-slate-300">
+                          {expenseCadence === 'MOMENTARY'
+                            ? 'Día de Pago / Vencimiento'
+                            : 'Día de Pago Mensual'}
+                        </label>
+                        <select
+                          value={dueRuleKind}
+                          onChange={e =>
+                            setDueRuleKind(e.target.value as 'FIXED_DAY' | 'LAST_BUSINESS_DAY')
+                          }
+                          className="text-[11px] bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 cursor-pointer"
+                        >
+                          <option value="FIXED_DAY">Día Fijo</option>
+                          <option value="LAST_BUSINESS_DAY">Último Día Hábil</option>
+                        </select>
                       </div>
-                      <input
-                        type="number"
-                        min={1}
-                        max={31}
-                        value={dueDay}
-                        onChange={(e) => setDueDay(Number(e.target.value))}
-                        required
-                        className={inputClass}
-                      />
+                      {dueRuleKind === 'FIXED_DAY' ? (
+                        <div className="space-y-2">
+                          <input
+                            type="number"
+                            min={1}
+                            max={31}
+                            value={dueDay}
+                            onChange={e => setDueDay(Number(e.target.value))}
+                            required
+                            className={inputClass}
+                          />
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-400">
+                              Si cae en fin de semana/feriado:
+                            </span>
+                            <select
+                              value={dueRuleShift}
+                              onChange={e =>
+                                setDueRuleShift(
+                                  e.target.value as 'NONE' | 'NEXT_BUSINESS' | 'PREV_BUSINESS',
+                                )
+                              }
+                              className="text-[10px] bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 cursor-pointer"
+                            >
+                              <option value="NONE">Sin cambio</option>
+                              <option value="NEXT_BUSINESS">Siguiente día hábil</option>
+                              <option value="PREV_BUSINESS">Día hábil anterior</option>
+                            </select>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="h-10 flex items-center px-3 rounded-xl border border-dashed border-teal-500/40 bg-teal-500/10 text-teal-300 text-xs">
+                          💼 Último día hábil del mes (salta fines de semana y feriados)
+                        </div>
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
-                        <label className="block text-xs font-medium text-slate-300">Fecha Inicio</label>
+                        <label className="block text-xs font-medium text-slate-300">
+                          {expenseCadence === 'MOMENTARY' ? 'Fecha del Compromiso' : 'Fecha Inicio'}
+                        </label>
                       </div>
                       <input
                         type="date"
                         value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
+                        onChange={e => setStartDate(e.target.value)}
                         required
                         className={inputClass}
                       />
@@ -539,18 +730,52 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-sky-950/30 border border-sky-800/40 text-xs text-sky-300/90 space-y-1">
-                    <div className="font-semibold text-sky-200">Proyección de Gasto:</div>
+                    <div className="font-semibold text-sky-200">
+                      {expenseCadence === 'MOMENTARY'
+                        ? 'Compromiso Momentáneo:'
+                        : 'Proyección de Gasto:'}
+                    </div>
                     <div>
-                      Se proyectará mensualmente un cargo estimado de{" "}
-                      <span className="font-bold text-white">{formatCLP(toMoney(installmentAmount))}</span> el
-                      día <span className="font-bold text-white">{dueDay}</span> de cada mes.
+                      {expenseCadence === 'MOMENTARY' ? (
+                        <>
+                          Se registrará como un compromiso puntual de{' '}
+                          <span className="font-bold text-white">
+                            {formatCLP(toMoney(installmentAmount))}
+                          </span>{' '}
+                          para el período de{' '}
+                          <span className="font-bold text-white">{startDate.slice(0, 7)}</span> (1
+                          solo pago, no recurrente).
+                        </>
+                      ) : expenseCadence === 'FIXED_MONTHS' ? (
+                        <>
+                          Se proyectarán{' '}
+                          <span className="font-bold text-white">{fixedMonthsCount} meses</span> de{' '}
+                          <span className="font-bold text-white">
+                            {formatCLP(toMoney(installmentAmount))}
+                          </span>{' '}
+                          cada uno el día <span className="font-bold text-white">{dueDay}</span>.
+                          Total compromiso:{' '}
+                          <span className="font-bold text-white">
+                            {formatCLP(toMoney(installmentAmount * fixedMonthsCount))}
+                          </span>
+                          .
+                        </>
+                      ) : (
+                        <>
+                          Se proyectará mensualmente un cargo continuo de{' '}
+                          <span className="font-bold text-white">
+                            {formatCLP(toMoney(installmentAmount))}
+                          </span>{' '}
+                          el día <span className="font-bold text-white">{dueDay}</span> de cada mes.
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
 
               {/* ─── TAB 2: DEUDA FINANCIERA ─── */}
-              {activeType === "DEBT" && (
+              {activeType === 'DEBT' && (
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center h-6 mb-1.5">
@@ -561,13 +786,13 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                     <input
                       type="text"
                       value={detail}
-                      onChange={(e) => setDetail(e.target.value)}
+                      onChange={e => setDetail(e.target.value)}
                       placeholder="Ej. Cuota crédito de consumo"
                       className={inputClass}
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
                         <label className="block text-xs font-medium text-slate-300">
@@ -577,8 +802,8 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                       <input
                         type="number"
                         min={0}
-                        value={totalAmount || ""}
-                        onChange={(e) => handleTotalAmountChange(Number(e.target.value))}
+                        value={totalAmount || ''}
+                        onChange={e => handleTotalAmountChange(Number(e.target.value))}
                         required
                         placeholder="Ej. 12000000"
                         className={inputClass}
@@ -594,10 +819,31 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                       <input
                         type="number"
                         min={0}
-                        value={installmentAmount || ""}
-                        onChange={(e) => setInstallmentAmount(Number(e.target.value))}
+                        value={installmentAmount || ''}
+                        onChange={e => setInstallmentAmount(Number(e.target.value))}
                         required
                         placeholder="Ej. 250000"
+                        className={inputClass}
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center h-6 mb-1.5">
+                        <label className="block text-xs font-medium text-slate-300">
+                          Tasa Anual / CAE %{' '}
+                          <span className="text-[10px] text-slate-500 font-normal">(Opcional)</span>
+                        </label>
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        max={100}
+                        value={annualRate === '' ? '' : annualRate}
+                        onChange={e =>
+                          setAnnualRate(e.target.value === '' ? '' : Number(e.target.value))
+                        }
+                        placeholder="Ej. 18.5"
                         className={inputClass}
                       />
                     </div>
@@ -607,14 +853,16 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
-                        <label className="block text-xs font-medium text-slate-300">Total Cuotas</label>
+                        <label className="block text-xs font-medium text-slate-300">
+                          Total Cuotas
+                        </label>
                       </div>
                       <input
                         type="number"
                         min={1}
                         max={600}
                         value={totalInstallments}
-                        onChange={(e) => handleTotalInstallmentsChange(Number(e.target.value))}
+                        onChange={e => handleTotalInstallmentsChange(Number(e.target.value))}
                         required
                         className={inputClass}
                       />
@@ -631,7 +879,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                         min={0}
                         max={totalInstallments - 1}
                         value={paidCount}
-                        onChange={(e) => handlePaidInstallmentsChange(Number(e.target.value))}
+                        onChange={e => handlePaidInstallmentsChange(Number(e.target.value))}
                         className={inputClass}
                       />
                     </div>
@@ -647,7 +895,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                         min={1}
                         max={totalInstallments}
                         value={currentInstallment}
-                        onChange={(e) => handleCurrentInstallmentChange(Number(e.target.value))}
+                        onChange={e => handleCurrentInstallmentChange(Number(e.target.value))}
                         required
                         className={inputClass}
                       />
@@ -657,28 +905,68 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                   {/* Día de pago y Fecha de inicio */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                     <div>
-                      <div className="flex items-center h-6 mb-1.5">
-                        <label className="block text-xs font-medium text-slate-300">Día de Pago</label>
+                      <div className="flex items-center justify-between h-6 mb-1.5">
+                        <label className="block text-xs font-medium text-slate-300">
+                          Día de Pago
+                        </label>
+                        <select
+                          value={dueRuleKind}
+                          onChange={e =>
+                            setDueRuleKind(e.target.value as 'FIXED_DAY' | 'LAST_BUSINESS_DAY')
+                          }
+                          className="text-[11px] bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 cursor-pointer"
+                        >
+                          <option value="FIXED_DAY">Día Fijo</option>
+                          <option value="LAST_BUSINESS_DAY">Último Día Hábil</option>
+                        </select>
                       </div>
-                      <input
-                        type="number"
-                        min={1}
-                        max={31}
-                        value={dueDay}
-                        onChange={(e) => setDueDay(Number(e.target.value))}
-                        required
-                        className={inputClass}
-                      />
+                      {dueRuleKind === 'FIXED_DAY' ? (
+                        <div className="space-y-2">
+                          <input
+                            type="number"
+                            min={1}
+                            max={31}
+                            value={dueDay}
+                            onChange={e => setDueDay(Number(e.target.value))}
+                            required
+                            className={inputClass}
+                          />
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-400">
+                              Si cae en fin de semana/feriado:
+                            </span>
+                            <select
+                              value={dueRuleShift}
+                              onChange={e =>
+                                setDueRuleShift(
+                                  e.target.value as 'NONE' | 'NEXT_BUSINESS' | 'PREV_BUSINESS',
+                                )
+                              }
+                              className="text-[10px] bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 cursor-pointer"
+                            >
+                              <option value="NONE">Sin cambio</option>
+                              <option value="NEXT_BUSINESS">Siguiente día hábil</option>
+                              <option value="PREV_BUSINESS">Día hábil anterior</option>
+                            </select>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="h-10 flex items-center px-3 rounded-xl border border-dashed border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs">
+                          💼 Último día hábil del mes (salta fines de semana y feriados)
+                        </div>
+                      )}
                     </div>
 
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
-                        <label className="block text-xs font-medium text-slate-300">Fecha Inicio (Cuota 1)</label>
+                        <label className="block text-xs font-medium text-slate-300">
+                          Fecha Inicio (Cuota 1)
+                        </label>
                       </div>
                       <input
                         type="date"
                         value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
+                        onChange={e => setStartDate(e.target.value)}
                         required
                         className={inputClass}
                       />
@@ -696,13 +984,13 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       <div>
-                        Monto ya pagado:{" "}
+                        Monto ya pagado:{' '}
                         <span className="text-slate-200 font-medium">
                           {formatCLP(toMoney(paidCount * installmentAmount))}
                         </span>
                       </div>
                       <div>
-                        Saldo restante por pagar:{" "}
+                        Saldo restante por pagar:{' '}
                         <span className="text-amber-300 font-bold">
                           {formatCLP(toMoney(pendingCount * installmentAmount))}
                         </span>
@@ -711,13 +999,13 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
 
                     <div className="pt-1.5 border-t border-slate-800/60 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-1">
                       <div>
-                        Próximo vencimiento (Cuota #{currentInstallment}):{" "}
+                        Próximo vencimiento (Cuota #{currentInstallment}):{' '}
                         <span className="text-white font-medium">
                           {computeDueDate(startDate, currentInstallment - 1, dueDay)}
                         </span>
                       </div>
                       <div>
-                        Fin del crédito (Cuota #{totalInstallments}):{" "}
+                        Fin del crédito (Cuota #{totalInstallments}):{' '}
                         <span className="text-white font-medium">
                           {computeDueDate(startDate, totalInstallments - 1, dueDay)}
                         </span>
@@ -728,7 +1016,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
               )}
 
               {/* ─── TAB 3: ENTRE PERSONAS (P2P) ─── */}
-              {activeType === "P2P_DEBT" && (
+              {activeType === 'P2P_DEBT' && (
                 <div className="space-y-4">
                   {/* P2P Sub-role Selector */}
                   <div>
@@ -740,33 +1028,33 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <button
                         type="button"
-                        onClick={() => setP2pRole("LENT_MY_CARD")}
+                        onClick={() => setP2pRole('LENT_MY_CARD')}
                         className={`min-h-[40px] px-3 py-2 rounded-xl text-xs font-medium border transition cursor-pointer text-left flex items-center gap-2 ${
-                          p2pRole === "LENT_MY_CARD"
-                            ? "bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm"
-                            : "bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800"
+                          p2pRole === 'LENT_MY_CARD'
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+                            : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800'
                         }`}
                       >
                         <span>💳</span> Presté mi tarjeta
                       </button>
                       <button
                         type="button"
-                        onClick={() => setP2pRole("USED_THEIR_CARD")}
+                        onClick={() => setP2pRole('USED_THEIR_CARD')}
                         className={`min-h-[40px] px-3 py-2 rounded-xl text-xs font-medium border transition cursor-pointer text-left flex items-center gap-2 ${
-                          p2pRole === "USED_THEIR_CARD"
-                            ? "bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-sm"
-                            : "bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800"
+                          p2pRole === 'USED_THEIR_CARD'
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-sm'
+                            : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800'
                         }`}
                       >
                         <span>🛍️</span> Usé tarjeta ajena
                       </button>
                       <button
                         type="button"
-                        onClick={() => setP2pRole("DIRECT_LOAN_GIVEN")}
+                        onClick={() => setP2pRole('DIRECT_LOAN_GIVEN')}
                         className={`min-h-[40px] px-3 py-2 rounded-xl text-xs font-medium border transition cursor-pointer text-left flex items-center gap-2 ${
-                          p2pRole === "DIRECT_LOAN_GIVEN"
-                            ? "bg-violet-500/20 text-violet-300 border-violet-500/50 shadow-sm"
-                            : "bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800"
+                          p2pRole === 'DIRECT_LOAN_GIVEN'
+                            ? 'bg-violet-500/20 text-violet-300 border-violet-500/50 shadow-sm'
+                            : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800'
                         }`}
                       >
                         <span>🤝</span> Préstamo directo
@@ -779,17 +1067,17 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
                         <label className="block text-xs font-medium text-slate-300">
-                          {p2pRole === "LENT_MY_CARD"
-                            ? "¿Quién te debe?"
-                            : p2pRole === "USED_THEIR_CARD"
-                            ? "¿A quién le debes?"
-                            : "Nombre de la persona"}
+                          {p2pRole === 'LENT_MY_CARD'
+                            ? '¿Quién te debe?'
+                            : p2pRole === 'USED_THEIR_CARD'
+                              ? '¿A quién le debes?'
+                              : 'Nombre de la persona'}
                         </label>
                       </div>
                       <input
                         type="text"
                         value={thirdPartyName}
-                        onChange={(e) => {
+                        onChange={e => {
                           setThirdPartyName(e.target.value)
                           setSubcategory(e.target.value)
                         }}
@@ -802,17 +1090,17 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
                         <label className="block text-xs font-medium text-slate-300">
-                          {p2pRole === "LENT_MY_CARD"
-                            ? "Tarjeta de crédito utilizada"
-                            : p2pRole === "USED_THEIR_CARD"
-                            ? "Tarjeta de origen del titular"
-                            : "Concepto / Medio"}
+                          {p2pRole === 'LENT_MY_CARD'
+                            ? 'Tarjeta de crédito utilizada'
+                            : p2pRole === 'USED_THEIR_CARD'
+                              ? 'Tarjeta de origen del titular'
+                              : 'Concepto / Medio'}
                         </label>
                       </div>
                       <input
                         type="text"
                         value={cardIssuer}
-                        onChange={(e) => setCardIssuer(e.target.value)}
+                        onChange={e => setCardIssuer(e.target.value)}
                         placeholder="Ej. CMR Falabella, Santander Visa"
                         className={inputClass}
                       />
@@ -828,7 +1116,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                     <input
                       type="text"
                       value={productDescription}
-                      onChange={(e) => {
+                      onChange={e => {
                         setProductDescription(e.target.value)
                         setDetail(e.target.value)
                       }}
@@ -849,8 +1137,8 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                       <input
                         type="number"
                         min={0}
-                        value={totalAmount || ""}
-                        onChange={(e) => handleP2PTotalAmountChange(Number(e.target.value))}
+                        value={totalAmount || ''}
+                        onChange={e => handleP2PTotalAmountChange(Number(e.target.value))}
                         required
                         placeholder="Ej. 839990"
                         className={inputClass}
@@ -866,8 +1154,8 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                       <input
                         type="number"
                         min={0}
-                        value={baseInstallmentAmount || ""}
-                        onChange={(e) => handleP2PBaseInstallmentChange(Number(e.target.value))}
+                        value={baseInstallmentAmount || ''}
+                        onChange={e => handleP2PBaseInstallmentChange(Number(e.target.value))}
                         required
                         placeholder="Ej. 209998"
                         className={inputClass}
@@ -879,14 +1167,16 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
-                        <label className="block text-xs font-medium text-slate-300">Total Cuotas</label>
+                        <label className="block text-xs font-medium text-slate-300">
+                          Total Cuotas
+                        </label>
                       </div>
                       <input
                         type="number"
                         min={1}
                         max={600}
                         value={totalInstallments}
-                        onChange={(e) => handleTotalInstallmentsChange(Number(e.target.value))}
+                        onChange={e => handleTotalInstallmentsChange(Number(e.target.value))}
                         required
                         className={inputClass}
                       />
@@ -903,7 +1193,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                         min={0}
                         max={totalInstallments - 1}
                         value={paidCount}
-                        onChange={(e) => handlePaidInstallmentsChange(Number(e.target.value))}
+                        onChange={e => handlePaidInstallmentsChange(Number(e.target.value))}
                         className={inputClass}
                       />
                     </div>
@@ -919,7 +1209,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                         min={1}
                         max={totalInstallments}
                         value={currentInstallment}
-                        onChange={(e) => handleCurrentInstallmentChange(Number(e.target.value))}
+                        onChange={e => handleCurrentInstallmentChange(Number(e.target.value))}
                         required
                         className={inputClass}
                       />
@@ -930,14 +1220,16 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
-                        <label className="block text-xs font-medium text-slate-300">Día Cobro/Pago</label>
+                        <label className="block text-xs font-medium text-slate-300">
+                          Día Cobro/Pago
+                        </label>
                       </div>
                       <input
                         type="number"
                         min={1}
                         max={31}
                         value={dueDay}
-                        onChange={(e) => setDueDay(Number(e.target.value))}
+                        onChange={e => setDueDay(Number(e.target.value))}
                         required
                         className={inputClass}
                       />
@@ -945,12 +1237,14 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
 
                     <div>
                       <div className="flex items-center h-6 mb-1.5">
-                        <label className="block text-xs font-medium text-slate-300">Fecha Inicio (Cuota 1)</label>
+                        <label className="block text-xs font-medium text-slate-300">
+                          Fecha Inicio (Cuota 1)
+                        </label>
                       </div>
                       <input
                         type="date"
                         value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
+                        onChange={e => setStartDate(e.target.value)}
                         required
                         className={inputClass}
                       />
@@ -958,7 +1252,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                   </div>
 
                   {/* Surcharges Section for LENT_MY_CARD */}
-                  {p2pRole === "LENT_MY_CARD" && (
+                  {p2pRole === 'LENT_MY_CARD' && (
                     <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
                       <div className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                         <span>⚙️</span> Traspaso de Costos de Tarjeta (Opcional)
@@ -970,43 +1264,54 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                           <input
                             type="checkbox"
                             checked={includeMaintenance}
-                            onChange={(e) => setIncludeMaintenance(e.target.checked)}
+                            onChange={e => setIncludeMaintenance(e.target.checked)}
                             className="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700 focus:ring-amber-500 cursor-pointer"
                           />
-                          <span className="font-medium">Traspasar Mantención / Administración Mensual</span>
+                          <span className="font-medium">
+                            Traspasar Mantención / Administración Mensual
+                          </span>
                         </label>
 
                         {includeMaintenance && (
                           <div className="pl-6 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                             <div>
                               <div className="flex items-center h-5 mb-1">
-                                <label className="block text-[11px] text-slate-400">Monto Mantención</label>
+                                <label className="block text-[11px] text-slate-400">
+                                  Monto Mantención
+                                </label>
                               </div>
                               <input
                                 type="number"
                                 min={0}
-                                value={maintenanceFee || ""}
-                                onChange={(e) => setMaintenanceFee(Number(e.target.value))}
+                                value={maintenanceFee || ''}
+                                onChange={e => setMaintenanceFee(Number(e.target.value))}
                                 className="w-full h-10 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs"
                               />
                             </div>
                             <div>
                               <div className="flex items-center h-5 mb-1">
-                                <label className="block text-[11px] text-slate-400">Modo de cobro</label>
+                                <label className="block text-[11px] text-slate-400">
+                                  Modo de cobro
+                                </label>
                               </div>
                               <select
                                 value={maintenanceSplitMode}
-                                onChange={(e) => setMaintenanceSplitMode(e.target.value as MaintenanceSplitMode)}
+                                onChange={e =>
+                                  setMaintenanceSplitMode(e.target.value as MaintenanceSplitMode)
+                                }
                                 className="w-full h-10 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs cursor-pointer"
                               >
-                                <option value="FULL">100% al tercero (+{formatCLP(toMoney(maintenanceFee))})</option>
+                                <option value="FULL">
+                                  100% al tercero (+{formatCLP(toMoney(maintenanceFee))})
+                                </option>
                                 <option value="SPLIT_50_50">
-                                  Dividir 50/50 (+{formatCLP(toMoney(Math.floor(maintenanceFee / 2)))})
+                                  Dividir 50/50 (+
+                                  {formatCLP(toMoney(Math.floor(maintenanceFee / 2)))})
                                 </option>
                                 <option value="CUSTOM_AMOUNT">Monto fijo personalizado</option>
                               </select>
                             </div>
-                            {maintenanceSplitMode === "CUSTOM_AMOUNT" && (
+                            {maintenanceSplitMode === 'CUSTOM_AMOUNT' && (
                               <div className="sm:col-span-2">
                                 <div className="flex items-center h-5 mb-1">
                                   <label className="block text-[11px] text-slate-400">
@@ -1016,8 +1321,8 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                                 <input
                                   type="number"
                                   min={0}
-                                  value={customMaintenance || ""}
-                                  onChange={(e) => setCustomMaintenance(Number(e.target.value))}
+                                  value={customMaintenance || ''}
+                                  onChange={e => setCustomMaintenance(Number(e.target.value))}
                                   className="w-full h-10 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs"
                                 />
                               </div>
@@ -1032,7 +1337,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                           <input
                             type="checkbox"
                             checked={includeCommission}
-                            onChange={(e) => setIncludeCommission(e.target.checked)}
+                            onChange={e => setIncludeCommission(e.target.checked)}
                             className="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700 focus:ring-amber-500 cursor-pointer"
                           />
                           <span className="font-medium">
@@ -1051,24 +1356,30 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                               <input
                                 type="number"
                                 min={0}
-                                value={commissionAmount || ""}
-                                onChange={(e) => setCommissionAmount(Number(e.target.value))}
+                                value={commissionAmount || ''}
+                                onChange={e => setCommissionAmount(Number(e.target.value))}
                                 placeholder="Ej. 6000"
                                 className="w-full h-10 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs"
                               />
                             </div>
                             <div>
                               <div className="flex items-center h-5 mb-1">
-                                <label className="block text-[11px] text-slate-400">Cómo cobrarlo</label>
+                                <label className="block text-[11px] text-slate-400">
+                                  Cómo cobrarlo
+                                </label>
                               </div>
                               <select
                                 value={commissionMode}
-                                onChange={(e) => setCommissionMode(e.target.value as CommissionMode)}
+                                onChange={e => setCommissionMode(e.target.value as CommissionMode)}
                                 className="w-full h-10 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs cursor-pointer"
                               >
                                 <option value="SPREAD_ACROSS_INSTALLMENTS">
                                   Prorrateado en las cuotas (+
-                                  {formatCLP(toMoney(Math.floor(commissionAmount / Math.max(1, totalInstallments))))}
+                                  {formatCLP(
+                                    toMoney(
+                                      Math.floor(commissionAmount / Math.max(1, totalInstallments)),
+                                    ),
+                                  )}
                                   /mes)
                                 </option>
                                 <option value="FIRST_INSTALLMENT_ONLY">En la primera cuota</option>
@@ -1088,8 +1399,10 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
                         </div>
                         <div className="text-slate-400 text-[11px]">
                           Cuota producto: {formatCLP(p2pBreakdown.baseAmountCents)}
-                          {includeMaintenance && ` + Mantención: ${formatCLP(p2pBreakdown.maintenanceSurchargeCents)}`}
-                          {includeCommission && ` + Comisión: ${formatCLP(p2pBreakdown.commissionSurchargeCents)}`}
+                          {includeMaintenance &&
+                            ` + Mantención: ${formatCLP(p2pBreakdown.maintenanceSurchargeCents)}`}
+                          {includeCommission &&
+                            ` + Comisión: ${formatCLP(p2pBreakdown.commissionSurchargeCents)}`}
                         </div>
                       </div>
                     </div>
@@ -1106,13 +1419,13 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       <div>
-                        Monto ya cancelado:{" "}
+                        Monto ya cancelado:{' '}
                         <span className="text-slate-200 font-medium">
                           {formatCLP(toMoney(paidCount * baseInstallmentAmount))}
                         </span>
                       </div>
                       <div>
-                        Saldo restante:{" "}
+                        Saldo restante:{' '}
                         <span className="text-amber-300 font-bold">
                           {formatCLP(toMoney(pendingCount * baseInstallmentAmount))}
                         </span>
@@ -1121,13 +1434,13 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
 
                     <div className="pt-1.5 border-t border-slate-800/60 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-1">
                       <div>
-                        Próximo vencimiento (Cuota #{currentInstallment}):{" "}
+                        Próximo vencimiento (Cuota #{currentInstallment}):{' '}
                         <span className="text-white font-medium">
                           {computeDueDate(startDate, currentInstallment - 1, dueDay)}
                         </span>
                       </div>
                       <div>
-                        Fin (Cuota #{totalInstallments}):{" "}
+                        Fin (Cuota #{totalInstallments}):{' '}
                         <span className="text-white font-medium">
                           {computeDueDate(startDate, totalInstallments - 1, dueDay)}
                         </span>
@@ -1150,18 +1463,18 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
               <button
                 type="submit"
                 className={`min-h-[44px] px-5 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer shadow-lg transition ${
-                  activeType === "EXPENSE"
-                    ? "bg-sky-600 hover:bg-sky-500"
-                    : activeType === "P2P_DEBT"
-                    ? "bg-amber-600 hover:bg-amber-500"
-                    : "bg-emerald-600 hover:bg-emerald-500"
+                  activeType === 'EXPENSE'
+                    ? 'bg-sky-600 hover:bg-sky-500'
+                    : activeType === 'P2P_DEBT'
+                      ? 'bg-amber-600 hover:bg-amber-500'
+                      : 'bg-emerald-600 hover:bg-emerald-500'
                 }`}
               >
                 {isEditing
-                  ? "Guardar Cambios"
+                  ? 'Guardar Cambios'
                   : isCloning
-                  ? "Clonar y Crear Obligación"
-                  : "Guardar Obligación"}
+                    ? 'Clonar y Crear Obligación'
+                    : 'Guardar Obligación'}
               </button>
             </div>
           </form>
@@ -1171,7 +1484,7 @@ export const ObligationFormModal: React.FC<ObligationFormProps> = ({
       {isCategoryModalOpen && (
         <CategorySettingsModal
           onClose={() => setIsCategoryModalOpen(false)}
-          onCategoryCreated={(newCat) => {
+          onCategoryCreated={newCat => {
             setCategoryId(newCat.id)
             setIsCategoryModalOpen(false)
           }}

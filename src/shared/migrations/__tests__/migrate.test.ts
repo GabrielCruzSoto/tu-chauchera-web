@@ -1,152 +1,273 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach } from 'vitest'
+import type { ObligationsStore, CategoriesStore } from '@/shared/types/domain'
 import {
   migrateDomainPayload,
   unwrapDomainEnvelope,
   wrapDomainEnvelope,
   validateDomainPayload,
-} from "../migrate"
-import { DOMAIN_MIGRATIONS, registerMigration, CURRENT_SCHEMA_VERSIONS } from "../registry"
+} from '../migrate'
+import { DOMAIN_MIGRATIONS, registerMigration, CURRENT_SCHEMA_VERSIONS } from '../registry'
 
-describe("Envelope & Migration Engine with Runtime Zod Validation", () => {
+describe('Envelope & Migration Engine with Runtime Zod Validation', () => {
   beforeEach(() => {
     DOMAIN_MIGRATIONS.obligations = []
     DOMAIN_MIGRATIONS.categories = []
     DOMAIN_MIGRATIONS.incomes = []
     DOMAIN_MIGRATIONS.settings = []
     DOMAIN_MIGRATIONS.credit_cards = []
+    DOMAIN_MIGRATIONS.preferences = []
     CURRENT_SCHEMA_VERSIONS.obligations = 1
     CURRENT_SCHEMA_VERSIONS.categories = 1
     CURRENT_SCHEMA_VERSIONS.incomes = 1
     CURRENT_SCHEMA_VERSIONS.settings = 1
     CURRENT_SCHEMA_VERSIONS.credit_cards = 1
+    CURRENT_SCHEMA_VERSIONS.preferences = 1
   })
 
-  describe("Envelope Wrapping & Unwrapping", () => {
-    it("wraps payload into standard versioned envelope", () => {
+  describe('Envelope Wrapping & Unwrapping', () => {
+    it('wraps payload into standard versioned envelope', () => {
       const payload = { categories: {} }
-      const envelope = wrapDomainEnvelope("categories", payload, 1)
+      const envelope = wrapDomainEnvelope('categories', payload, 1)
 
       expect(envelope).toMatchObject({
         schemaVersion: 1,
-        domain: "categories",
+        domain: 'categories',
         payload: { categories: {} },
       })
-      expect(typeof envelope.updatedAt).toBe("string")
+      expect(typeof envelope.updatedAt).toBe('string')
     })
 
-    it("unwraps standard envelope extracting version and inner payload", () => {
+    it('unwraps standard envelope extracting version and inner payload', () => {
       const envelope = {
         schemaVersion: 2,
-        domain: "categories",
-        updatedAt: "2026-08-31T20:00:00Z",
+        domain: 'categories',
+        updatedAt: '2026-08-31T20:00:00Z',
         payload: { categories: {} },
       }
 
-      const { schemaVersion, payload } = unwrapDomainEnvelope("categories", envelope)
+      const { schemaVersion, payload } = unwrapDomainEnvelope('categories', envelope)
       expect(schemaVersion).toBe(2)
       expect(payload).toEqual({ categories: {} })
     })
 
-    it("unwraps legacy unwrapped payload and defaults version to 1", () => {
+    it('unwraps legacy unwrapped payload and defaults version to 1', () => {
       const legacy = {
         categories: {},
       }
 
-      const { schemaVersion, payload } = unwrapDomainEnvelope("categories", legacy)
+      const { schemaVersion, payload } = unwrapDomainEnvelope('categories', legacy)
       expect(schemaVersion).toBe(1)
       expect(payload).toEqual(legacy)
     })
   })
 
-  describe("Zod Runtime Validation", () => {
-    it("validates a valid categories store schema", () => {
+  describe('Zod Runtime Validation', () => {
+    it('validates a valid categories store schema', () => {
       const validStore = {
         categories: {
-          "cat-1": {
-            id: "cat-1",
-            name: "Servicios",
-            color: "blue-500",
-            createdAt: "2026-08-31",
-            updatedAt: "2026-08-31",
+          'cat-1': {
+            id: 'cat-1',
+            name: 'Servicios',
+            color: 'blue-500',
+            createdAt: '2026-08-31',
+            updatedAt: '2026-08-31',
           },
         },
       }
 
-      expect(() => validateDomainPayload("categories", validStore)).not.toThrow()
+      expect(() => validateDomainPayload('categories', validStore)).not.toThrow()
     })
 
-    it("validates a valid credit_cards store schema", () => {
+    it('validates a valid credit_cards store schema', () => {
       const validCcStore = {
         accounts: {
-          "acc-1": {
-            id: "acc-1",
-            institution: "Banco Santander",
-            accountName: "Visa Signature",
+          'acc-1': {
+            id: 'acc-1',
+            institution: 'Banco Santander',
+            accountName: 'Visa Signature',
             creditLimitCents: 2000000,
             closingDay: 20,
             dueDay: 5,
             plastics: [
               {
-                id: "plas-1",
-                accountId: "acc-1",
-                holderName: "Gabriel Cruz",
-                lastFourDigits: "1234",
-                type: "TITULAR",
-                createdAt: "2026-09-01",
-                updatedAt: "2026-09-01",
+                id: 'plas-1',
+                accountId: 'acc-1',
+                holderName: 'Gabriel Cruz',
+                lastFourDigits: '1234',
+                type: 'TITULAR',
+                createdAt: '2026-09-01',
+                updatedAt: '2026-09-01',
               },
             ],
-            createdAt: "2026-09-01",
-            updatedAt: "2026-09-01",
+            createdAt: '2026-09-01',
+            updatedAt: '2026-09-01',
           },
         },
         purchases: {},
       }
 
-      expect(() => validateDomainPayload("credit_cards", validCcStore)).not.toThrow()
+      expect(() => validateDomainPayload('credit_cards', validCcStore)).not.toThrow()
     })
 
-    it("throws ZodError on corrupted or invalid payload shape", () => {
+    it('validates a valid preferences store schema', () => {
+      const validPrefStore = {
+        preferences: {
+          currency: 'CLP',
+          dateFormat: 'DD/MM/YYYY',
+          theme: 'dark',
+          updatedAt: '2026-09-01T10:00:00.000Z',
+        },
+      }
+
+      expect(() => validateDomainPayload('preferences', validPrefStore)).not.toThrow()
+    })
+
+    it('validates and preserves type, isRecurringIndefinite and p2pMetadata in obligations store schema', () => {
+      const validOblStore = {
+        obligations: {
+          'exp-1': {
+            id: 'exp-1',
+            type: 'EXPENSE',
+            categoryId: 'cat-servicios',
+            subcategory: 'Enel Luz',
+            detail: 'Luz mes',
+            totalAmountCents: 1200000,
+            totalInstallments: 60,
+            currentInstallment: 1,
+            installmentAmountCents: 20000,
+            isRecurringIndefinite: true,
+            startDate: '2026-09-01',
+            dueDay: 15,
+            status: 'PENDING',
+            createdAt: '2026-09-01',
+            updatedAt: '2026-09-01',
+          },
+          'p2p-1': {
+            id: 'p2p-1',
+            type: 'P2P_DEBT',
+            categoryId: 'cat-terceros',
+            subcategory: 'Isis Paris',
+            detail: 'Préstamo',
+            totalAmountCents: 500000,
+            totalInstallments: 5,
+            currentInstallment: 1,
+            installmentAmountCents: 100000,
+            startDate: '2026-09-01',
+            dueDay: 30,
+            status: 'PENDING',
+            createdAt: '2026-09-01',
+            updatedAt: '2026-09-01',
+            p2pMetadata: {
+              role: 'LENT_MY_CARD',
+              thirdPartyName: 'Isis Paris',
+              productDescription: 'Préstamo',
+              baseInstallmentAmountCents: 100000,
+              totalMonthlyChargeCents: 100000,
+            },
+          },
+        },
+        installments: {
+          'inst-1': {
+            id: 'inst-1',
+            obligationId: 'exp-1',
+            installmentNumber: 1,
+            dueDate: '2026-09-15',
+            amountCents: 20000,
+            status: 'PENDING',
+            originalDueDate: '2026-09-15',
+            isOverdueRollover: false,
+          },
+        },
+      }
+
+      const validated = validateDomainPayload<ObligationsStore>('obligations', validOblStore)
+      expect(validated.obligations['exp-1']?.type).toBe('EXPENSE')
+      expect(validated.obligations['exp-1']?.isRecurringIndefinite).toBe(true)
+      expect(validated.obligations['p2p-1']?.type).toBe('P2P_DEBT')
+      expect(validated.obligations['p2p-1']?.p2pMetadata?.thirdPartyName).toBe('Isis Paris')
+      expect(validated.installments['inst-1']?.originalDueDate).toBe('2026-09-15')
+    })
+
+    it('auto-heals legacy obligations where type was missing but characteristics match recurring expense', () => {
+      const legacyStore = {
+        obligations: {
+          'legacy-exp': {
+            id: 'legacy-exp',
+            categoryId: 'cat-servicios',
+            subcategory: 'Aguas Andina',
+            detail: 'Agua potable',
+            totalAmountCents: 1689000,
+            totalInstallments: 60,
+            currentInstallment: 1,
+            installmentAmountCents: 28150,
+            startDate: '2026-09-01',
+            dueDay: 30,
+            status: 'PENDING',
+            createdAt: '2026-09-01',
+            updatedAt: '2026-09-01',
+          },
+        },
+        installments: {},
+      }
+
+      const validated = validateDomainPayload<ObligationsStore>('obligations', legacyStore)
+      expect(validated.obligations['legacy-exp']?.type).toBe('EXPENSE')
+      expect(validated.obligations['legacy-exp']?.isRecurringIndefinite).toBe(true)
+    })
+
+    it('throws ZodError on corrupted or invalid payload shape', () => {
       const corruptedStore = {
         categories: {
-          "cat-1": {
-            id: "cat-1",
+          'cat-1': {
+            id: 'cat-1',
             // missing 'name' and 'color'
           },
         },
       }
 
-      expect(() => validateDomainPayload("categories", corruptedStore)).toThrow()
+      expect(() => validateDomainPayload('categories', corruptedStore)).toThrow()
     })
   })
 
-  describe("Sequential Migrations Pipeline", () => {
-    it("returns unchanged payload if already on target version and valid", () => {
+  describe('Sequential Migrations Pipeline', () => {
+    it('returns unchanged payload if already on target version and valid', () => {
       const payload = {
         categories: {},
       }
-      const envelope = wrapDomainEnvelope("categories", payload, 1)
+      const envelope = wrapDomainEnvelope('categories', payload, 1)
 
-      const result = migrateDomainPayload("categories", envelope)
+      const result = migrateDomainPayload('categories', envelope)
       expect(result.wasMigrated).toBe(false)
       expect(result.fromVersion).toBe(1)
       expect(result.toVersion).toBe(1)
       expect(result.data).toEqual(payload)
     })
 
-    it("applies sequential migrations across multiple versions (v1 -> v2 -> v3)", () => {
+    it('applies sequential migrations across multiple versions (v1 -> v2 -> v3)', () => {
       CURRENT_SCHEMA_VERSIONS.categories = 3
 
+      interface LegacyCategoryItem {
+        id?: string
+        name?: string
+        color?: string
+        createdAt?: string
+        updatedAt?: string
+      }
+      interface LegacyCategoriesStore {
+        categories?: Record<string, LegacyCategoryItem>
+      }
+
       // v1 -> v2: Add default color if missing
-      registerMigration("categories", {
+      registerMigration('categories', {
         fromVersion: 1,
         toVersion: 2,
-        migrate: (data: any) => {
-          const updatedCategories: Record<string, any> = {}
-          for (const [id, cat] of Object.entries<any>(data.categories ?? {})) {
+        migrate: (rawData: unknown) => {
+          const data = rawData as LegacyCategoriesStore
+          const updatedCategories: Record<string, LegacyCategoryItem> = {}
+          for (const [id, cat] of Object.entries(data.categories ?? {})) {
             updatedCategories[id] = {
               ...cat,
-              color: cat.color ?? "gray-500",
+              color: cat.color ?? 'gray-500',
             }
           }
           return { categories: updatedCategories }
@@ -154,16 +275,17 @@ describe("Envelope & Migration Engine with Runtime Zod Validation", () => {
       })
 
       // v2 -> v3: Add timestamps if missing
-      registerMigration("categories", {
+      registerMigration('categories', {
         fromVersion: 2,
         toVersion: 3,
-        migrate: (data: any) => {
-          const updatedCategories: Record<string, any> = {}
-          for (const [id, cat] of Object.entries<any>(data.categories ?? {})) {
+        migrate: (rawData: unknown) => {
+          const data = rawData as LegacyCategoriesStore
+          const updatedCategories: Record<string, LegacyCategoryItem> = {}
+          for (const [id, cat] of Object.entries(data.categories ?? {})) {
             updatedCategories[id] = {
               ...cat,
-              createdAt: cat.createdAt ?? "2026-08-31",
-              updatedAt: cat.updatedAt ?? "2026-08-31",
+              createdAt: cat.createdAt ?? '2026-08-31',
+              updatedAt: cat.updatedAt ?? '2026-08-31',
             }
           }
           return { categories: updatedCategories }
@@ -173,32 +295,32 @@ describe("Envelope & Migration Engine with Runtime Zod Validation", () => {
       // Legacy v1 payload (without envelope or timestamps or color)
       const legacyPayload = {
         categories: {
-          "cat-1": {
-            id: "cat-1",
-            name: "Supermercado",
+          'cat-1': {
+            id: 'cat-1',
+            name: 'Supermercado',
           },
         },
       }
 
-      const result = migrateDomainPayload<any>("categories", legacyPayload)
+      const result = migrateDomainPayload<CategoriesStore>('categories', legacyPayload)
       expect(result.wasMigrated).toBe(true)
       expect(result.fromVersion).toBe(1)
       expect(result.toVersion).toBe(3)
-      expect(result.data.categories["cat-1"]).toEqual({
-        id: "cat-1",
-        name: "Supermercado",
-        color: "gray-500",
-        createdAt: "2026-08-31",
-        updatedAt: "2026-08-31",
+      expect(result.data.categories['cat-1']).toEqual({
+        id: 'cat-1',
+        name: 'Supermercado',
+        color: 'gray-500',
+        createdAt: '2026-08-31',
+        updatedAt: '2026-08-31',
       })
     })
 
-    it("prevents execution and throws if payload is from a newer unsupported version", () => {
+    it('prevents execution and throws if payload is from a newer unsupported version', () => {
       CURRENT_SCHEMA_VERSIONS.categories = 1
-      const futureEnvelope = wrapDomainEnvelope("categories", { categories: {} }, 3)
+      const futureEnvelope = wrapDomainEnvelope('categories', { categories: {} }, 3)
 
       expect(() => {
-        migrateDomainPayload("categories", futureEnvelope)
+        migrateDomainPayload('categories', futureEnvelope)
       }).toThrow(/newer than the app's supported version/)
     })
   })

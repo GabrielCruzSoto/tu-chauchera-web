@@ -2,10 +2,10 @@ import { toMoney, type Money } from '@/shared/types/money'
 
 export interface ParsedStatementTransaction {
   id: string
-  date: string                  // YYYY-MM-DD
+  date: string // YYYY-MM-DD
   description: string
-  currentInstallment: number    // e.g., 3
-  totalInstallments: number      // e.g., 12
+  currentInstallment: number // e.g., 3
+  totalInstallments: number // e.g., 12
   amountCents: Money
   firstInstallmentPeriod?: string | undefined // e.g. "2026-06" or "2026-07"
   suggestedPlasticLastFour?: string | undefined
@@ -15,7 +15,10 @@ export interface ParsedStatementTransaction {
 }
 
 export interface ParsedStatementResult {
-  institution: 'BANCO_FALABELLA' | 'TENPO' | string
+  institution: 'BANCO_FALABELLA' | 'TENPO' | 'UNSUPPORTED' | string
+  isSupported?: boolean | undefined
+  detectedInstitution?: string | undefined
+  errorMessage?: string | undefined
   closingDate?: string | undefined
   dueDate?: string | undefined
   totalBilledCents?: Money | undefined
@@ -70,7 +73,10 @@ export function parseFalabellaStatementText(rawText: string): ParsedStatementRes
       line.toLowerCase().includes('vencimiento próximos') ||
       line.toLowerCase().includes('próximo período')
     ) {
-      if (line.toLowerCase().includes('pagar hasta') || line.toLowerCase().includes('vencimiento')) {
+      if (
+        line.toLowerCase().includes('pagar hasta') ||
+        line.toLowerCase().includes('vencimiento')
+      ) {
         const match = line.match(dateRegex)
         if (match && match[1] !== '00' && match[2] !== '00') {
           dueDate = `${match[3]}-${match[2]}-${match[1]}`
@@ -98,7 +104,10 @@ export function parseFalabellaStatementText(rawText: string): ParsedStatementRes
       }
     }
 
-    if (line.toLowerCase().includes('total facturado') || line.toLowerCase().includes('total a pagar')) {
+    if (
+      line.toLowerCase().includes('total facturado') ||
+      line.toLowerCase().includes('total a pagar')
+    ) {
       const amountMatch = line.match(/(?:\$|\b)([\d.]+)/)
       if (amountMatch?.[1]) {
         const cleanAmount = parseInt(amountMatch[1].replace(/\./g, ''), 10)
@@ -136,7 +145,8 @@ export function parseFalabellaStatementText(rawText: string): ParsedStatementRes
     if (day === '00' || month === '00') continue
 
     const formattedDate = `${year}-${month}-${day}`
-    const dateIndex = dateMatch.index !== undefined ? dateMatch.index + (dateMatch[0].startsWith(' ') ? 1 : 0) : 0
+    const dateIndex =
+      dateMatch.index !== undefined ? dateMatch.index + (dateMatch[0].startsWith(' ') ? 1 : 0) : 0
     const restOfLine = line.substring(dateIndex + dateMatch[0].trim().length).trim()
     if (!restOfLine) continue
 
@@ -176,7 +186,9 @@ export function parseFalabellaStatementText(rawText: string): ParsedStatementRes
       const trailingAmountsMatch = beforeInst.match(/(?:\s+[TA])?\s+([\d.]+)(?:\s+([\d.]+))?$/)
       if (trailingAmountsMatch?.[1]) {
         const num1 = parseInt(trailingAmountsMatch[1].replace(/\./g, ''), 10)
-        const num2 = trailingAmountsMatch[2] ? parseInt(trailingAmountsMatch[2].replace(/\./g, ''), 10) : undefined
+        const num2 = trailingAmountsMatch[2]
+          ? parseInt(trailingAmountsMatch[2].replace(/\./g, ''), 10)
+          : undefined
         // If two numbers, num2 is Monto Total a Pagar (including interest). Otherwise num1.
         numericAmount = num2 !== undefined && !isNaN(num2) ? num2 : num1
         description = beforeInst.substring(0, trailingAmountsMatch.index).trim()
@@ -195,7 +207,9 @@ export function parseFalabellaStatementText(rawText: string): ParsedStatementRes
       const trailingAmountMatch = restOfLine.match(/(?:\$|\b)([\d.]+)\s*$/)
       if (trailingAmountMatch?.[1]) {
         numericAmount = parseInt(trailingAmountMatch[1].replace(/\./g, ''), 10)
-        let remaining = restOfLine.substring(0, restOfLine.length - trailingAmountMatch[0].length).trim()
+        let remaining = restOfLine
+          .substring(0, restOfLine.length - trailingAmountMatch[0].length)
+          .trim()
         remaining = remaining.replace(/\b[a-z]{3}-\d{4}\b/i, '').trim()
         let clean = remaining.replace(/\s+[\d.]+(\s+[\d.]+)*\s*$/, '').trim()
         clean = clean.replace(/\s+[TA]\s*$/, '').trim()
@@ -231,6 +245,7 @@ export function parseFalabellaStatementText(rawText: string): ParsedStatementRes
 
   return {
     institution: 'BANCO_FALABELLA',
+    isSupported: true,
     closingDate,
     dueDate,
     totalBilledCents,

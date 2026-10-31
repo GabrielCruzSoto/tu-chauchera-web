@@ -168,7 +168,7 @@ describe('Financial correctness — no floating-point errors', () => {
     // 100 pesos + 200 pesos = 300 pesos (not 0.1 + 0.2)
     const a = toMoney(100)
     const b = toMoney(200)
-    expect(addMoney(a, b)).toBe(300)   // Exactly 300, no floating-point drift
+    expect(addMoney(a, b)).toBe(300) // Exactly 300, no floating-point drift
   })
 
   it('large installment sum is exact', () => {
